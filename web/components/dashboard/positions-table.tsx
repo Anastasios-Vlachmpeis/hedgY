@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -12,25 +10,15 @@ const TYPE_CHIP: Record<Position["type"], string> = {
   Prediction: "bg-[#f5f5f5] text-[#666666]",
 };
 
-function PositionsTable({ positions }: { positions: Position[] }) {
+/** Bare list (column header + rows) — used inside the tabbed account table. */
+function PositionsRows({ positions }: { positions: Position[] }) {
   return (
-    <section className="flex h-full flex-col rounded-[14px] border border-[#ececec] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-      <div className="mb-1 flex items-center justify-between">
-        <h2 className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
-          Positions
-        </h2>
-        <span className="text-[11px] tabular-nums text-[#a3a3a3]">
-          {positions.length} open
-        </span>
-      </div>
-
-      {/* Column headers */}
+    <>
       <div className="hidden items-center gap-3 pb-1 text-[10px] uppercase tracking-wide text-[#a3a3a3] sm:flex">
         <span className="min-w-0 flex-1">Position</span>
         <span className="w-24 shrink-0 text-right">Value</span>
         <span className="w-28 shrink-0 text-right">P&amp;L</span>
       </div>
-
       <ul className="divide-y divide-[#f0f0f0]">
         {positions.map((p) => {
           const up = p.pnl >= 0;
@@ -59,12 +47,7 @@ function PositionsTable({ positions }: { positions: Position[] }) {
               </span>
 
               <div className="w-28 shrink-0 text-right">
-                <p
-                  className={cn(
-                    "text-[13px] font-semibold tabular-nums",
-                    pnlColor,
-                  )}
-                >
+                <p className={cn("text-[13px] font-semibold tabular-nums", pnlColor)}>
                   {signedUsd(p.pnl, 0)}
                 </p>
                 <p className={cn("text-[11px] tabular-nums", pnlColor)}>
@@ -75,8 +58,25 @@ function PositionsTable({ positions }: { positions: Position[] }) {
           );
         })}
       </ul>
+    </>
+  );
+}
+
+/** Standalone card (kept for reuse). */
+function PositionsTable({ positions }: { positions: Position[] }) {
+  return (
+    <section className="flex h-full flex-col rounded-[14px] border border-[#ececec] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <div className="mb-1 flex items-center justify-between">
+        <h2 className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
+          Positions
+        </h2>
+        <span className="text-[11px] tabular-nums text-[#a3a3a3]">
+          {positions.length} open
+        </span>
+      </div>
+      <PositionsRows positions={positions} />
     </section>
   );
 }
 
-export { PositionsTable };
+export { PositionsTable, PositionsRows };

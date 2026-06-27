@@ -788,3 +788,53 @@ export function yesCents(prob: number): number {
 export function noCents(prob: number): number {
   return 100 - Math.round(prob * 100);
 }
+
+/* ---------- P&L by timeframe (account header chart) ---------- */
+
+export interface TimeframePnl {
+  change: number;
+  pct: number;
+  series: PortfolioPoint[];
+}
+
+const toPts = (arr: number[]): PortfolioPoint[] =>
+  arr.map((value, i) => ({ t: `P${i + 1}`, value }));
+
+export const timeframeOrder = ["1D", "1W", "1M", "YTD", "ALL"] as const;
+
+export const pnlTimeframes: Record<string, TimeframePnl> = {
+  "1D": {
+    change: 1284.2,
+    pct: 1.01,
+    series: toPts([
+      127256, 127400, 127320, 127600, 127540, 127880, 127760, 128100, 128020,
+      128340, 128460, 128540,
+    ]),
+  },
+  "1W": {
+    change: 3400,
+    pct: 2.72,
+    series: toPts([125140, 125600, 124980, 126200, 126800, 127400, 128540]),
+  },
+  "1M": {
+    change: 10120,
+    pct: 8.54,
+    series: portfolioSeries,
+  },
+  YTD: {
+    change: 22540,
+    pct: 21.3,
+    series: toPts([
+      106000, 108500, 107200, 111000, 113500, 116000, 119500, 121000, 124000,
+      125500, 127000, 128540,
+    ]),
+  },
+  ALL: {
+    change: 48540,
+    pct: 60.7,
+    series: toPts([
+      80000, 84000, 82000, 90000, 95000, 101000, 107000, 112000, 118000,
+      123000, 126000, 128540,
+    ]),
+  },
+};
