@@ -65,7 +65,7 @@ function Legend({ items }: { items: { color: string; label: string }[] }) {
   );
 }
 
-const CARD = "rounded-[10px] border border-[#f0f0f0] bg-white p-3";
+const CARD = "rounded-[10px] border border-[#e0e0e0] bg-white p-3";
 
 export function FinancialPanel() {
   const [t1, setT1] = React.useState<"A" | "Q">("Q");
@@ -73,7 +73,7 @@ export function FinancialPanel() {
   const [t3, setT3] = React.useState<"A" | "Q">("A");
 
   return (
-    <div className="flex h-full flex-col gap-3 rounded-[14px] border border-[#ececec] bg-[#fafafa] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+    <div className="flex h-full flex-col gap-3 rounded-[14px] border border-[#181925] bg-[#fafafa] p-4 shadow-[0_4px_16px_rgba(0,0,0,0.10)]">
       <p className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">Financials · LMT</p>
 
       {/* Revenue to net income */}

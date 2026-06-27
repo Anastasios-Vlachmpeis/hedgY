@@ -33,7 +33,7 @@ function StockCardsGrid() {
         return (
           <div
             key={s.symbol}
-            className="cursor-pointer rounded-[12px] border border-[#ececec] bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+            className="cursor-pointer rounded-[12px] border border-[#181925] bg-white p-3 shadow-[0_4px_16px_rgba(0,0,0,0.10)] transition-shadow hover:shadow-[0_6px_20px_rgba(0,0,0,0.14)]"
           >
             <p className="text-[13px] font-semibold text-[#181925]">{s.symbol}</p>
             <p className="mt-0.5 truncate text-[11px] text-[#a3a3a3]">{s.name}</p>
@@ -72,7 +72,7 @@ function CombineCTA() {
 /* ── Trending prediction markets panel ── */
 function PredictionPanel() {
   return (
-    <div className="flex flex-col gap-2 rounded-[14px] border border-[#ececec] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+    <div className="flex flex-col gap-2 rounded-[14px] border border-[#181925] bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.10)]">
       <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
         Trending markets
       </p>

@@ -53,7 +53,7 @@ function Row({
 
 export function OrderBook() {
   return (
-    <div className="flex h-full flex-col rounded-[14px] border border-[#ececec] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+    <div className="flex h-full flex-col rounded-[14px] border border-[#181925] bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.10)]">
       <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
         Order Book · LMT
       </p>
