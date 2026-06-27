@@ -47,6 +47,8 @@ h1,h2,h3{letter-spacing:-0.02em;}
   --color-success:#16a34a; --color-destructive:#dc2626; --color-warning:#ea580c; --color-info:#3b82f6;
   --color-border:var(--border); --color-ring:var(--ring);
   --font-sans:'Open Runde','Inter',system-ui,sans-serif; --font-mono:'Open Runde','Inter',system-ui,sans-serif;
+  /* real monospace numerals — used ONLY on market data (prices, odds, volume) */
+  --font-num:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
   --radius-sm:calc(var(--radius)*.6); --radius-md:calc(var(--radius)*.8); --radius-lg:var(--radius);
   --radius-xl:calc(var(--radius)*1.4); --radius-2xl:calc(var(--radius)*1.8); --radius-3xl:calc(var(--radius)*2.2);
   --shadow-card:0 1px 3px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.02);
@@ -124,3 +126,86 @@ body{
     radial-gradient(60% 70% at 30% 92%, rgba(186,160,255,.24), transparent 60%),
     #f4f3fb;
 }
+
+/* ============================================================
+   MARKETS — terminal-grade surfaces (scoped to /markets redesign)
+   ============================================================ */
+
+/* numerals utility: market data only, never body copy */
+.font-num{ font-family:var(--font-num); font-feature-settings:"tnum","zero"; letter-spacing:-0.01em; }
+
+/* faint atmosphere behind the light markets canvas — gives glass something to refract */
+.markets-canvas{
+  background:
+    radial-gradient(64% 42% at 90% 1%, rgba(149,128,255,.17), transparent 60%),
+    radial-gradient(60% 40% at 2% 22%, rgba(99,140,255,.13), transparent 60%),
+    radial-gradient(58% 40% at 64% 96%, rgba(124,58,237,.10), transparent 62%),
+    radial-gradient(40% 30% at 30% 60%, rgba(149,128,255,.05), transparent 60%),
+    #f6f7fd;
+}
+
+/* frosted glass surface */
+.glass{
+  background:rgba(255,255,255,.62);
+  -webkit-backdrop-filter:blur(18px) saturate(150%);
+  backdrop-filter:blur(18px) saturate(150%);
+  border:1px solid rgba(255,255,255,.7);
+  box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 10px 30px -16px rgba(24,25,37,.18);
+}
+.glass-strong{
+  background:rgba(255,255,255,.78);
+  -webkit-backdrop-filter:blur(28px) saturate(160%);
+  backdrop-filter:blur(28px) saturate(160%);
+  border:1px solid rgba(255,255,255,.8);
+  box-shadow:0 1px 0 rgba(255,255,255,.7) inset, 0 28px 70px -28px rgba(24,25,37,.42);
+}
+
+/* staggered card entrance + modal/scrim motion */
+@keyframes card-in{ from{ opacity:0; transform:translateY(10px) scale(.992); } to{ opacity:1; transform:none; } }
+.card-in{ animation:card-in .5s cubic-bezier(0.16,1,0.3,1) both; }
+@keyframes modal-in{ from{ opacity:0; transform:translateY(10px) scale(.975); } to{ opacity:1; transform:none; } }
+.modal-in{ animation:modal-in .3s cubic-bezier(0.16,1,0.3,1) both; }
+@keyframes scrim-in{ from{ opacity:0; } to{ opacity:1; } }
+.scrim-in{ animation:scrim-in .22s ease both; }
+@media (prefers-reduced-motion:reduce){
+  .card-in, .modal-in, .scrim-in{ animation:none; opacity:1; transform:none; }
+}
+
+/* signature dark hero band: brand ink + violet/blue ambient glow + fine grid */
+.market-hero{
+  position:relative;
+  background:
+    radial-gradient(80% 120% at 12% -10%, rgba(149,128,255,.34), transparent 55%),
+    radial-gradient(70% 120% at 92% 120%, rgba(124,58,237,.30), transparent 55%),
+    radial-gradient(60% 100% at 70% -20%, rgba(99,140,255,.18), transparent 60%),
+    #14151f;
+  overflow:hidden;
+}
+.market-hero::before{
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.5;
+  background-image:
+    linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-size:34px 34px;
+  -webkit-mask-image:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);
+  mask-image:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 78%);
+}
+
+/* horizontal edge fade for the live tapes */
+.tape-mask{
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
+}
+
+/* opposite-direction marquee (equities → , predictions ← ) */
+@keyframes marquee-rev{ from{ transform:translateX(-50%); } to{ transform:translateX(0); } }
+.animate-marquee-rev{ animation:marquee-rev 60s linear infinite; }
+.animate-marquee-slow{ animation:marquee 64s linear infinite; }
+@media (prefers-reduced-motion:reduce){
+  .animate-marquee-rev, .animate-marquee-slow{ animation:none; }
+}
+
+/* live pulse dot */
+@keyframes livepulse{ 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.45; transform:scale(.82); } }
+.live-dot{ animation:livepulse 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion:reduce){ .live-dot{ animation:none; } }
