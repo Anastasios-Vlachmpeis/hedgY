@@ -795,6 +795,23 @@ export const openOrders: OpenOrder[] = [
   { id: "o5", market: "ZIM Integrated", side: "Sell", outcome: "ZIM", price: "$24.00", qty: 120, filledPct: 0 },
 ];
 
+/* ---------- Platform breakdown ---------- */
+
+export interface PlatformBreakdown {
+  platform: string;
+  kind: string;
+  value: number;
+  pnl: number;
+  pnlPct: number;
+  color: string;
+}
+
+export const platformBreakdown: PlatformBreakdown[] = [
+  { platform: "Alpaca", kind: "Stocks & Options", value: 85_310, pnl: 1_050.2, pnlPct: 1.25, color: "#9580ff" },
+  { platform: "Polymarket", kind: "Prediction Markets", value: 1_230, pnl: 234, pnlPct: 23.5, color: "#181925" },
+  { platform: "Cash", kind: "Available Balance", value: 42_000.32, pnl: 0, pnlPct: 0, color: "#a3a3a3" },
+];
+
 /** Cents helpers for the prediction-market pricing convention. */
 export function yesCents(prob: number): number {
   return Math.round(prob * 100);
