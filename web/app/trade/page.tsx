@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Search, ArrowRight, ShieldAlert, Zap } from "lucide-react";
+import { Search, ArrowRight, ShieldAlert } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { trendingStocks, hedgeSuggestions } from "@/lib/mockData";
@@ -11,289 +11,330 @@ import { StockChart } from "@/components/trade/stock-chart";
 /* ── helpers ── */
 function fmtVol(n: number): string {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
+  if (n >= 1_000)     return `$${(n / 1_000).toFixed(0)}K`;
   return `$${n}`;
 }
 
-/* ── Search ── */
+/* ── Search — macOS Spotlight feel ── */
 function TradeSearch() {
   return (
     <div className="relative w-full">
-      <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#a3a3a3]" />
+      <Search className="pointer-events-none absolute left-5 top-1/2 size-4 -translate-y-1/2 text-[#9ca3af]" strokeWidth={1.75} />
       <input
         type="text"
         placeholder="Search a stock to see its risk exposure…"
-        className="h-12 w-full rounded-2xl border border-white/60 bg-white/70 pl-11 pr-4 text-[14px] text-[#181925] placeholder:text-[#a3a3a3] shadow-[0_1px_4px_rgba(0,0,0,0.06)] backdrop-blur-sm transition-all focus:border-[#C5D3E6] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C5D3E6]/40"
+        className="h-14 w-full rounded-[14px] border border-[#ececec] bg-white pl-12 pr-24 text-[15px] text-[#111111] placeholder:text-[#9ca3af] outline-none transition-colors duration-[180ms] focus:border-[#d1d5db]"
       />
+      <kbd className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 rounded-[6px] border border-[#ececec] bg-[#f5f5f5] px-2 py-0.5 text-[11px] text-[#9ca3af]">
+        ⌘ K
+      </kbd>
     </div>
   );
 }
 
 /* ── Sparkline ── */
 function Spark({ data, up }: { data: number[]; up: boolean }) {
-  const min = Math.min(...data);
-  const max = Math.max(...data);
+  const min = Math.min(...data), max = Math.max(...data);
   const range = max - min || 1;
-  const W = 64, H = 22;
+  const W = 80, H = 28;
   const pts = data
     .map((v, i) => `${(i / (data.length - 1)) * W},${H - ((v - min) / range) * H}`)
     .join(" ");
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
-      <polyline points={pts} fill="none" stroke={up ? "#16a34a" : "#dc2626"} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+      <polyline points={pts} fill="none" stroke={up ? "#16a34a" : "#ef4444"} strokeWidth={1.25} strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }
 
-/* ── Risk factors panel ── */
+/* ── Risk analysis panel (right hero card) ── */
 const LMT_RISKS = [
   {
-    id: "midterms",
-    icon: "🏛️",
-    event: "Republicans win 2026 midterms",
+    id:          "midterms",
+    icon:        "🏛️",
+    event:       "Republicans win 2026 midterms",
     probability: 0.43,
-    impact: "bearish" as const,
-    reason: "Defense budgets shrink under Republican cost-cutting mandates.",
-    hedgeAction: "Buy NO · 57¢",
-    volume: 12_400_000,
+    impact:      "bearish" as const,
+    reason:      "Defense budgets shrink under Republican cost-cutting mandates.",
+    volume:      12_400_000,
   },
   {
-    id: "defense-budget",
-    icon: "🛡️",
-    event: "US defense budget exceeds $900B",
+    id:          "defense-budget",
+    icon:        "🛡️",
+    event:       "US defense budget exceeds $900B",
     probability: 0.55,
-    impact: "bullish" as const,
-    reason: "Direct revenue tailwind — LMT earns 70%+ from US government contracts.",
-    hedgeAction: "Buy YES · 55¢",
-    volume: 1_100_000,
+    impact:      "bullish" as const,
+    reason:      "Direct revenue tailwind — LMT earns 70%+ from US government contracts.",
+    volume:      1_100_000,
   },
   {
-    id: "hormuz",
-    icon: "⚓",
-    event: "Strait of Hormuz blockade 2026",
+    id:          "hormuz",
+    icon:        "⚓",
+    event:       "Strait of Hormuz blockade 2026",
     probability: 0.17,
-    impact: "bearish" as const,
-    reason: "Supply chain disruption hits production timelines.",
-    hedgeAction: "Buy YES · 17¢",
-    volume: 900_000,
+    impact:      "bearish" as const,
+    reason:      "Supply chain disruption risks production timelines and deliveries.",
+    volume:      900_000,
   },
 ];
 
 function RiskPanel() {
   return (
-    <div className="flex h-full flex-col rounded-[20px] bg-white p-6 shadow-[0_1px_6px_rgba(0,0,0,0.07)]">
+    <div className="flex h-full flex-col rounded-[18px] bg-white p-7 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ShieldAlert className="size-4 text-[#f59e0b]" />
-          <span className="text-[14px] font-bold text-[#181925]">Risk factors for LMT</span>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-[22px] font-semibold leading-tight text-[#111111]">LMT Risk Analysis</h3>
+          <p className="mt-1 text-[14px] text-[#6B7280]">3 macro events correlated with your position</p>
         </div>
-        <span className="rounded-full bg-[#fef3c7] px-2.5 py-0.5 text-[11px] font-bold text-[#d97706]">
-          {LMT_RISKS.length} events
+        <span className="mt-1 flex items-center gap-1 rounded-full bg-[#fef3c7] px-2.5 py-1 text-[11px] font-semibold text-[#d97706]">
+          <ShieldAlert className="size-3" /> 3 events
         </span>
       </div>
-      <p className="mt-1 text-[12px] text-[#a3a3a3]">
-        Prediction markets correlated with your position
-      </p>
 
-      {/* Risk rows */}
-      <div className="mt-4 flex flex-col divide-y divide-[#f5f5f5]">
+      {/* Risk cards */}
+      <div className="mt-6 flex flex-col gap-4">
         {LMT_RISKS.map((r) => {
-          const pct = Math.round(r.probability * 100);
+          const pct     = Math.round(r.probability * 100);
           const bearish = r.impact === "bearish";
           return (
-            <div key={r.id} className="py-4 first:pt-0 last:pb-0">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2.5">
-                  <span className="mt-0.5 text-[18px] leading-none">{r.icon}</span>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-semibold leading-snug text-[#181925]">{r.event}</p>
-                    <p className="mt-0.5 text-[11px] leading-relaxed text-[#a3a3a3]">{r.reason}</p>
-                  </div>
-                </div>
+            <div key={r.id} className="rounded-[14px] border border-[#ececec] p-5">
+              {/* Top row: icon + title + badge */}
+              <div className="flex items-center gap-2.5">
+                <span className="shrink-0 text-[16px] leading-none">{r.icon}</span>
+                <p className="flex-1 text-[13px] font-semibold leading-snug text-[#111111]">{r.event}</p>
                 <span className={cn(
-                  "mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold",
+                  "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
                   bearish ? "bg-[#fef2f2] text-[#dc2626]" : "bg-[#f0fdf4] text-[#16a34a]",
                 )}>
                   {bearish ? "↓ Bearish" : "↑ Bullish"}
                 </span>
               </div>
 
-              {/* Probability bar */}
-              <div className="mt-2.5 flex items-center gap-2.5">
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#f0f0f0]">
-                  <div
-                    className={cn("h-full rounded-full", bearish ? "bg-[#fca5a5]" : "bg-[#86efac]")}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <span className="w-8 shrink-0 text-right text-[11px] font-semibold tabular-nums text-[#181925]">{pct}%</span>
-                <span className="text-[10px] text-[#c0c0c0]">{fmtVol(r.volume)}</span>
+              {/* Probability */}
+              <div className="mt-3 flex items-end gap-2">
+                <span className="text-[30px] font-semibold leading-none tabular-nums text-[#111111]">{pct}%</span>
+                <span className="mb-0.5 text-[12px] text-[#9ca3af]">probability · {fmtVol(r.volume)} vol</span>
               </div>
+
+              {/* Bar */}
+              <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-[#f0f0f0]">
+                <div
+                  className={cn("h-full rounded-full transition-all", bearish ? "bg-[#fca5a5]" : "bg-[#86efac]")}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+
+              {/* Reason */}
+              <p className="mt-2.5 text-[12px] leading-relaxed text-[#6B7280]">{r.reason}</p>
             </div>
           );
         })}
       </div>
 
-      {/* CTA */}
+      {/* Full-width outline CTA */}
       <Link
         href="/structure"
-        className="mt-auto flex items-center justify-center gap-2 rounded-[12px] bg-[#181925] py-3.5 pt-3.5 text-[14px] font-bold text-white transition-opacity hover:opacity-90"
+        className="mt-auto flex h-12 w-full items-center justify-between rounded-[12px] border border-[#111111] px-5 pt-6 text-[14px] font-medium text-[#111111] transition-all duration-[200ms] ease-out hover:bg-[#111111] hover:text-white"
       >
-        Hedge LMT against these <ArrowRight className="size-4" />
+        Hedge LMT against these
+        <ArrowRight className="size-4" />
       </Link>
     </div>
   );
 }
 
-/* ── Combine CTA ── */
+/* ── Primary CTA ── */
 function CombineCTA() {
   return (
     <Link
       href="/structure"
-      className="group flex items-center justify-between rounded-[20px] bg-[#181925] px-8 py-5 transition-opacity hover:opacity-90"
+      className="group flex h-[92px] items-center justify-between rounded-[18px] bg-[#171B3B] px-7 transition-opacity duration-[200ms] hover:opacity-95"
     >
-      <div className="flex items-center gap-4">
-        <span className="text-[28px]">🧩</span>
+      <div className="flex items-center gap-5">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-white/10">
+          <span className="text-[18px]">🧩</span>
+        </div>
         <div>
-          <p className="text-[16px] font-bold text-white">Build a hedged position on LMT</p>
-          <p className="mt-0.5 text-[12px] text-white/50">
-            Pair your equity with prediction-market coverage — auto-sized hedge ratio, one click.
+          <p className="text-[20px] font-semibold leading-tight text-white">
+            Build a hedged position on LMT
+          </p>
+          <p className="mt-0.5 text-[14px] text-white/70">
+            Pair equity with prediction-market coverage — auto-sized hedge ratio, one click.
           </p>
         </div>
       </div>
-      <span className="ml-6 flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-5 py-2.5 text-[13px] font-semibold text-[#C5D3E6] transition-colors group-hover:bg-white/20">
+      <button
+        type="button"
+        className="ml-8 flex shrink-0 items-center gap-2 rounded-[12px] bg-white px-6 py-2.5 text-[14px] font-semibold text-[#171B3B] transition-transform duration-[200ms] ease-out group-hover:-translate-y-px"
+      >
         Structure it <ArrowRight className="size-4" />
-      </span>
+      </button>
     </Link>
   );
 }
 
 /* ── Hedge idea card ── */
-const STRENGTH_STYLE: Record<string, string> = {
-  Strong: "bg-[#f0fdf4] text-[#16a34a]",
-  Moderate: "bg-[#fff7ed] text-[#ea580c]",
-  Light: "bg-[#f5f5f5] text-[#737373]",
+const STRENGTH_COLORS: Record<string, { dot: string; text: string }> = {
+  Strong:   { dot: "bg-[#16a34a]",  text: "text-[#16a34a]"  },
+  Moderate: { dot: "bg-[#f59e0b]",  text: "text-[#d97706]"  },
+  Light:    { dot: "bg-[#9ca3af]",  text: "text-[#6B7280]"  },
+};
+
+const HEDGE_SUBTITLE: Record<string, string> = {
+  "defense-election": "Hedging political risk in defense spending",
+  "pharma-fda":       "Hedging binary FDA readout risk in pharma",
+  "shipping-hormuz":  "Hedging geopolitical disruption in shipping",
 };
 
 function HedgeCard({ s }: { s: (typeof hedgeSuggestions)[0] }) {
   const hedgePct = Math.round(s.hedgePrice * 100);
+  const c = STRENGTH_COLORS[s.strength];
   return (
     <Link
       href="/structure"
-      className="group flex flex-col rounded-[18px] bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] transition-shadow hover:shadow-[0_6px_20px_rgba(0,0,0,0.10)]"
+      className="group flex flex-col rounded-[18px] bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all duration-[200ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.05)]"
     >
-      <span className={cn("self-start rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide", STRENGTH_STYLE[s.strength])}>
-        {s.strength} hedge
-      </span>
+      {/* Strength */}
+      <div className="flex items-center gap-1.5">
+        <span className={cn("size-1.5 rounded-full", c.dot)} />
+        <span className={cn("text-[11px] font-semibold uppercase tracking-wide", c.text)}>
+          {s.strength} hedge
+        </span>
+      </div>
 
-      {/* Equity */}
-      <div className="mt-3 flex items-center gap-2.5">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#f0f4ff] text-[16px]">📈</span>
+      {/* Thesis */}
+      <h3 className="mt-3 text-[15px] font-semibold text-[#111111]">{s.position.thesis}</h3>
+      <p className="mt-1 text-[13px] text-[#6B7280]">{HEDGE_SUBTITLE[s.id]}</p>
+
+      {/* Legs */}
+      <div className="mt-5 flex flex-col gap-3">
         <div>
-          <p className="text-[13px] font-bold text-[#181925]">{s.equityLabel}</p>
-          <p className="text-[11px] text-[#a3a3a3]">{s.equitySymbols.join(" · ")}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#9ca3af]">Long exposure</p>
+          <p className="mt-1.5 text-[13px] font-medium text-[#111111]">
+            {s.equitySymbols.join(" · ")}
+          </p>
         </div>
-      </div>
 
-      {/* Connector */}
-      <div className="my-3 flex items-center gap-2">
-        <div className="h-px flex-1 bg-[#ececec]" />
-        <span className="rounded-full border border-[#ececec] px-2 py-0.5 text-[10px] font-medium text-[#aaa]">hedged with</span>
-        <div className="h-px flex-1 bg-[#ececec]" />
-      </div>
+        <div className="flex items-center gap-2.5">
+          <div className="h-px flex-1 bg-[#f0f0f0]" />
+          <span className="text-[10px] font-medium text-[#d1d5db]">hedged with</span>
+          <div className="h-px flex-1 bg-[#f0f0f0]" />
+        </div>
 
-      {/* Hedge leg */}
-      <div className="flex items-center gap-2.5">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#fef3c7] text-[16px]">🎯</span>
         <div>
-          <p className="text-[13px] font-bold text-[#181925]">{s.hedgeSide} — {s.hedgeMarket}</p>
-          <p className="text-[11px] text-[#a3a3a3]">@ {hedgePct}¢ implied</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#9ca3af]">Hedge exposure</p>
+          <p className="mt-1.5 text-[13px] font-medium text-[#111111]">
+            {s.hedgeSide} — {s.hedgeMarket}
+          </p>
+          <p className="mt-0.5 text-[12px] text-[#9ca3af]">@ {hedgePct}¢ implied</p>
         </div>
       </div>
 
       {/* Rationale */}
-      <p className="mt-3 text-[12px] leading-relaxed text-[#737373]">{s.rationale}</p>
+      <p className="mt-4 text-[12px] leading-relaxed text-[#6B7280]">{s.rationale}</p>
 
-      {/* Footer CTA */}
-      <div className="mt-4 flex items-center gap-1.5 text-[12px] font-bold text-[#181925] transition-opacity group-hover:opacity-70">
-        <Zap className="size-3.5 fill-current" /> Build this combo →
+      {/* Text CTA */}
+      <div className="mt-5 flex items-center gap-1 text-[13px] font-medium text-[#111111] transition-all duration-[200ms] ease-out group-hover:gap-2">
+        Build this combo <ArrowRight className="size-3.5" />
       </div>
     </Link>
   );
 }
 
-/* ── Stock pill (quick discovery) ── */
-const STOCK_RISK_COUNT: Record<string, number> = {
+/* ── Stock pill — Apple Stocks widget feel ── */
+const STOCK_RISKS: Record<string, number> = {
   LMT: 3, RTX: 2, NOC: 2, GD: 1, PFE: 2, MRK: 1, ZIM: 2,
 };
 
 function StockPill({ s }: { s: (typeof trendingStocks)[0] }) {
-  const up = s.direction !== "down";
-  const risks = STOCK_RISK_COUNT[s.symbol] ?? 0;
+  const up    = s.direction !== "down";
+  const risks = STOCK_RISKS[s.symbol] ?? 0;
   return (
-    <div className="flex min-w-[152px] cursor-pointer flex-col rounded-[14px] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-shadow hover:shadow-[0_4px_14px_rgba(0,0,0,0.10)]">
-      <div className="flex items-center justify-between">
-        <span className="text-[13px] font-bold text-[#181925]">{s.symbol}</span>
-        <span className={cn("text-[11px] font-semibold", up ? "text-[#16a34a]" : "text-[#dc2626]")}>
-          {up ? "+" : ""}{s.changePct.toFixed(1)}%
-        </span>
+    <div className="flex w-[190px] shrink-0 cursor-pointer flex-col rounded-[16px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all duration-[200ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.05)]">
+      {/* Ticker + risk badge */}
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-[16px] font-semibold text-[#111111]">{s.symbol}</p>
+          <p className="mt-0.5 truncate text-[11px] text-[#9ca3af]">{s.name}</p>
+        </div>
+        {risks > 0 && (
+          <span className="mt-0.5 flex items-center gap-1 rounded-full bg-[#fef3c7] px-1.5 py-0.5">
+            <span className="size-[5px] rounded-full bg-[#f59e0b]" />
+            <span className="text-[9px] font-bold text-[#d97706]">{risks}</span>
+          </span>
+        )}
       </div>
-      <p className="mt-0.5 truncate text-[10px] text-[#a3a3a3]">{s.name}</p>
-      <p className="mt-2.5 text-[17px] font-bold tabular-nums text-[#181925]">${s.price.toFixed(2)}</p>
-      <div className="mt-2">
+
+      {/* Sparkline */}
+      <div className="mt-4">
         <Spark data={s.spark} up={up} />
       </div>
-      {risks > 0 && (
-        <div className="mt-2.5 flex items-center gap-1 rounded-full bg-[#fef3c7] px-2 py-0.5 self-start">
-          <ShieldAlert className="size-2.5 text-[#d97706]" />
-          <span className="text-[9px] font-bold text-[#d97706]">{risks} risk event{risks > 1 ? "s" : ""}</span>
-        </div>
-      )}
+
+      {/* Price + change */}
+      <div className="mt-3 flex items-end justify-between">
+        <p className="text-[17px] font-semibold tabular-nums text-[#111111]">${s.price.toFixed(2)}</p>
+        <p className={cn("text-[12px] font-medium tabular-nums", up ? "text-[#16a34a]" : "text-[#ef4444]")}>
+          {up ? "+" : ""}{s.changePct.toFixed(1)}%
+        </p>
+      </div>
     </div>
+  );
+}
+
+/* ── Section header ── */
+function Section({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-6">
+      <div>
+        <h2 className="text-[16px] font-semibold text-[#111111]">{title}</h2>
+        {sub && <p className="mt-1 text-[13px] text-[#9ca3af]">{sub}</p>}
+      </div>
+      {children}
+    </section>
   );
 }
 
 /* ── Page ── */
 export default function TradePage() {
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-16">
       <TradeSearch />
 
-      {/* Hero: stock chart + risk factors */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[3fr_2fr] lg:items-stretch">
-        <div className="min-h-[360px]">
+      {/* Hero — 62/38 split, top-aligned */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[62fr_38fr] lg:items-start">
+        <div className="min-h-[480px]">
           <StockChart />
         </div>
         <RiskPanel />
       </div>
 
-      {/* Hedge CTA */}
+      {/* Primary CTA */}
       <CombineCTA />
 
-      {/* Pre-built hedge ideas */}
-      <section>
-        <h2 className="mb-1 text-[15px] font-bold text-[#181925]">Hedge Ideas</h2>
-        <p className="mb-4 text-[13px] text-[#a3a3a3]">
-          Pre-built equity + prediction market pairs. Pick one, we handle the sizing.
-        </p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Hedge ideas */}
+      <Section
+        title="Hedge Ideas"
+        sub="Pre-built equity + prediction market pairs. Pick one, we handle the sizing."
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {hedgeSuggestions.map((s) => (
             <HedgeCard key={s.id} s={s} />
           ))}
         </div>
-      </section>
+      </Section>
 
-      {/* Stocks — with risk event badges */}
-      <section className="pb-6">
-        <h2 className="mb-1 text-[15px] font-bold text-[#181925]">Explore Stocks</h2>
-        <p className="mb-4 text-[13px] text-[#a3a3a3]">Select any stock to see its correlated risk events.</p>
-        <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Explore stocks */}
+      <Section
+        title="Explore Stocks"
+        sub="Select any stock to see its correlated risk events."
+      >
+        <div className="flex gap-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {trendingStocks.map((s) => (
             <StockPill key={s.symbol} s={s} />
           ))}
         </div>
-      </section>
+      </Section>
     </div>
   );
 }
