@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ChevronRight } from "lucide-react";
 
 import type { RegionExposure } from "@/lib/mockData";
 
@@ -27,6 +28,7 @@ function ByRegion({ regions }: { regions: RegionExposure[] }) {
             <span className="shrink-0 rounded-[6px] bg-[#f3f1ff] px-2 py-0.5 font-mono text-[11px] font-semibold text-[#9580ff]">
               {r.pct}%
             </span>
+            <ChevronRight className="size-3.5 shrink-0 text-[#a3a3a3]" />
           </li>
         ))}
       </ul>

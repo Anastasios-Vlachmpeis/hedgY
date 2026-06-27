@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ChevronRight } from "lucide-react";
 
 import type { SectorWeight } from "@/lib/mockData";
 
@@ -28,6 +29,7 @@ function BySector({ sectors }: { sectors: SectorWeight[] }) {
             <span className="shrink-0 rounded-[6px] bg-[#f3f1ff] px-2 py-0.5 font-mono text-[11px] font-semibold text-[#9580ff]">
               {s.pct}%
             </span>
+            <ChevronRight className="size-3.5 shrink-0 text-[#a3a3a3]" />
           </li>
         ))}
       </ul>
