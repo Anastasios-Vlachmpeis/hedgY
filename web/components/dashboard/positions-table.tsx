@@ -104,7 +104,27 @@ const GROUPS: Array<{ type: Position["type"]; label: string }> = [
 ];
 
 /** Grouped list (Combined / Equities / Predictions). */
-function PositionsRows({ positions }: { positions: Position[] }) {
+function PositionsRows({
+  positions,
+  hideGroupHeaders = false,
+}: {
+  positions: Position[];
+  hideGroupHeaders?: boolean;
+}) {
+  if (hideGroupHeaders) {
+    return (
+      <ul className="divide-y divide-[#f0f0f0]">
+        {positions.map((p) =>
+          p.type === "Combined" ? (
+            <CombinedRow key={p.id} p={p} />
+          ) : (
+            <SimpleRow key={p.id} p={p} />
+          ),
+        )}
+      </ul>
+    );
+  }
+
   return (
     <div className="flex flex-col">
       {GROUPS.map(({ type, label }) => {
