@@ -210,7 +210,7 @@ function AccountHeader({ portfolio }: { portfolio: Portfolio }) {
             </p>
             <BreakdownButton onClick={() => setValueOpen(true)} />
           </div>
-          <p className="mt-1 text-[34px] font-bold leading-none tracking-[-0.03em] tabular-nums text-[#181925]">
+          <p className="mt-1 text-[34px] font-semibold leading-none tracking-[-0.03em] tabular-nums text-[#181925]">
             {usd(portfolio.totalValue)}
           </p>
           <div
@@ -243,34 +243,34 @@ function AccountHeader({ portfolio }: { portfolio: Portfolio }) {
         {/* P&L card */}
         <section className={CARD}>
           <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
-                Profit / Loss
-              </p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
+              Profit / Loss
+            </p>
+            <div className="flex items-center gap-1.5">
               <BreakdownButton onClick={() => setPnlOpen(true)} />
-            </div>
-            <div className="flex gap-0.5">
-              {timeframeOrder.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTf(t)}
-                  className={cn(
-                    "rounded-full px-2.5 py-1 text-[12px] font-medium tabular-nums transition-colors",
-                    t === tf
-                      ? "bg-[#181925] text-white"
-                      : "text-[#666666] hover:bg-[#f5f5f5]",
-                  )}
-                >
-                  {t}
-                </button>
-              ))}
+              <div className="flex gap-0.5">
+                {timeframeOrder.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTf(t)}
+                    className={cn(
+                      "rounded-full px-2.5 py-1 text-[12px] font-medium tabular-nums transition-colors",
+                      t === tf
+                        ? "bg-[#181925] text-white"
+                        : "text-[#666666] hover:bg-[#f5f5f5]",
+                    )}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
           <p
             className={cn(
-              "mt-1 text-[30px] font-bold leading-none tracking-[-0.02em] tabular-nums",
+              "mt-1 text-[30px] font-semibold leading-none tracking-[-0.02em] tabular-nums",
               up ? "text-[#16a34a]" : "text-[#dc2626]",
             )}
           >
