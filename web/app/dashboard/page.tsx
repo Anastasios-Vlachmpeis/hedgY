@@ -11,7 +11,6 @@ export default function DashboardPage() {
         <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[#181925]">
           Good morning, Maxim
         </h1>
-        <p className="text-[13px] text-[#a3a3a3]">Markets open · Demo data</p>
       </div>
 
       <div className="flex flex-col gap-4">
