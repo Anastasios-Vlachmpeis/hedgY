@@ -6,6 +6,6 @@
   "scripts": {
     "alpaca:test": "node --env-file=.env scripts/alpaca-test.ts",
     "poly:test": "node scripts/polymarket-test.ts",
-    "coinbase:test": "node scripts/coinbase-test.ts"
+    "integrations:demo": "node --env-file-if-exists=.env scripts/integrations-demo.ts"
   }
 }

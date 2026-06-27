@@ -1,0 +1,43 @@
+{
+  "instruments": [
+    {
+      "canonicalId": "crypto:BTC",
+      "assetClass": "crypto",
+      "label": "Bitcoin",
+      "description": "BTC/USD via Alpaca crypto.",
+      "tags": ["crypto", "macro", "risk-on"],
+      "listings": [{ "venue": "alpaca", "symbol": "BTC/USD" }]
+    },
+    {
+      "canonicalId": "crypto:ETH",
+      "assetClass": "crypto",
+      "label": "Ethereum",
+      "tags": ["crypto", "risk-on"],
+      "listings": [{ "venue": "alpaca", "symbol": "ETH/USD" }]
+    },
+    {
+      "canonicalId": "etf:ITA",
+      "assetClass": "etf",
+      "label": "iShares U.S. Aerospace & Defense ETF",
+      "tags": ["defense", "equities", "us", "thematic"],
+      "listings": [{ "venue": "alpaca", "symbol": "ITA" }]
+    },
+    {
+      "canonicalId": "equity:LMT",
+      "assetClass": "equity",
+      "label": "Lockheed Martin",
+      "tags": ["defense", "equities", "us"],
+      "listings": [{ "venue": "alpaca", "symbol": "LMT" }]
+    },
+    {
+      "canonicalId": "event:fifa-wc-2026-usa",
+      "assetClass": "event",
+      "label": "USA win the 2026 FIFA World Cup",
+      "description": "Event leg. Resolved at runtime by text match because venue ids change. Swap in an election/geopolitics market for the real demo.",
+      "tags": ["event", "sports"],
+      "listings": [
+        { "venue": "polymarket", "match": { "search": "USA win the 2026 FIFA World Cup", "outcome": "Yes" } }
+      ]
+    }
+  ]
+}
