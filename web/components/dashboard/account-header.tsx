@@ -23,7 +23,7 @@ function BreakdownButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="group flex shrink-0 items-center gap-1 rounded-full bg-[#f5f5f5] px-3 py-1.5 text-[12px] font-medium text-[#737373] transition-colors hover:bg-[#ececec] hover:text-[#181925]"
+      className="group flex shrink-0 items-center gap-1 rounded-full bg-[#C5D3E6] px-3 py-1.5 text-[12px] font-medium text-[#181925] transition-colors hover:bg-[#B5C6DC]"
     >
       Full breakdown
       <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={2.25} />
@@ -227,13 +227,13 @@ function AccountHeader({ portfolio }: { portfolio: Portfolio }) {
           <div className="mt-auto pt-4 flex gap-2">
             <button
               type="button"
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#9580ff] py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[#a99bff]"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#C5D3E6] py-2.5 text-[14px] font-semibold text-[#181925] transition-colors hover:bg-[#B5C6DC]"
             >
               <ArrowDownToLine className="size-4" /> Deposit
             </button>
             <button
               type="button"
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#f5f5f5] py-2.5 text-[14px] font-medium text-[#181925] transition-colors hover:bg-[#ececec]"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#C5D3E6] py-2.5 text-[14px] font-medium text-[#181925] transition-colors hover:bg-[#B5C6DC]"
             >
               <ArrowUpFromLine className="size-4" /> Withdraw
             </button>
@@ -298,7 +298,7 @@ function AccountHeader({ portfolio }: { portfolio: Portfolio }) {
                     "rounded-full px-2.5 py-1 text-[12px] font-medium tabular-nums transition-colors",
                     t === tf
                       ? "bg-[#181925] text-white"
-                      : "text-[#666666] hover:bg-[#f5f5f5]",
+                      : "text-[#666666] hover:bg-[#C5D3E6]/60 hover:text-[#181925]",
                   )}
                 >
                   {t}

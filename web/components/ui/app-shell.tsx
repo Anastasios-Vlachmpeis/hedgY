@@ -45,8 +45,8 @@ function AppShell({ children, className }: { children: React.ReactNode; classNam
                   className={cn(
                     "rounded-full px-3.5 py-1.5 text-[14px] transition-colors",
                     active
-                      ? "bg-[#f5f5f5] font-medium text-[#181925]"
-                      : "text-[#666666] hover:bg-[#f5f5f5] hover:text-[#181925]",
+                      ? "bg-[#C5D3E6] font-medium text-[#181925]"
+                      : "text-[#666666] hover:bg-[#C5D3E6]/60 hover:text-[#181925]",
                   )}
                 >
                   {label}
