@@ -67,20 +67,24 @@ function PositionsActivity({
           {/* Control toolbar */}
           <div className="mb-3 flex items-center gap-2">
             <div className="flex shrink-0 items-center overflow-hidden rounded-[8px] border border-[#e8e8e8] bg-white">
-              {TYPE_FILTERS.map((f) => (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => setTypeFilter(f)}
-                  className={cn(
-                    "px-3 py-[7px] text-[12px] font-medium transition-colors",
-                    f === typeFilter
-                      ? "bg-[#ebebeb] text-[#181925]"
-                      : "text-[#737373] hover:text-[#444444]",
+              {TYPE_FILTERS.map((f, i) => (
+                <React.Fragment key={f}>
+                  {i > 0 && (
+                    <span className="h-4 w-px shrink-0 bg-[#e8e8e8]" aria-hidden />
                   )}
-                >
-                  {f}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setTypeFilter(f)}
+                    className={cn(
+                      "px-3 py-[7px] text-[12px] font-medium transition-colors",
+                      f === typeFilter
+                        ? "bg-[#ebebeb] text-[#181925]"
+                        : "text-[#737373] hover:text-[#444444]",
+                    )}
+                  >
+                    {f}
+                  </button>
+                </React.Fragment>
               ))}
             </div>
 
