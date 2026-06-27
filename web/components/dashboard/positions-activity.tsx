@@ -51,10 +51,10 @@ function PositionsActivity({
             type="button"
             onClick={() => setTab(t)}
             className={cn(
-              "-mb-px border-b-2 pb-2.5 text-[14px] font-semibold capitalize transition-colors",
+              "pb-2.5 text-[14px] font-semibold capitalize transition-colors",
               t === tab
-                ? "border-[#9580ff] text-[#181925]"
-                : "border-transparent text-[#a3a3a3] hover:text-[#666666]",
+                ? "text-[#181925]"
+                : "text-[#a3a3a3] hover:text-[#666666]",
             )}
           >
             {t}
@@ -69,7 +69,7 @@ function PositionsActivity({
         <>
           {/* Control toolbar */}
           <div className="mb-3 flex items-center gap-2">
-            <div className="flex shrink-0 items-center rounded-[8px] border border-[#e8e8e8] bg-[#f5f5f5] p-0.5">
+            <div className="flex shrink-0 items-center rounded-[8px] border border-[#e8e8e8] bg-white p-0.5">
               {TYPE_FILTERS.map((f) => (
                 <button
                   key={f}
