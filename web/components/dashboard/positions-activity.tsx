@@ -44,7 +44,7 @@ function PositionsActivity({
   return (
     <div>
       {/* Tab bar — plain text, no container card */}
-      <div className="mb-3 flex items-center gap-4 border-b border-[#f0f0f0]">
+      <div className="mb-3 flex items-center gap-4">
         {(["positions", "activity"] as const).map((t) => (
           <button
             key={t}
