@@ -246,26 +246,24 @@ function AccountHeader({ portfolio }: { portfolio: Portfolio }) {
             <p className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
               Profit / Loss
             </p>
-            <div className="flex items-center gap-1.5">
-              <BreakdownButton onClick={() => setPnlOpen(true)} />
-              <div className="flex gap-0.5">
-                {timeframeOrder.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setTf(t)}
-                    className={cn(
-                      "rounded-full px-2.5 py-1 text-[12px] font-medium tabular-nums transition-colors",
-                      t === tf
-                        ? "bg-[#181925] text-white"
-                        : "text-[#666666] hover:bg-[#f5f5f5]",
-                    )}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <BreakdownButton onClick={() => setPnlOpen(true)} />
+          </div>
+          <div className="mt-1 flex justify-end gap-0.5">
+            {timeframeOrder.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTf(t)}
+                className={cn(
+                  "rounded-full px-2.5 py-1 text-[12px] font-medium tabular-nums transition-colors",
+                  t === tf
+                    ? "bg-[#181925] text-white"
+                    : "text-[#666666] hover:bg-[#f5f5f5]",
+                )}
+              >
+                {t}
+              </button>
+            ))}
           </div>
 
           <p
