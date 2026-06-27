@@ -16,11 +16,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-[1100px]">
-      <div className="mb-4 flex items-baseline justify-between">
+      <div className="mb-4">
         <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[#181925]">
           Good morning, Maxim
         </h1>
-        <p className="text-[13px] text-[#a3a3a3]">Markets open · Live account</p>
       </div>
 
       <div className="flex flex-col gap-4">

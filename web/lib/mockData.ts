@@ -88,7 +88,7 @@ export interface PredictionMarket {
 export const trendingMarkets: PredictionMarket[] = [
   { id: "fed-jul", question: "Fed cuts rates in July 2026?", category: "Macro", yesProbability: 0.38, changePts: 4, volume: 2_100_000, direction: "up" },
   { id: "hormuz", question: "Strait of Hormuz blockade in 2026?", category: "Geopolitics", yesProbability: 0.17, changePts: 2, volume: 900_000, direction: "up" },
-  { id: "incumbent", question: "Incumbent wins 2026 election?", category: "Politics", yesProbability: 0.43, changePts: -1, volume: 12_400_000, direction: "down" },
+  { id: "republicans-2026", question: "Republicans win 2026 midterms?", category: "Politics", yesProbability: 0.43, changePts: -1, volume: 12_400_000, direction: "down" },
   { id: "recession", question: "US recession declared in 2026?", category: "Macro", yesProbability: 0.29, changePts: 3, volume: 3_600_000, direction: "up" },
 ];
 
@@ -115,16 +115,16 @@ export interface CombinedPosition {
   defaultHedgeRatio: number; // 0–1
   /** plain-language nouns used to build the summary sentence */
   equityNoun: string; // e.g. "defense equities"
-  hedgeAgainst: string; // e.g. "the incumbent winning"
+  hedgeAgainst: string; // e.g. "Republicans winning the midterms"
 }
 
 export const combinedPosition: CombinedPosition = {
-  thesis: "Long defense, hedge the election.",
-  equityLeg: { label: "Defense basket", symbols: ["LMT", "RTX", "NOC"], size: 5000 },
-  hedgeLeg: { label: "NO — incumbent wins", side: "NO", marketPrice: 0.57, size: 1500 },
+  thesis: "Long defense, hedge midterms.",
+  equityLeg: { label: "LMT · RTX · NOC", symbols: ["LMT", "RTX", "NOC"], size: 5000 },
+  hedgeLeg: { label: "NO — Republicans win House", side: "NO", marketPrice: 0.57, size: 1500 },
   defaultHedgeRatio: 0.3,
   equityNoun: "defense equities",
-  hedgeAgainst: "the incumbent winning",
+  hedgeAgainst: "Republicans winning the midterms",
 };
 
 /** Result of recomputing the preview for a given hedge ratio. */
@@ -162,7 +162,7 @@ export function summarize(p: CombinedPosition, hedgeRatio: number): string {
 
 /** One point on the payoff/scenario chart. */
 export interface PayoffPoint {
-  /** 0 = downside scenario (incumbent wins), 1 = upside (incumbent loses) */
+  /** 0 = downside scenario (Republicans win), 1 = upside (Republicans lose) */
   x: number;
   /** non-empty only at the two ends, used as axis labels */
   scenario: string;
@@ -171,9 +171,9 @@ export interface PayoffPoint {
 }
 
 /**
- * Combined P&L across the election outcomes. The left end ("Incumbent wins")
- * is the downside; raising the hedge ratio lifts the hedged curve there,
- * visibly cushioning the loss while the unhedged curve stays put.
+ * Combined P&L across the election outcomes. The left end ("Republicans win")
+ * is the downside for defense stocks; raising the hedge ratio lifts the hedged
+ * curve there, visibly cushioning the loss while the unhedged curve stays put.
  */
 export function computePayoff(
   p: CombinedPosition,
@@ -188,7 +188,7 @@ export function computePayoff(
     return {
       x,
       scenario:
-        i === 0 ? "Incumbent wins" : i === steps - 1 ? "Incumbent loses" : "",
+        i === 0 ? "Republicans win" : i === steps - 1 ? "Republicans lose" : "",
       hedged: Math.round(lerp(cur.maxLoss, cur.maxGain, x)),
       unhedged: Math.round(lerp(base.maxLoss, base.maxGain, x)),
     };
@@ -246,7 +246,7 @@ export const hedgeSuggestions: HedgeSuggestion[] = [
     id: "defense-election",
     equityLabel: "Long Defense",
     equitySymbols: ["LMT", "RTX", "NOC"],
-    hedgeMarket: "Incumbent wins 2026",
+    hedgeMarket: "Republicans win 2026 midterms",
     hedgeSide: "NO",
     hedgePrice: 0.57,
     rationale: "Defense budgets track the administration.",
@@ -254,38 +254,38 @@ export const hedgeSuggestions: HedgeSuggestion[] = [
     position: combinedPosition,
   },
   {
-    id: "pharma-trial",
+    id: "pharma-fda",
     equityLabel: "Long Pharma",
     equitySymbols: ["PFE", "MRK"],
-    hedgeMarket: "Drug X Phase 3 succeeds",
+    hedgeMarket: "Pfizer GLP-1 FDA approval 2026",
     hedgeSide: "NO",
     hedgePrice: 0.61,
-    rationale: "Single binary clinical-trial risk.",
+    rationale: "Binary FDA readout risk on the lead asset.",
     strength: "Moderate",
     position: {
-      thesis: "Long pharma, hedge the trial.",
-      equityLeg: { label: "Pharma basket", symbols: ["PFE", "MRK"], size: 5000 },
-      hedgeLeg: { label: "NO — Drug X Phase 3 succeeds", side: "NO", marketPrice: 0.61, size: 1500 },
+      thesis: "Long Pfizer, hedge FDA outcome.",
+      equityLeg: { label: "PFE · MRK", symbols: ["PFE", "MRK"], size: 5000 },
+      hedgeLeg: { label: "NO — Pfizer GLP-1 FDA approval", side: "NO", marketPrice: 0.61, size: 1500 },
       defaultHedgeRatio: 0.3,
       equityNoun: "pharma names",
-      hedgeAgainst: "a failed Phase 3 readout",
+      hedgeAgainst: "the GLP-1 approval",
     },
   },
   {
     id: "shipping-hormuz",
     equityLabel: "Long Shipping",
     equitySymbols: ["ZIM"],
-    hedgeMarket: "Hormuz blockade 2026",
+    hedgeMarket: "Strait of Hormuz blockade 2026",
     hedgeSide: "YES",
     hedgePrice: 0.17,
     rationale: "Route disruption offset by the hedge payout.",
     strength: "Light",
     position: {
-      thesis: "Long shipping, hedge route risk.",
-      equityLeg: { label: "Shipping", symbols: ["ZIM"], size: 5000 },
-      hedgeLeg: { label: "YES — Hormuz blockade 2026", side: "YES", marketPrice: 0.17, size: 1500 },
+      thesis: "Long ZIM, hedge Hormuz.",
+      equityLeg: { label: "ZIM Integrated", symbols: ["ZIM"], size: 5000 },
+      hedgeLeg: { label: "YES — Strait of Hormuz blockade", side: "YES", marketPrice: 0.17, size: 1500 },
       defaultHedgeRatio: 0.3,
-      equityNoun: "shipping (ZIM)",
+      equityNoun: "ZIM shipping",
       hedgeAgainst: "a Hormuz blockade",
     },
   },
@@ -347,8 +347,8 @@ export interface MarketEvent {
 
 export const marketEvents: MarketEvent[] = [
   {
-    id: "incumbent-2026",
-    title: "Incumbent wins the 2026 election?",
+    id: "republicans-2026",
+    title: "Republicans win 2026 midterms?",
     category: "Politics",
     icon: "🏛️",
     kind: "binary",
@@ -359,8 +359,8 @@ export const marketEvents: MarketEvent[] = [
     live: true,
   },
   {
-    id: "election-winner-2026",
-    title: "2026 Presidential election winner",
+    id: "midterms-house-2026",
+    title: "2026 midterms: who controls the House?",
     category: "Politics",
     icon: "🗳️",
     kind: "multi",
@@ -369,10 +369,10 @@ export const marketEvents: MarketEvent[] = [
     direction: "up",
     cadence: "Live",
     outcomes: [
-      { label: "Incumbent", yes: 0.43 },
-      { label: "Challenger A", yes: 0.31 },
-      { label: "Challenger B", yes: 0.18 },
-      { label: "Field", yes: 0.08 },
+      { label: "Republicans", yes: 0.43 },
+      { label: "Democrats", yes: 0.31 },
+      { label: "Split", yes: 0.18 },
+      { label: "Other", yes: 0.08 },
     ],
   },
   {
@@ -443,8 +443,8 @@ export const marketEvents: MarketEvent[] = [
     direction: "up",
   },
   {
-    id: "drugx-phase3",
-    title: "Drug X Phase 3 trial succeeds?",
+    id: "pfizer-glp1",
+    title: "Pfizer GLP-1 drug FDA approval 2026?",
     category: "Tech",
     icon: "💊",
     kind: "binary",
@@ -542,22 +542,22 @@ const FEATURED_SERIES: Array<[number, number, number]> = [
 ];
 
 export const featuredMarket: FeaturedMarket = {
-  id: "election-winner-2026",
-  title: "Who will win the 2026 Presidential election?",
+  id: "midterms-house-2026",
+  title: "Who controls the House after 2026 midterms?",
   category: "Politics",
   icon: "🗳️",
   volume: 64_000_000,
   live: true,
   outcomes: [
-    { label: "Incumbent", pct: 43, color: "#9580ff" },
-    { label: "Challenger", pct: 38, color: "#181925" },
-    { label: "Field", pct: 19, color: "#a3a3a3" },
+    { label: "Republicans", pct: 43, color: "#9580ff" },
+    { label: "Democrats", pct: 38, color: "#181925" },
+    { label: "Split", pct: 19, color: "#a3a3a3" },
   ],
-  series: FEATURED_SERIES.map(([inc, chal, field], i) => ({
+  series: FEATURED_SERIES.map(([rep, dem, split], i) => ({
     t: `D${i + 1}`,
-    Incumbent: inc,
-    Challenger: chal,
-    Field: field,
+    Republicans: rep,
+    Democrats: dem,
+    Split: split,
   })),
 };
 
@@ -587,15 +587,15 @@ export interface Position {
 export const positions: Position[] = [
   {
     id: "p-defense",
-    title: "Long defense, hedge the election",
+    title: "Long Lockheed Martin, hedge midterms",
     type: "Combined",
-    detail: "LMT·RTX·NOC + NO Incumbent wins",
+    detail: "LMT · RTX · NOC + NO Republicans win House",
     value: 10_840,
     cost: 10_000,
     pnl: 840,
     pnlPct: 8.4,
-    equityLeg: { label: "Defense basket · LMT·RTX·NOC", value: 8_300 },
-    hedgeLeg: { label: "NO — Incumbent wins @57%", value: 2_540 },
+    equityLeg: { label: "LMT · RTX · NOC", value: 8_300 },
+    hedgeLeg: { label: "NO — Republicans win House @57%", value: 2_540 },
   },
   {
     id: "p-lmt",
@@ -609,15 +609,15 @@ export const positions: Position[] = [
   },
   {
     id: "p-pharma",
-    title: "Long pharma, hedge the trial",
+    title: "Long Pfizer, hedge FDA outcome",
     type: "Combined",
-    detail: "PFE·MRK + NO Phase 3",
+    detail: "PFE · MRK + NO Pfizer GLP-1 FDA approval",
     value: 6_320,
     cost: 6_500,
     pnl: -180,
     pnlPct: -2.8,
-    equityLeg: { label: "Pharma basket · PFE·MRK", value: 4_900 },
-    hedgeLeg: { label: "NO — Drug X Phase 3 succeeds @61%", value: 1_420 },
+    equityLeg: { label: "PFE · MRK", value: 4_900 },
+    hedgeLeg: { label: "NO — Pfizer GLP-1 FDA approval @61%", value: 1_420 },
   },
   {
     id: "p-fed",
@@ -671,15 +671,15 @@ export const positions: Position[] = [
   },
   {
     id: "p-shipping",
-    title: "Long shipping, hedge route risk",
+    title: "Long ZIM, hedge Hormuz",
     type: "Combined",
-    detail: "ZIM + YES Hormuz blockade",
+    detail: "ZIM Integrated + YES Hormuz blockade",
     value: 5_180,
     cost: 5_000,
     pnl: 180,
     pnlPct: 3.6,
-    equityLeg: { label: "Shipping · ZIM", value: 3_980 },
-    hedgeLeg: { label: "YES — Hormuz blockade @17%", value: 1_200 },
+    equityLeg: { label: "ZIM Integrated", value: 3_980 },
+    hedgeLeg: { label: "YES — Strait of Hormuz blockade @17%", value: 1_200 },
   },
   {
     id: "p-btc",
@@ -745,14 +745,14 @@ export interface Activity {
 }
 
 export const activity: Activity[] = [
-  { id: "a1", kind: "Hedged", title: "Long defense, hedge the election", detail: "Added NO Incumbent wins · 40%", amount: -1500, time: "12m ago" },
+  { id: "a1", kind: "Hedged", title: "Long Lockheed Martin, hedge midterms", detail: "Added NO Republicans win House · 57%", amount: -1500, time: "12m ago" },
   { id: "a2", kind: "Bought", title: "Lockheed Martin", detail: "4 shares @ $471.20", amount: -1884.8, time: "1h ago" },
   { id: "a3", kind: "Sold", title: "Fed cuts rates in July 2026", detail: "YES · 80 contracts @ 38¢", amount: 304, time: "3h ago" },
   { id: "a4", kind: "Bought", title: "Nvidia hits $4T market cap", detail: "YES · 300 contracts @ 44¢", amount: -1320, time: "5h ago" },
-  { id: "a5", kind: "Settled", title: "Q1 jobs report beats", detail: "YES resolved · 200 contracts", amount: 412, time: "Yesterday" },
+  { id: "a5", kind: "Settled", title: "Q1 2026 jobs report beats expectations", detail: "YES resolved · 200 contracts", amount: 412, time: "Yesterday" },
   { id: "a6", kind: "Bought", title: "ZIM Integrated", detail: "240 shares @ $20.90 avg", amount: -5016, time: "Yesterday" },
   { id: "a7", kind: "Deposit", title: "Deposit", detail: "ACH transfer", amount: 10000, time: "2d ago" },
-  { id: "a8", kind: "Settled", title: "Govt shutdown by March", detail: "NO resolved · 150 contracts", amount: -90, time: "3d ago" },
+  { id: "a8", kind: "Settled", title: "US government shutdown by March 2026", detail: "NO resolved · 150 contracts", amount: -90, time: "3d ago" },
 ];
 
 /* ---------- Watchlist ---------- */
@@ -769,7 +769,7 @@ export interface WatchItem {
 
 export const watchlist: WatchItem[] = [
   { id: "w1", label: "NOC", sub: "Northrop Grumman", kind: "Stock", valueLabel: "$511.20", change: 1.5, direction: "up" },
-  { id: "w2", label: "GPT-6 in 2026?", sub: "Tech · Prediction", kind: "Market", valueLabel: "47%", change: 6, direction: "up" },
+  { id: "w2", label: "OpenAI GPT-6", sub: "Tech · Prediction", kind: "Market", valueLabel: "47%", change: 6, direction: "up" },
   { id: "w3", label: "PFE", sub: "Pfizer", kind: "Stock", valueLabel: "$28.60", change: -0.6, direction: "down" },
   { id: "w4", label: "Brent above $100", sub: "Energy · Prediction", kind: "Market", valueLabel: "34%", change: 2, direction: "up" },
   { id: "w5", label: "RTX", sub: "RTX Corp", kind: "Stock", valueLabel: "$118.40", change: 0.8, direction: "up" },
@@ -790,11 +790,28 @@ export interface OpenOrder {
 }
 
 export const openOrders: OpenOrder[] = [
-  { id: "o1", market: "Incumbent wins 2026", side: "Buy", outcome: "NO", price: "55¢", qty: 300, filledPct: 40 },
+  { id: "o1", market: "Republicans win 2026 midterms", side: "Buy", outcome: "NO", price: "55¢", qty: 300, filledPct: 40 },
   { id: "o2", market: "Lockheed Martin", side: "Buy", outcome: "LMT", price: "$465.00", qty: 10, filledPct: 0 },
   { id: "o3", market: "Bitcoin above $100k 2026", side: "Sell", outcome: "YES", price: "58¢", qty: 200, filledPct: 65 },
   { id: "o4", market: "US recession 2026", side: "Buy", outcome: "NO", price: "70¢", qty: 150, filledPct: 0 },
   { id: "o5", market: "ZIM Integrated", side: "Sell", outcome: "ZIM", price: "$24.00", qty: 120, filledPct: 0 },
+];
+
+/* ---------- Platform breakdown ---------- */
+
+export interface PlatformBreakdown {
+  platform: string;
+  kind: string;
+  value: number;
+  pnl: number;
+  pnlPct: number;
+  color: string;
+}
+
+export const platformBreakdown: PlatformBreakdown[] = [
+  { platform: "Alpaca", kind: "Stocks & Options", value: 85_310, pnl: 1_050.2, pnlPct: 1.25, color: "#9580ff" },
+  { platform: "Polymarket", kind: "Prediction Markets", value: 1_230, pnl: 234, pnlPct: 23.5, color: "#181925" },
+  { platform: "Cash", kind: "Available Balance", value: 42_000.32, pnl: 0, pnlPct: 0, color: "#a3a3a3" },
 ];
 
 /** Cents helpers for the prediction-market pricing convention. */
