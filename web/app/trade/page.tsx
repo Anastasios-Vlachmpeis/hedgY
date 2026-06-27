@@ -47,31 +47,25 @@ const LMT_RISKS = [
 
 /* ── Single risk market row ── */
 function RiskRow({ r }: { r: (typeof LMT_RISKS)[0] }) {
-  const pct     = Math.round(r.probability * 100);
-  const bearish = r.impact === "bearish";
+  const pct      = Math.round(r.probability * 100);
+  const bearish  = r.impact === "bearish";
   const yesCents = pct;
   const noCents  = 100 - pct;
 
   return (
     <div className="flex flex-col gap-2.5 py-4">
-      {/* Line 1: icon + title + % + Hedge CTA */}
+      {/* Line 1: icon + title + % */}
       <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 shrink-0 text-[16px] leading-none">{r.icon}</span>
-        <p className="flex-1 text-[13px] font-semibold leading-snug text-[#111111]">
+        <span className="mt-0.5 shrink-0 text-[15px] leading-none">{r.icon}</span>
+        <p className="flex-1 text-[13px] font-semibold leading-snug text-[#0a0a0a]">
           {r.event}
         </p>
         <span className={cn(
-          "shrink-0 text-[15px] font-bold tabular-nums leading-none",
+          "shrink-0 text-[14px] font-bold tabular-nums leading-none",
           bearish ? "text-[#dc2626]" : "text-[#16a34a]",
         )}>
           {pct}%
         </span>
-        <Link
-          href={`/structure?from=${r.hedgeFrom}`}
-          className="shrink-0 text-[12px] font-semibold text-[#6B7280] transition-colors duration-[150ms] hover:text-[#111111]"
-        >
-          Hedge →
-        </Link>
       </div>
 
       {/* Line 2: probability bar */}
@@ -82,16 +76,22 @@ function RiskRow({ r }: { r: (typeof LMT_RISKS)[0] }) {
         />
       </div>
 
-      {/* Line 3: prices + impact + volume */}
-      <div className="ml-[26px] flex items-center gap-2 text-[11px]">
-        <span className="font-semibold text-[#15803d]">Yes {yesCents}¢</span>
-        <span className="text-[#d1d5db]">·</span>
-        <span className="font-semibold text-[#b91c1c]">No {noCents}¢</span>
-        <span className="text-[#d1d5db]">·</span>
-        <span className={cn("font-medium", bearish ? "text-[#dc2626]" : "text-[#16a34a]")}>
-          {bearish ? "↓ bearish" : "↑ bullish"}
+      {/* Line 3: YES / NO pills + Hedge pill */}
+      <div className="ml-[26px] flex items-center gap-1.5">
+        <span className="rounded-full bg-[rgba(22,163,74,0.08)] px-3 py-[3px] text-[11px] font-semibold text-[#16a34a]">
+          Yes {yesCents}¢
         </span>
-        <span className="ml-auto text-[#9ca3af]">{fmtVol(r.volume)}</span>
+        <span className="rounded-full bg-[rgba(220,38,38,0.06)] px-3 py-[3px] text-[11px] font-semibold text-[#dc2626]">
+          No {noCents}¢
+        </span>
+        <span className="text-[11px] text-[#d4d4d4]">·</span>
+        <span className="text-[10px] text-[#a3a3a3]">{fmtVol(r.volume)}</span>
+        <Link
+          href={`/structure?from=${r.hedgeFrom}`}
+          className="ml-auto rounded-full border border-[#e5e5e5] bg-white px-3 py-[3px] text-[11px] font-semibold text-[#0a0a0a] transition-colors duration-[150ms] hover:border-[#0a0a0a]"
+        >
+          Hedge →
+        </Link>
       </div>
     </div>
   );
@@ -119,13 +119,12 @@ function RiskPanel() {
         ))}
       </div>
 
-      {/* Panel CTA */}
+      {/* Panel CTA — applai black pill style */}
       <Link
         href="/structure"
-        className="mt-auto flex h-10 w-full shrink-0 items-center justify-between rounded-[10px] bg-[#171B3B] px-4 text-[13px] font-semibold text-white transition-opacity duration-[180ms] hover:opacity-90"
+        className="mt-auto flex items-center justify-center gap-2 rounded-full bg-[#0a0a0a] px-5 py-2.5 text-[13px] font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-all duration-[150ms] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
       >
-        Hedge all 3 risks
-        <ArrowRight className="size-4" />
+        Hedge all 3 risks <ArrowRight className="size-3.5" />
       </Link>
     </div>
   );
