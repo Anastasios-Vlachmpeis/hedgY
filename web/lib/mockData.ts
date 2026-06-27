@@ -563,6 +563,11 @@ export const featuredMarket: FeaturedMarket = {
    PORTFOLIO POSITIONS  (/dashboard)
    ==================================================================== */
 
+export interface PositionLeg {
+  label: string;
+  value: number;
+}
+
 export interface Position {
   id: string;
   title: string;
@@ -572,6 +577,9 @@ export interface Position {
   cost: number; // cost basis
   pnl: number; // value − cost
   pnlPct: number;
+  // Combined positions expose their two legs so the hedge structure is visible.
+  equityLeg?: PositionLeg;
+  hedgeLeg?: PositionLeg;
 }
 
 export const positions: Position[] = [
@@ -584,6 +592,8 @@ export const positions: Position[] = [
     cost: 10_000,
     pnl: 840,
     pnlPct: 8.4,
+    equityLeg: { label: "Defense basket · LMT·RTX·NOC", value: 8_300 },
+    hedgeLeg: { label: "NO — Incumbent wins @57%", value: 2_540 },
   },
   {
     id: "p-lmt",
@@ -604,6 +614,8 @@ export const positions: Position[] = [
     cost: 6_500,
     pnl: -180,
     pnlPct: -2.8,
+    equityLeg: { label: "Pharma basket · PFE·MRK", value: 4_900 },
+    hedgeLeg: { label: "NO — Drug X Phase 3 succeeds @61%", value: 1_420 },
   },
   {
     id: "p-fed",
@@ -664,6 +676,8 @@ export const positions: Position[] = [
     cost: 5_000,
     pnl: 180,
     pnlPct: 3.6,
+    equityLeg: { label: "Shipping · ZIM", value: 3_980 },
+    hedgeLeg: { label: "YES — Hormuz blockade @17%", value: 1_200 },
   },
   {
     id: "p-btc",
