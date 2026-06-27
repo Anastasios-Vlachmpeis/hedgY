@@ -16,6 +16,8 @@ import {
   type MarketCategory,
   type FeaturedMarket,
   type FeaturedPoint,
+  type Position,
+  type Activity,
   trendingStocks as stocksFallback,
   trendingMarkets as marketsFallback,
   portfolio as portfolioFallback,
@@ -23,7 +25,10 @@ import {
   marketEvents as eventsFallback,
   marketCategories as categoriesFallback,
   featuredMarket as featuredFallback,
+  positions as positionsFallback,
+  activity as activityFallback,
 } from "@/lib/mockData";
+import { usd } from "@/lib/format";
 
 const DATA = "https://data.alpaca.markets";
 const TRADING = "https://paper-api.alpaca.markets";
@@ -378,6 +383,8 @@ function buildFeatured(all: UnifiedMarket[]): FeaturedMarket | null {
       label: c.label,
       pct: c.pct,
       color: FEATURED_COLORS[i % FEATURED_COLORS.length],
+      marketId: c.source.id, // each candidate is its own tradeable YES market
+      side: "YES" as const,
     }));
     return {
       id: top[0].source.id,
@@ -400,8 +407,8 @@ function buildFeatured(all: UnifiedMarket[]): FeaturedMarket | null {
   const yes = Math.round(single.best_yes.price * 100);
   const { category, icon } = feCategory(single);
   const outcomes = [
-    { label: "Yes", pct: yes, color: "#9580ff" },
-    { label: "No", pct: 100 - yes, color: "#181925" },
+    { label: "Yes", pct: yes, color: "#9580ff", marketId: single.id, side: "YES" as const },
+    { label: "No", pct: 100 - yes, color: "#181925", marketId: single.id, side: "NO" as const },
   ];
   return {
     id: single.id,
@@ -527,5 +534,135 @@ export async function getPriceBars(
     return { symbol, candles, live: true };
   } catch {
     return { symbol, candles: synthCandles(symbol, tfSec), live: false };
+  }
+}
+
+// ── Paper-trading account (the live $1000 wallet) ────────────────────────────
+//
+// Reads the backend ledger (POST /account/deposit + /orders mutate it; see the
+// /api route handlers). A fresh account legitimately reads $0 — that's the real
+// "deposit to start" state, NOT an error — so we only fall back to mock on an
+// actual fetch failure.
+
+interface LiveAccount {
+  cash: number;
+  equity: number;
+  buying_power: number;
+  total_deposited: number;
+  pnl: number;
+  pnl_pct: number;
+  positions_count: number;
+  currency: string;
+}
+
+interface LivePosition {
+  id: number;
+  kind: "stock" | "prediction";
+  symbol: string | null;
+  market_id: string | null;
+  side: "YES" | "NO" | null;
+  qty: number;
+  avg_entry: number;
+  label: string | null;
+  price: number;
+  market_value: number;
+  cost: number;
+  unrealized_pnl: number;
+  unrealized_pnl_pct: number;
+}
+
+export async function getAccount(): Promise<Portfolio> {
+  try {
+    const res = await fetch(`${MARKETS_API}/account`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`account ${res.status}`);
+    const a: LiveAccount = await res.json();
+    return {
+      totalValue: a.equity,
+      dayChange: a.pnl,
+      dayChangePct: a.pnl_pct,
+      buyingPower: a.buying_power,
+      positionsCount: a.positions_count,
+      currency: a.currency,
+    };
+  } catch {
+    return portfolioFallback;
+  }
+}
+
+export async function getPositions(): Promise<Position[]> {
+  try {
+    const res = await fetch(`${MARKETS_API}/positions`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`positions ${res.status}`);
+    const live: LivePosition[] = await res.json();
+    return live.map((p): Position => {
+      if (p.kind === "stock") {
+        return {
+          id: `pos-${p.id}`,
+          title: p.symbol ?? "—",
+          type: "Equity",
+          detail: `${p.qty.toFixed(4)} shares @ ${usd(p.avg_entry)} avg`,
+          value: p.market_value,
+          cost: p.cost,
+          pnl: p.unrealized_pnl,
+          pnlPct: p.unrealized_pnl_pct,
+        };
+      }
+      const cents = Math.round(p.avg_entry * 100);
+      return {
+        id: `pos-${p.id}`,
+        title: p.label ?? "Prediction",
+        type: "Prediction",
+        detail: `${p.side} · ${cents}¢ · ${Math.round(p.qty).toLocaleString()} contracts`,
+        value: p.market_value,
+        cost: p.cost,
+        pnl: p.unrealized_pnl,
+        pnlPct: p.unrealized_pnl_pct,
+      };
+    });
+  } catch {
+    return positionsFallback;
+  }
+}
+
+interface LiveTrade {
+  id: number;
+  kind: "stock" | "prediction";
+  action: "buy" | "sell";
+  symbol: string | null;
+  side: "YES" | "NO" | null;
+  qty: number;
+  price: number;
+  notional: number;
+  label: string | null;
+  ts: number;
+}
+
+function relTime(secondsAgo: number): string {
+  if (secondsAgo < 60) return "just now";
+  if (secondsAgo < 3600) return `${Math.floor(secondsAgo / 60)}m ago`;
+  if (secondsAgo < 86_400) return `${Math.floor(secondsAgo / 3600)}h ago`;
+  return `${Math.floor(secondsAgo / 86_400)}d ago`;
+}
+
+export async function getActivity(): Promise<Activity[]> {
+  try {
+    const res = await fetch(`${MARKETS_API}/trades`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`trades ${res.status}`);
+    const trades: LiveTrade[] = await res.json();
+    if (trades.length === 0) return []; // fresh account — empty is the real state
+    const now = Date.now() / 1000;
+    return trades.map((t): Activity => ({
+      id: `t-${t.id}`,
+      kind: t.action === "buy" ? "Bought" : "Sold",
+      title: t.label ?? t.symbol ?? "Trade",
+      detail:
+        t.kind === "stock"
+          ? `${t.qty.toFixed(4)} shares @ $${t.price.toFixed(2)}`
+          : `${t.side} · ${Math.round(t.qty).toLocaleString()} contracts @ ${Math.round(t.price * 100)}¢`,
+      amount: t.action === "buy" ? -t.notional : t.notional,
+      time: relTime(now - t.ts),
+    }));
+  } catch {
+    return activityFallback;
   }
 }
