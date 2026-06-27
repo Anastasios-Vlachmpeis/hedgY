@@ -30,19 +30,16 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
 
 function TrendingStocks({ stocks }: { stocks: Stock[] }) {
   return (
-    <section className="flex h-full flex-col rounded-[12px] bg-[#f5f5f5] p-4">
-      <h2 className="mb-2 text-[11px] font-medium uppercase tracking-wide text-[#666666]">
+    <section className="flex h-full flex-col rounded-[14px] border border-[#ececec] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <h2 className="mb-1 text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
         Trending Stocks
       </h2>
-      <ul className="flex flex-col gap-1.5">
+      <ul className="divide-y divide-[#f0f0f0]">
         {stocks.map((s) => {
           const up = s.direction !== "down";
           const color = up ? "#16a34a" : "#dc2626";
           return (
-            <li
-              key={s.symbol}
-              className="flex items-center gap-2 rounded-[8px] bg-white px-2.5 py-2"
-            >
+            <li key={s.symbol} className="flex items-center gap-2 py-2">
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-semibold leading-tight text-[#181925]">
                   {s.symbol}
@@ -53,12 +50,12 @@ function TrendingStocks({ stocks }: { stocks: Stock[] }) {
               </div>
               <Sparkline data={s.spark} color={color} />
               <div className="shrink-0 text-right">
-                <p className="font-mono text-[13px] font-semibold leading-tight text-[#181925]">
+                <p className="text-[13px] font-semibold leading-tight tabular-nums text-[#181925]">
                   {s.price.toFixed(2)}
                 </p>
                 <p
                   className={cn(
-                    "font-mono text-[11px] font-medium leading-tight",
+                    "text-[11px] font-medium leading-tight tabular-nums",
                     up ? "text-[#16a34a]" : "text-[#dc2626]",
                   )}
                 >
