@@ -70,7 +70,7 @@ function PositionsActivity({
               {TYPE_FILTERS.map((f, i) => (
                 <React.Fragment key={f}>
                   {i > 0 && (
-                    <span className="h-4 w-px shrink-0 bg-[#e8e8e8]" aria-hidden />
+                    <span className="self-stretch w-px shrink-0 bg-[#e8e8e8]" aria-hidden />
                   )}
                   <button
                     type="button"
