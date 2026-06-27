@@ -115,6 +115,19 @@ function PositionsActivity({
             </button>
           </div>
 
+          {/* Column header — px-3 + gap-3 matches pill card internal layout */}
+          <div className="mb-2 flex items-center gap-3 border-b border-[#f0f0f0] px-3 pb-2">
+            <span className="flex-1 text-[11px] font-medium uppercase tracking-[0.05em] text-[#737373]">
+              Market
+            </span>
+            <span className="hidden w-24 text-right text-[11px] font-medium uppercase tracking-[0.05em] text-[#737373] sm:block">
+              Value
+            </span>
+            <span className="w-24 text-right text-[11px] font-medium uppercase tracking-[0.05em] text-[#737373]">
+              P&amp;L
+            </span>
+          </div>
+
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-1 py-12 text-center">
               <span className="text-[13px] font-medium text-[#444444]">No positions found</span>
