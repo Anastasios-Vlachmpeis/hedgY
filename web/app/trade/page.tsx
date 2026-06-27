@@ -94,13 +94,13 @@ function RiskCard({ r }: { r: (typeof LMT_RISKS)[0] }) {
       <div className="mt-3 flex gap-2">
         <button
           type="button"
-          className="flex-1 rounded-[10px] bg-[#22c55e] py-[9px] text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
+          className="flex-1 rounded-[10px] bg-[#dcfce7] py-[9px] text-[13px] font-semibold text-[#16a34a] transition-colors hover:bg-[#bbf7d0]"
         >
           Yes
         </button>
         <button
           type="button"
-          className="flex-1 rounded-[10px] bg-[#fef2f2] py-[9px] text-[13px] font-semibold text-[#dc2626] transition-colors hover:bg-[#fee2e2]"
+          className="flex-1 rounded-[10px] bg-[#fee2e2] py-[9px] text-[13px] font-semibold text-[#dc2626] transition-colors hover:bg-[#fecaca]"
         >
           No
         </button>
