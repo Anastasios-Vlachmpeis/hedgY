@@ -422,3 +422,110 @@ export async function getFeaturedMarket(): Promise<FeaturedMarket> {
     return featuredFallback;
   }
 }
+
+// ── Price bars / candles (Alpaca) — for the TradingView chart demo ────────────
+//
+// OHLCV bars at a selectable timeframe (5m/30m/1h/1d). Handles both equities
+// (free IEX feed) and crypto (a symbol containing "/", e.g. BTC/USD). Times are
+// UTC epoch seconds floored to the timeframe boundary, so the live WS stream can
+// bucket trades onto the exact same candles. On any error (or missing keys) we
+// synthesize a deterministic series so the demo never white-screens.
+
+import {
+  type Candle,
+  type Timeframe,
+  TIMEFRAME_SECONDS,
+  TIMEFRAME_LOOKBACK_DAYS,
+} from "@/lib/timeframes";
+
+export interface PriceBars {
+  symbol: string;
+  candles: Candle[];
+  live: boolean; // true = real Alpaca data, false = synthesized fallback
+}
+
+interface AlpacaBar {
+  t: string; // RFC-3339 timestamp
+  o: number;
+  h: number;
+  l: number;
+  c: number;
+}
+
+/** Floor a unix-seconds time onto the timeframe grid (so live trades align). */
+function bucket(sec: number, tfSec: number): number {
+  return Math.floor(sec / tfSec) * tfSec;
+}
+
+const toCandle = (b: AlpacaBar, tfSec: number): Candle => ({
+  time: bucket(Math.floor(Date.parse(b.t) / 1000), tfSec),
+  open: b.o,
+  high: b.h,
+  low: b.l,
+  close: b.c,
+});
+
+/** Deterministic synthetic candles so the demo renders even without keys/market data. */
+function synthCandles(symbol: string, tfSec: number, count = 160): Candle[] {
+  // Seed the walk from the symbol so each ticker looks distinct but is stable.
+  let seed = [...symbol].reduce((s, ch) => s + ch.charCodeAt(0), 0);
+  const rand = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+  let price = 100 + (seed % 200);
+  const out: Candle[] = [];
+  const end = bucket(Math.floor(Date.now() / 1000), tfSec);
+  for (let i = count - 1; i >= 0; i--) {
+    const time = end - i * tfSec;
+    const open = price;
+    const drift = (rand() - 0.48) * price * 0.03;
+    const close = Math.max(1, open + drift);
+    const high = Math.max(open, close) * (1 + rand() * 0.015);
+    const low = Math.min(open, close) * (1 - rand() * 0.015);
+    out.push({
+      time,
+      open: +open.toFixed(2),
+      high: +high.toFixed(2),
+      low: +low.toFixed(2),
+      close: +close.toFixed(2),
+    });
+    price = close;
+  }
+  return out;
+}
+
+export async function getPriceBars(
+  symbol: string,
+  timeframe: Timeframe = "1Day",
+): Promise<PriceBars> {
+  const isCrypto = symbol.includes("/");
+  const tfSec = TIMEFRAME_SECONDS[timeframe];
+  const lookback = TIMEFRAME_LOOKBACK_DAYS[timeframe];
+  const start = new Date(Date.now() - lookback * 864e5).toISOString();
+  try {
+    const url = isCrypto
+      ? `${DATA}/v1beta3/crypto/us/bars?symbols=${encodeURIComponent(symbol)}&timeframe=${timeframe}&start=${start}&limit=10000`
+      : `${DATA}/v2/stocks/${encodeURIComponent(symbol)}/bars?timeframe=${timeframe}&start=${start}&limit=10000&feed=iex`;
+
+    const res = await fetch(url, ALP);
+    if (!res.ok) throw new Error(`alpaca bars ${res.status}`);
+    const data = await res.json();
+
+    // Stocks: { bars: [...] }. Crypto: { bars: { "BTC/USD": [...] } }.
+    const raw: AlpacaBar[] = isCrypto ? data.bars?.[symbol] ?? [] : data.bars ?? [];
+    // Dedupe by bucketed time (defensive) and keep ascending order.
+    const seen = new Set<number>();
+    const candles: Candle[] = [];
+    for (const b of raw) {
+      const c = toCandle(b, tfSec);
+      if (seen.has(c.time)) continue;
+      seen.add(c.time);
+      candles.push(c);
+    }
+    if (candles.length < 5) throw new Error("too few bars");
+    return { symbol, candles, live: true };
+  } catch {
+    return { symbol, candles: synthCandles(symbol, tfSec), live: false };
+  }
+}
