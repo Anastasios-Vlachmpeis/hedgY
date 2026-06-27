@@ -66,16 +66,16 @@ function PositionsActivity({
         <>
           {/* Control toolbar */}
           <div className="mb-3 flex items-center gap-2">
-            <div className="flex shrink-0 items-center rounded-[8px] border border-[#e8e8e8] bg-white p-0.5">
+            <div className="flex shrink-0 items-center overflow-hidden rounded-[8px] border border-[#e8e8e8] bg-white">
               {TYPE_FILTERS.map((f) => (
                 <button
                   key={f}
                   type="button"
                   onClick={() => setTypeFilter(f)}
                   className={cn(
-                    "rounded-[6px] px-2.5 py-[5px] text-[12px] font-medium transition-colors",
+                    "px-3 py-[7px] text-[12px] font-medium transition-colors",
                     f === typeFilter
-                      ? "bg-[#1f1f1f] text-white"
+                      ? "bg-[#ebebeb] text-[#181925]"
                       : "text-[#737373] hover:text-[#444444]",
                   )}
                 >
