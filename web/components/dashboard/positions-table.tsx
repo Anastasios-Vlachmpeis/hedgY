@@ -46,7 +46,7 @@ function CombinedRow({ p }: { p: Position }) {
       ? Math.round((p.hedgeLeg.value / p.equityLeg.value) * 100)
       : 0;
   return (
-    <li className="flex items-start gap-3 py-2.5">
+    <li className="flex items-start gap-3 py-3">
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-semibold text-[#181925]">
           {p.title}
@@ -78,7 +78,7 @@ function CombinedRow({ p }: { p: Position }) {
           )}
         </div>
       </div>
-      <div className="mt-0.5 flex shrink-0 items-start gap-3">
+      <div className="flex shrink-0 items-start gap-3">
         <ValuePnl p={p} />
       </div>
     </li>
@@ -87,7 +87,7 @@ function CombinedRow({ p }: { p: Position }) {
 
 function SimpleRow({ p }: { p: Position }) {
   return (
-    <li className="flex items-center gap-3 py-2.5">
+    <li className="flex items-center gap-3 py-3">
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-semibold text-[#181925]">{p.title}</p>
         <p className="truncate text-[11px] text-[#a3a3a3]">{p.detail}</p>

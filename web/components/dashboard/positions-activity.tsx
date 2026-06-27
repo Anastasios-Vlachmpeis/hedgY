@@ -68,19 +68,19 @@ function PositionsActivity({
       {tab === "positions" ? (
         <>
           {/* Control toolbar */}
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            {/* Type filter — segmented pill */}
-            <div className="flex items-center rounded-[8px] bg-[#f5f5f5] p-0.5">
+          <div className="mb-3 flex items-center gap-2">
+            {/* Type filter — segmented pill with hairline border around track */}
+            <div className="flex shrink-0 items-center rounded-[8px] border border-[#e8e8e8] bg-[#f5f5f5] p-0.5">
               {TYPE_FILTERS.map((f) => (
                 <button
                   key={f}
                   type="button"
                   onClick={() => setTypeFilter(f)}
                   className={cn(
-                    "rounded-[6px] px-2.5 py-1 text-[12px] font-medium transition-colors",
+                    "rounded-[6px] px-2.5 py-[5px] text-[12px] font-medium transition-colors",
                     f === typeFilter
-                      ? "bg-white text-[#181925] shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
-                      : "text-[#a3a3a3] hover:text-[#666666]",
+                      ? "bg-white text-[#181925] shadow-[0_1px_3px_rgba(0,0,0,0.10)]"
+                      : "text-[#737373] hover:text-[#444444]",
                   )}
                 >
                   {f}
@@ -88,15 +88,15 @@ function PositionsActivity({
               ))}
             </div>
 
-            {/* Search */}
-            <div className="relative flex min-w-0 flex-1 items-center">
-              <Search className="pointer-events-none absolute left-2.5 size-3.5 text-[#a3a3a3]" />
+            {/* Search — dominant flex-grow element */}
+            <div className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[#a3a3a3]" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search positions"
-                className="h-7 w-full rounded-[8px] border border-[#ececec] bg-white pl-8 pr-3 text-[12px] text-[#181925] placeholder:text-[#a3a3a3] focus:border-[#9580ff] focus:outline-none"
+                className="h-[30px] w-full rounded-[8px] border border-[#e8e8e8] bg-white pl-8 pr-3 text-[12px] text-[#181925] placeholder:text-[#a3a3a3] transition-colors focus:border-[#9580ff] focus:outline-none focus:ring-2 focus:ring-[#9580ff]/20"
               />
             </div>
 
@@ -106,32 +106,38 @@ function PositionsActivity({
               onClick={() =>
                 setSort((s) => (s === "value-desc" ? "value-asc" : "value-desc"))
               }
-              className="flex h-7 items-center gap-1 rounded-[8px] border border-[#ececec] bg-white px-2.5 text-[12px] text-[#666666] hover:border-[#d4d4d4] hover:text-[#181925] transition-colors"
+              className="flex h-[30px] shrink-0 items-center gap-1.5 rounded-[8px] border border-[#e8e8e8] bg-white px-3 text-[12px] font-medium text-[#444444] transition-colors hover:border-[#c8c8c8] hover:text-[#181925]"
             >
-              Sort: Value
+              Value
               <ChevronDown
                 className={cn(
-                  "size-3 transition-transform",
+                  "size-3 text-[#a3a3a3] transition-transform",
                   sort === "value-asc" && "rotate-180",
                 )}
               />
             </button>
           </div>
 
-          {/* Table header */}
-          <div className="mb-1 flex items-center justify-between px-0">
-            <span className="text-[10px] font-medium uppercase tracking-wide text-[#a3a3a3]">
+          {/* Table header — ledger columns aligned to ValuePnl layout */}
+          <div className="mb-0.5 flex items-center border-b border-[#f0f0f0] pb-2">
+            <span className="flex-1 text-[11px] font-medium uppercase tracking-[0.05em] text-[#737373]">
               Market
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-wide text-[#a3a3a3]">
-              Value · P&L
-            </span>
+            <div className="flex shrink-0 items-center gap-3">
+              <span className="hidden w-24 text-right text-[11px] font-medium uppercase tracking-[0.05em] text-[#737373] sm:block">
+                Value
+              </span>
+              <span className="w-24 text-right text-[11px] font-medium uppercase tracking-[0.05em] text-[#737373]">
+                P&amp;L
+              </span>
+            </div>
           </div>
 
           {/* Positions list or empty state */}
           {filtered.length === 0 ? (
-            <div className="flex items-center justify-center py-10 text-[13px] text-[#a3a3a3]">
-              No positions found
+            <div className="flex flex-col items-center justify-center gap-1 py-12 text-center">
+              <span className="text-[13px] font-medium text-[#444444]">No positions found</span>
+              <span className="text-[12px] text-[#a3a3a3]">Try adjusting your filter or search</span>
             </div>
           ) : (
             <PositionsRows
