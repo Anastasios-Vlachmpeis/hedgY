@@ -234,6 +234,7 @@ class DifflibMatcher:
             country=anchor.country,
             theme=anchor.theme,
             venues=venues,
+            volume=sum(m.volume for m in members),
         )
 
 
