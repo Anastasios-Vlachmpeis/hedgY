@@ -75,7 +75,7 @@ function PositionsActivity({
                   className={cn(
                     "rounded-[6px] px-2.5 py-[5px] text-[12px] font-medium transition-colors",
                     f === typeFilter
-                      ? "bg-white text-[#181925] shadow-[0_1px_3px_rgba(0,0,0,0.10)]"
+                      ? "bg-[#1f1f1f] text-white"
                       : "text-[#737373] hover:text-[#444444]",
                   )}
                 >
