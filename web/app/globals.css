@@ -17,6 +17,11 @@
 
 @font-face { font-family:'JetBrains Mono'; font-style:normal; font-weight:400; font-display:swap; src:url('https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2') format('woff2'); }
 @font-face { font-family:'JetBrains Mono'; font-style:normal; font-weight:500; font-display:swap; src:url('https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family:'JetBrains Mono'; font-style:normal; font-weight:600; font-display:swap; src:url('https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family:'JetBrains Mono'; font-style:normal; font-weight:700; font-display:swap; src:url('https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family:'Space Grotesk'; font-style:normal; font-weight:500; font-display:swap; src:url('https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk/files/space-grotesk-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family:'Space Grotesk'; font-style:normal; font-weight:600; font-display:swap; src:url('https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk/files/space-grotesk-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family:'Space Grotesk'; font-style:normal; font-weight:700; font-display:swap; src:url('https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk/files/space-grotesk-latin-700-normal.woff2') format('woff2'); }
 
 /* ============================================================
    DESIGN TOKENS — light, editorial, single violet accent
@@ -124,3 +129,157 @@ body{
     radial-gradient(60% 70% at 30% 92%, rgba(186,160,255,.24), transparent 60%),
     #f4f3fb;
 }
+
+/* ============================================================================
+   FUSION — futuristic dark theme. Scoped under .fusion so the legacy light
+   marketing/app pages are untouched. The new Trade + Portfolio + landing
+   surfaces opt in by wrapping their tree in a .fusion container.
+   ============================================================================ */
+.fusion{
+  --fz-bg:#f6f7fb;
+  --fz-bg-2:#eef0f8;
+  --fz-panel:#ffffff;
+  --fz-panel-2:#f7f8fc;
+  --fz-elevated:#ffffff;
+  --fz-line:rgba(20,24,46,.10);
+  --fz-line-2:rgba(20,24,46,.16);
+  --fz-violet:#ff2a39;
+  --fz-violet-2:#e00b27;
+  --fz-cyan:#0aa7c9;
+  --fz-plasma:#e23ec8;
+  --fz-amber:#d97706;
+  --fz-up:#0ea864;
+  --fz-down:#e5484d;
+  --fz-text:#15172b;
+  --fz-text-2:#3f4360;
+  --fz-text-3:#6b7090;
+  --fz-text-4:#9aa0bd;
+
+  /* light surfaces that the (formerly white-alpha) utilities map onto */
+  --fz-surface:rgba(20,24,46,.04);
+  --fz-surface-2:rgba(20,24,46,.07);
+  --fz-track:rgba(20,24,46,.08);
+  --fz-inset:rgba(20,24,46,.028);
+  --fz-grid:rgba(20,24,46,.06);
+  --fz-axis:rgba(20,24,46,.16);
+
+  color:var(--fz-text);
+  font-family:'Space Grotesk','Open Runde','Inter',system-ui,sans-serif;
+  background:var(--fz-bg);
+  -webkit-font-smoothing:antialiased;
+}
+.fusion ::selection{ background:rgba(255,42,57,.22); color:var(--fz-text); }
+
+/* text-white was used heavily for the dark theme — on light it becomes ink.
+   Genuine on-accent whites (logo glyphs) use text-[#fff], which is unaffected. */
+.fusion .text-white{ color:var(--fz-text); }
+
+/* Animated aurora + grid backdrop for full-page surfaces */
+.fusion-bg{ position:relative; background:var(--fz-bg); isolation:isolate; }
+.fusion-bg::before{
+  content:""; position:fixed; inset:0; z-index:-2; pointer-events:none;
+  background:
+    radial-gradient(60% 55% at 12% 0%, rgba(255,42,57,.16), transparent 60%),
+    radial-gradient(50% 50% at 92% 8%, rgba(255,120,90,.12), transparent 60%),
+    radial-gradient(55% 60% at 78% 96%, rgba(226,62,120,.08), transparent 60%),
+    radial-gradient(60% 60% at 20% 100%, rgba(255,42,57,.10), transparent 60%);
+  animation:fz-aurora 18s ease-in-out infinite alternate;
+}
+.fusion-bg::after{
+  content:""; position:fixed; inset:0; z-index:-2; pointer-events:none; opacity:.6;
+  background-image:
+    linear-gradient(rgba(20,24,46,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20,24,46,.04) 1px, transparent 1px);
+  background-size:54px 54px;
+  -webkit-mask-image:radial-gradient(120% 90% at 50% 0%, #000 35%, transparent 80%);
+  mask-image:radial-gradient(120% 90% at 50% 0%, #000 35%, transparent 80%);
+}
+@keyframes fz-aurora{
+  0%{ transform:translate3d(0,0,0) scale(1); filter:hue-rotate(0deg); }
+  100%{ transform:translate3d(0,-2%,0) scale(1.06); filter:hue-rotate(18deg); }
+}
+@media (prefers-reduced-motion:reduce){ .fusion-bg::before{ animation:none; } }
+
+/* Glass panels */
+.fz-glass{
+  background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.66));
+  border:1px solid var(--fz-line);
+  border-radius:18px;
+  backdrop-filter:blur(14px);
+  box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 22px 44px -28px rgba(20,24,46,.4);
+}
+.fz-glass-hover{ transition:border-color .25s, transform .25s, box-shadow .25s; }
+.fz-glass-hover:hover{
+  border-color:var(--fz-line-2);
+  transform:translateY(-2px);
+  box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 30px 56px -30px rgba(20,24,46,.5), 0 0 0 1px rgba(255,42,57,.22);
+}
+.fz-card{ background:var(--fz-panel); border:1px solid var(--fz-line); border-radius:16px; }
+
+/* Glows */
+.fz-glow-violet{ box-shadow:0 0 0 1px rgba(255,42,57,.4), 0 10px 28px -8px rgba(255,42,57,.5); }
+.fz-glow-cyan{ box-shadow:0 0 0 1px rgba(10,167,201,.35), 0 10px 26px -8px rgba(10,167,201,.45); }
+.fz-ring{ box-shadow:0 0 0 1px var(--fz-line); }
+
+/* Gradient text + accents */
+.fz-gradient-text{
+  background:linear-gradient(100deg, var(--fz-text) 0%, var(--fz-violet) 52%, #ff7a45 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.fz-plasma-text{
+  background:linear-gradient(100deg, var(--fz-violet) 0%, var(--fz-plasma) 60%, var(--fz-amber) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.fz-data{ font-family:'JetBrains Mono', ui-monospace, monospace; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+
+/* Buttons */
+.fz-btn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:999px; font-weight:600; transition:all .2s; cursor:pointer; white-space:nowrap; }
+.fz-btn-primary{
+  background:linear-gradient(100deg, var(--fz-violet), #d10a26);
+  color:#fff; box-shadow:0 8px 24px -8px rgba(255,42,57,.8), 0 0 0 1px rgba(255,42,57,.5) inset;
+}
+.fz-btn-primary:hover{ filter:brightness(1.08); box-shadow:0 10px 30px -8px rgba(255,42,57,1), 0 0 0 1px rgba(255,120,120,.7) inset; }
+.fz-btn-ghost{ background:rgba(20,24,46,.04); color:var(--fz-text); border:1px solid var(--fz-line-2); }
+.fz-btn-ghost:hover{ background:rgba(20,24,46,.08); }
+
+/* Pills / chips */
+.fz-chip{ display:inline-flex; align-items:center; gap:.4rem; border-radius:999px; border:1px solid var(--fz-line-2); background:rgba(20,24,46,.03); padding:.25rem .6rem; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--fz-text-2); }
+
+/* Live dot */
+.fz-live{ position:relative; }
+.fz-live::before{ content:""; display:inline-block; width:7px; height:7px; border-radius:999px; background:var(--fz-up); box-shadow:0 0 0 0 rgba(55,224,166,.6); animation:fz-pulse 1.8s ease-out infinite; }
+@keyframes fz-pulse{ 0%{ box-shadow:0 0 0 0 rgba(55,224,166,.55); } 70%{ box-shadow:0 0 0 7px rgba(55,224,166,0); } 100%{ box-shadow:0 0 0 0 rgba(55,224,166,0); } }
+
+/* Ticker marquee (reuses marquee keyframe) */
+.fz-marquee{ animation:marquee 60s linear infinite; }
+.fz-marquee:hover{ animation-play-state:paused; }
+.fz-marquee-mask{ -webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent); mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent); }
+
+/* Slider (range) for the hedge ratio / structuring */
+.fz-range{ -webkit-appearance:none; appearance:none; height:6px; border-radius:999px; background:linear-gradient(90deg, var(--fz-violet), var(--fz-cyan)); outline:none; }
+.fz-range::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:999px; background:#fff; cursor:pointer; box-shadow:0 0 0 4px rgba(255,42,57,.3), 0 2px 8px rgba(20,24,46,.35); transition:box-shadow .2s; }
+.fz-range::-webkit-slider-thumb:hover{ box-shadow:0 0 0 6px rgba(255,42,57,.4), 0 2px 10px rgba(20,24,46,.45); }
+.fz-range::-moz-range-thumb{ width:20px; height:20px; border:none; border-radius:999px; background:#fff; cursor:pointer; box-shadow:0 0 0 4px rgba(255,42,57,.3); }
+
+/* Scrollbars inside the light UI */
+.fusion *::-webkit-scrollbar{ width:9px; height:9px; }
+.fusion *::-webkit-scrollbar-track{ background:transparent; }
+.fusion *::-webkit-scrollbar-thumb{ background:rgba(20,24,46,.16); border-radius:999px; border:2px solid transparent; background-clip:padding-box; }
+.fusion *::-webkit-scrollbar-thumb:hover{ background:rgba(20,24,46,.28); background-clip:padding-box; }
+
+/* Entrance animations */
+@keyframes fz-rise{ from{ opacity:0; transform:translateY(18px); } to{ opacity:1; transform:none; } }
+.fz-rise{ animation:fz-rise .7s cubic-bezier(.16,1,.3,1) both; }
+@keyframes fz-fade{ from{ opacity:0; } to{ opacity:1; } }
+.fz-fade{ animation:fz-fade 1s ease both; }
+@keyframes fz-spin-slow{ to{ transform:rotate(360deg); } }
+.fz-spin-slow{ animation:fz-spin-slow 26s linear infinite; }
+@keyframes fz-scan{ 0%{ transform:translateY(-100%); } 100%{ transform:translateY(400%); } }
+.fz-scan{ animation:fz-scan 4.5s linear infinite; }
+@media (prefers-reduced-motion:reduce){ .fz-rise,.fz-fade{ animation:none; } }
+
+/* Number flash on update */
+@keyframes fz-flash-up{ 0%{ color:var(--fz-up); } 100%{ color:inherit; } }
+@keyframes fz-flash-down{ 0%{ color:var(--fz-down); } 100%{ color:inherit; } }
+.fz-flash-up{ animation:fz-flash-up 1s ease; }
+.fz-flash-down{ animation:fz-flash-down 1s ease; }

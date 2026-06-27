@@ -6,7 +6,7 @@ import { WORDMARK, TAGLINE } from "@/lib/brand";
 export const metadata: Metadata = {
   title: `${WORDMARK} — ${TAGLINE}`,
   description:
-    "Trade equities, bonds, derivatives and prediction markets in one position. Express a real-world view and hedge it across Kalshi, Polymarket, Alpaca and IBKR.",
+    "FUSION is the fusion exchange — fuse equities, energy futures and prediction markets into a single position. Express a real-world thesis and hedge it across Kalshi, Polymarket, Alpaca and IBKR in one ticket.",
 };
 
 export default function RootLayout({
@@ -15,8 +15,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
-      <body className="min-h-full font-sans">{children}</body>
+    <html lang="en" className="h-full antialiased" style={{ colorScheme: "light" }}>
+      <body className="min-h-full font-sans" style={{ background: "#f6f7fb" }}>
+        {children}
+      </body>
     </html>
   );
 }
