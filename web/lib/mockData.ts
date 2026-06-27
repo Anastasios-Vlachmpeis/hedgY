@@ -295,3 +295,352 @@ export const hedgeSuggestions: HedgeSuggestion[] = [
 export function positionFromSuggestion(id?: string): CombinedPosition {
   return hedgeSuggestions.find((s) => s.id === id)?.position ?? combinedPosition;
 }
+
+/* ====================================================================
+   MARKETS DISCOVERY FEED  (/markets)
+   ==================================================================== */
+
+/* ---------- Category nav ---------- */
+
+export interface MarketCategory {
+  id: string;
+  label: string;
+  count: number;
+}
+
+export const marketCategories: MarketCategory[] = [
+  { id: "trending", label: "Trending", count: 128 },
+  { id: "politics", label: "Politics", count: 42 },
+  { id: "macro", label: "Macro", count: 36 },
+  { id: "geopolitics", label: "Geopolitics", count: 24 },
+  { id: "equities", label: "Equities", count: 57 },
+  { id: "crypto", label: "Crypto", count: 31 },
+  { id: "tech", label: "Tech", count: 19 },
+  { id: "energy", label: "Energy", count: 14 },
+];
+
+/* ---------- Market cards (grid) ----------
+   yesProbability/yes is 0–1; cents = round(p*100); No = 100 − cents.    */
+
+export type MarketKind = "binary" | "multi" | "threshold";
+
+export interface MarketOutcomeRow {
+  label: string;
+  yes: number; // 0–1 implied probability (¢ = yes*100)
+  dir?: "up" | "down"; // threshold direction arrow
+}
+
+export interface MarketEvent {
+  id: string;
+  title: string;
+  category: string; // matches a MarketCategory.label
+  icon: string; // emoji glyph
+  kind: MarketKind;
+  volume: number; // USD
+  changePts: number; // 24h move in pts
+  direction: Direction;
+  cadence?: string; // "Daily" | "Weekly" | "Monthly"
+  live?: boolean;
+  yesProbability?: number; // binary
+  outcomes?: MarketOutcomeRow[]; // multi / threshold (ranked)
+}
+
+export const marketEvents: MarketEvent[] = [
+  {
+    id: "incumbent-2026",
+    title: "Incumbent wins the 2026 election?",
+    category: "Politics",
+    icon: "🏛️",
+    kind: "binary",
+    yesProbability: 0.43,
+    volume: 12_400_000,
+    changePts: -1,
+    direction: "down",
+    live: true,
+  },
+  {
+    id: "election-winner-2026",
+    title: "2026 Presidential election winner",
+    category: "Politics",
+    icon: "🗳️",
+    kind: "multi",
+    volume: 64_000_000,
+    changePts: 2,
+    direction: "up",
+    cadence: "Live",
+    outcomes: [
+      { label: "Incumbent", yes: 0.43 },
+      { label: "Challenger A", yes: 0.31 },
+      { label: "Challenger B", yes: 0.18 },
+      { label: "Field", yes: 0.08 },
+    ],
+  },
+  {
+    id: "fed-july",
+    title: "Fed cuts rates in July 2026?",
+    category: "Macro",
+    icon: "💵",
+    kind: "binary",
+    yesProbability: 0.38,
+    volume: 2_100_000,
+    changePts: 4,
+    direction: "up",
+    cadence: "Monthly",
+  },
+  {
+    id: "fed-decision",
+    title: "Fed decision at the next meeting",
+    category: "Macro",
+    icon: "🏦",
+    kind: "multi",
+    volume: 5_000_000,
+    changePts: 3,
+    direction: "up",
+    cadence: "Monthly",
+    outcomes: [
+      { label: "No change", yes: 0.62 },
+      { label: "25 bps cut", yes: 0.3 },
+      { label: "50 bps cut", yes: 0.08 },
+    ],
+  },
+  {
+    id: "btc-2026",
+    title: "What price will Bitcoin hit in 2026?",
+    category: "Crypto",
+    icon: "₿",
+    kind: "threshold",
+    volume: 8_200_000,
+    changePts: 5,
+    direction: "up",
+    cadence: "Daily",
+    live: true,
+    outcomes: [
+      { label: "$80,000", yes: 0.71, dir: "down" },
+      { label: "$100,000", yes: 0.54, dir: "up" },
+      { label: "$120,000", yes: 0.28, dir: "up" },
+    ],
+  },
+  {
+    id: "recession-2026",
+    title: "US recession declared in 2026?",
+    category: "Macro",
+    icon: "📉",
+    kind: "binary",
+    yesProbability: 0.29,
+    volume: 3_600_000,
+    changePts: 3,
+    direction: "up",
+  },
+  {
+    id: "hormuz-2026",
+    title: "Strait of Hormuz blockade in 2026?",
+    category: "Geopolitics",
+    icon: "⚓",
+    kind: "binary",
+    yesProbability: 0.17,
+    volume: 900_000,
+    changePts: 2,
+    direction: "up",
+  },
+  {
+    id: "drugx-phase3",
+    title: "Drug X Phase 3 trial succeeds?",
+    category: "Tech",
+    icon: "💊",
+    kind: "binary",
+    yesProbability: 0.61,
+    volume: 1_400_000,
+    changePts: -2,
+    direction: "down",
+  },
+  {
+    id: "gpt6-2026",
+    title: "OpenAI releases GPT-6 in 2026?",
+    category: "Tech",
+    icon: "🤖",
+    kind: "binary",
+    yesProbability: 0.47,
+    volume: 2_800_000,
+    changePts: 6,
+    direction: "up",
+  },
+  {
+    id: "defense-budget",
+    title: "US defense budget exceeds $900B?",
+    category: "Politics",
+    icon: "🛡️",
+    kind: "binary",
+    yesProbability: 0.55,
+    volume: 1_100_000,
+    changePts: 1,
+    direction: "up",
+  },
+  {
+    id: "oil-100",
+    title: "Brent crude above $100 in 2026?",
+    category: "Energy",
+    icon: "🛢️",
+    kind: "binary",
+    yesProbability: 0.34,
+    volume: 1_900_000,
+    changePts: 2,
+    direction: "up",
+  },
+  {
+    id: "nvda-4t",
+    title: "Does Nvidia hit a $4T market cap?",
+    category: "Equities",
+    icon: "📈",
+    kind: "binary",
+    yesProbability: 0.49,
+    volume: 4_300_000,
+    changePts: 3,
+    direction: "up",
+  },
+];
+
+/* ---------- Featured market (hero, multi-line chart) ---------- */
+
+export interface FeaturedOutcome {
+  label: string;
+  pct: number; // 0–100
+  color: string;
+}
+
+export interface FeaturedPoint {
+  t: string;
+  [outcome: string]: number | string;
+}
+
+export interface FeaturedMarket {
+  id: string;
+  title: string;
+  category: string;
+  icon: string;
+  volume: number;
+  live: boolean;
+  outcomes: FeaturedOutcome[];
+  /** time series; one numeric key per outcome label (probability 0–100) */
+  series: FeaturedPoint[];
+}
+
+const FEATURED_SERIES: Array<[number, number, number]> = [
+  [39, 41, 20],
+  [40, 40, 20],
+  [41, 39, 20],
+  [40, 40, 20],
+  [42, 38, 20],
+  [41, 39, 20],
+  [43, 37, 20],
+  [42, 38, 20],
+  [44, 37, 19],
+  [43, 38, 19],
+  [44, 37, 19],
+  [43, 38, 19],
+];
+
+export const featuredMarket: FeaturedMarket = {
+  id: "election-winner-2026",
+  title: "Who will win the 2026 Presidential election?",
+  category: "Politics",
+  icon: "🗳️",
+  volume: 64_000_000,
+  live: true,
+  outcomes: [
+    { label: "Incumbent", pct: 43, color: "#9580ff" },
+    { label: "Challenger", pct: 38, color: "#181925" },
+    { label: "Field", pct: 19, color: "#a3a3a3" },
+  ],
+  series: FEATURED_SERIES.map(([inc, chal, field], i) => ({
+    t: `D${i + 1}`,
+    Incumbent: inc,
+    Challenger: chal,
+    Field: field,
+  })),
+};
+
+/* ====================================================================
+   PORTFOLIO POSITIONS  (/dashboard)
+   ==================================================================== */
+
+export interface Position {
+  id: string;
+  title: string;
+  type: "Combined" | "Equity" | "Prediction";
+  detail: string;
+  value: number; // current market value
+  cost: number; // cost basis
+  pnl: number; // value − cost
+  pnlPct: number;
+}
+
+export const positions: Position[] = [
+  {
+    id: "p-defense",
+    title: "Long defense, hedge the election",
+    type: "Combined",
+    detail: "LMT·RTX·NOC + NO Incumbent wins",
+    value: 10_840,
+    cost: 10_000,
+    pnl: 840,
+    pnlPct: 8.4,
+  },
+  {
+    id: "p-lmt",
+    title: "Lockheed Martin",
+    type: "Equity",
+    detail: "12 sh @ $452.10 avg",
+    value: 5_667.6,
+    cost: 5_425.2,
+    pnl: 242.4,
+    pnlPct: 4.5,
+  },
+  {
+    id: "p-pharma",
+    title: "Long pharma, hedge the trial",
+    type: "Combined",
+    detail: "PFE·MRK + NO Phase 3",
+    value: 6_320,
+    cost: 6_500,
+    pnl: -180,
+    pnlPct: -2.8,
+  },
+  {
+    id: "p-fed",
+    title: "Fed cuts rates in July 2026",
+    type: "Prediction",
+    detail: "YES · 38¢ · 200 contracts",
+    value: 84,
+    cost: 76,
+    pnl: 8,
+    pnlPct: 10.5,
+  },
+  {
+    id: "p-zim",
+    title: "ZIM Integrated",
+    type: "Equity",
+    detail: "240 sh @ $20.90 avg",
+    value: 5_376,
+    cost: 5_016,
+    pnl: 360,
+    pnlPct: 7.2,
+  },
+  {
+    id: "p-recession",
+    title: "US recession declared in 2026",
+    type: "Prediction",
+    detail: "NO · 71¢ · 150 contracts",
+    value: 102,
+    cost: 106.5,
+    pnl: -4.5,
+    pnlPct: -4.2,
+  },
+];
+
+/** Cents helpers for the prediction-market pricing convention. */
+export function yesCents(prob: number): number {
+  return Math.round(prob * 100);
+}
+export function noCents(prob: number): number {
+  return 100 - Math.round(prob * 100);
+}
