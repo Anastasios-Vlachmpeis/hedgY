@@ -24,13 +24,13 @@ function StatTile({
   tone?: "default" | "up" | "down";
 }) {
   return (
-    <div className="rounded-[8px] bg-white px-3 py-2.5">
+    <div>
       <p className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
         {label}
       </p>
       <p
         className={cn(
-          "mt-0.5 font-mono text-[16px] font-semibold tabular-nums",
+          "mt-0.5 text-[16px] font-semibold tabular-nums",
           tone === "default" && "text-[#181925]",
           tone === "up" && "text-[#16a34a]",
           tone === "down" && "text-[#dc2626]",
@@ -54,25 +54,23 @@ function PortfolioOverview({
   const up = portfolio.dayChange >= 0;
 
   return (
-    <section className="flex flex-col rounded-[12px] bg-[#f5f5f5] p-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-wide text-[#666666]">
-            Portfolio value
-          </p>
-          <p className="mt-0.5 font-mono text-[34px] font-bold leading-none tracking-[-0.03em] text-[#181925]">
-            {usd(portfolio.totalValue)}
-          </p>
-          <div
-            className={cn(
-              "mt-1.5 inline-flex items-center gap-1.5 font-mono text-[13px] font-medium",
-              up ? "text-[#16a34a]" : "text-[#dc2626]",
-            )}
-          >
-            <span>{signedUsd(portfolio.dayChange)}</span>
-            <span>({pct(portfolio.dayChangePct)})</span>
-            <span className="text-[#a3a3a3]">today</span>
-          </div>
+    <section className="flex h-full flex-col rounded-[14px] border border-[#ececec] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      <div>
+        <p className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
+          Portfolio value
+        </p>
+        <p className="mt-0.5 text-[34px] font-bold leading-none tracking-[-0.03em] tabular-nums text-[#181925]">
+          {usd(portfolio.totalValue)}
+        </p>
+        <div
+          className={cn(
+            "mt-1.5 inline-flex items-center gap-1.5 text-[13px] font-medium tabular-nums",
+            up ? "text-[#16a34a]" : "text-[#dc2626]",
+          )}
+        >
+          <span>{signedUsd(portfolio.dayChange)}</span>
+          <span>({pct(portfolio.dayChangePct)})</span>
+          <span className="text-[#a3a3a3]">today</span>
         </div>
       </div>
 
@@ -99,21 +97,21 @@ function PortfolioOverview({
         </ResponsiveContainer>
       </div>
 
-      {/* 4 stat tiles */}
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      {/* Stat tiles — plain, lined up */}
+      <div className="mt-3 grid grid-cols-2 gap-3 border-t border-[#f0f0f0] pt-3 sm:grid-cols-4">
         <StatTile label="Net Liquidity" value={usd(portfolio.totalValue, 0)} />
         <StatTile
           label="Day P/L"
-          value={`${signedUsd(portfolio.dayChange, 0)}`}
+          value={signedUsd(portfolio.dayChange, 0)}
           tone={up ? "up" : "down"}
         />
         <StatTile label="Buying Power" value={usd(portfolio.buyingPower, 0)} />
         <StatTile label="Positions" value={String(portfolio.positionsCount)} />
       </div>
 
-      {/* Exposure breakdown */}
-      <div className="mt-3">
-        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-[#666666]">
+      {/* Exposure */}
+      <div className="mt-3 border-t border-[#f0f0f0] pt-3">
+        <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
           Exposure
         </p>
         <div className="flex h-2 overflow-hidden rounded-full">
@@ -133,7 +131,7 @@ function PortfolioOverview({
                 style={{ background: EXPOSURE_COLORS[e.label] }}
               />
               <span className="text-[#666666]">{e.label}</span>
-              <span className="ml-auto font-mono font-medium text-[#181925]">
+              <span className="ml-auto font-medium tabular-nums text-[#181925]">
                 {e.pct}%
               </span>
             </li>

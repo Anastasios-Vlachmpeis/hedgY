@@ -34,7 +34,7 @@
   --shadow-card:0 1px 3px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.02);
   --shadow-card-hover:0 1px 3px rgba(0,0,0,.06),0 8px 16px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.02);
   --shadow-nav:0 2px 16px rgba(0,0,0,.07); --shadow-review:0 2px 10px rgba(0,0,0,.03);
-  --font-sans:'Open Runde','Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --font-sans:'Open Runde','Inter',system-ui,sans-serif; --font-mono:'Open Runde','Inter',system-ui,sans-serif;
 }
 h1,h2,h3{letter-spacing:-0.02em;}
 
@@ -46,7 +46,7 @@ h1,h2,h3{letter-spacing:-0.02em;}
   --color-smoke-50:#f5f5f5; --color-smoke-400:#a3a3a3; --color-smoke-500:#737373; --color-smoke-600:#525252;
   --color-success:#16a34a; --color-destructive:#dc2626; --color-warning:#ea580c; --color-info:#3b82f6;
   --color-border:var(--border); --color-ring:var(--ring);
-  --font-sans:'Open Runde','Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --font-sans:'Open Runde','Inter',system-ui,sans-serif; --font-mono:'Open Runde','Inter',system-ui,sans-serif;
   --radius-sm:calc(var(--radius)*.6); --radius-md:calc(var(--radius)*.8); --radius-lg:var(--radius);
   --radius-xl:calc(var(--radius)*1.4); --radius-2xl:calc(var(--radius)*1.8); --radius-3xl:calc(var(--radius)*2.2);
   --shadow-card:0 1px 3px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.02);

@@ -1,3 +1,9 @@
+import { portfolio, positions, activity } from "@/lib/mockData";
+import { AccountHeader } from "@/components/dashboard/account-header";
+import { PositionsActivity } from "@/components/dashboard/positions-activity";
+
+/** User account — Polymarket-style: summary + P&L, then positions/activity. */
+export default function DashboardPage() {
 import { exposure, regionExposure, sectorWeights, hedgeSuggestions } from "@/lib/mockData";
 import {
   getTrendingStocks,
@@ -26,7 +32,7 @@ export default async function DashboardPage() {
     ]);
 
   return (
-    <div>
+    <div className="mx-auto max-w-[1100px]">
       <div className="mb-4 flex items-baseline justify-between">
         <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[#181925]">
           Good morning, Maxim
@@ -34,32 +40,9 @@ export default async function DashboardPage() {
         <p className="text-[13px] text-[#a3a3a3]">Markets open · Mock data</p>
       </div>
 
-      <div className="grid grid-cols-12 gap-4">
-        {/* TOP BAND: Portfolio (1–6) · By Region (7–9) · By Sector (10–12) */}
-        <div className="col-span-12 lg:col-span-6">
-          <PortfolioOverview
-            portfolio={portfolio}
-            series={portfolioSeries}
-            exposure={exposure}
-          />
-        </div>
-        <div className="col-span-6 lg:col-span-3">
-          <ByRegion regions={regionExposure} />
-        </div>
-        <div className="col-span-6 lg:col-span-3">
-          <BySector sectors={sectorWeights} />
-        </div>
-
-        {/* BOTTOM BAND: Trending Stocks (1–3) · Trending Predictions (4–6) · Hedge Suggestions (7–12) */}
-        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
-          <TrendingStocks stocks={trendingStocks} />
-        </div>
-        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
-          <TrendingMarkets markets={trendingMarkets} />
-        </div>
-        <div className="col-span-12 lg:col-span-6">
-          <HedgeSuggestions suggestions={hedgeSuggestions} />
-        </div>
+      <div className="flex flex-col gap-4">
+        <AccountHeader portfolio={portfolio} />
+        <PositionsActivity positions={positions} activity={activity} />
       </div>
     </div>
   );
