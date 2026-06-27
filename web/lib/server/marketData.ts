@@ -264,27 +264,40 @@ async function fetchUnified(): Promise<UnifiedMarket[]> {
   return res.json();
 }
 
-export async function getMarketEvents(limit = 12): Promise<MarketEvent[]> {
+/** Map a live UnifiedMarket into the FE MarketEvent shape. */
+function toMarketEvent(u: UnifiedMarket): MarketEvent {
+  const { category, icon } = feCategory(u);
+  return {
+    id: u.id,
+    title: u.canonical_question,
+    category,
+    icon,
+    kind: "binary",
+    volume: u.volume,
+    changePts: 0, // backend exposes no 24h delta yet
+    direction: "flat",
+    live: u.venues.length > 1, // cross-venue = aggregated best price
+    yesProbability: u.best_yes!.price,
+  };
+}
+
+/**
+ * The single source of truth for the discovery grid: every interesting market,
+ * ranked, capped. Both getMarketEvents (the grid) and getMarketCategories (the
+ * tab counts) derive from this exact list so a tab's count always equals the
+ * number of cards shown when it's selected.
+ */
+async function discoveryEvents(limit = 60): Promise<MarketEvent[]> {
+  return (await fetchUnified())
+    .filter(isInteresting)
+    .sort(discoveryRank)
+    .slice(0, limit)
+    .map(toMarketEvent);
+}
+
+export async function getMarketEvents(limit = 60): Promise<MarketEvent[]> {
   try {
-    const events = (await fetchUnified())
-      .filter(isInteresting)
-      .sort(discoveryRank)
-      .slice(0, limit)
-      .map((u): MarketEvent => {
-        const { category, icon } = feCategory(u);
-        return {
-          id: u.id,
-          title: u.canonical_question,
-          category,
-          icon,
-          kind: "binary",
-          volume: u.volume,
-          changePts: 0, // backend exposes no 24h delta yet
-          direction: "flat",
-          live: u.venues.length > 1, // cross-venue = aggregated best price
-          yesProbability: u.best_yes!.price,
-        };
-      });
+    const events = await discoveryEvents(limit);
     return events.length >= 6 ? events : eventsFallback;
   } catch {
     return eventsFallback;
@@ -293,15 +306,14 @@ export async function getMarketEvents(limit = 12): Promise<MarketEvent[]> {
 
 export async function getMarketCategories(): Promise<MarketCategory[]> {
   try {
-    const interesting = (await fetchUnified()).filter(isInteresting);
-    if (interesting.length < 6) return categoriesFallback;
+    const events = await discoveryEvents();
+    if (events.length < 6) return categoriesFallback;
     const counts = new Map<string, number>();
-    for (const u of interesting) {
-      const { category } = feCategory(u);
-      counts.set(category, (counts.get(category) ?? 0) + 1);
+    for (const e of events) {
+      counts.set(e.category, (counts.get(e.category) ?? 0) + 1);
     }
     return [
-      { id: "trending", label: "Trending", count: interesting.length },
+      { id: "trending", label: "Trending", count: events.length },
       ...[...counts.entries()]
         .sort((a, b) => b[1] - a[1])
         .map(([label, count]) => ({ id: label.toLowerCase(), label, count })),
