@@ -35,7 +35,7 @@ function AppShell({ children, className }: { children: React.ReactNode; classNam
           {/* Nav */}
           <nav className="flex items-center">
             {NAV_LINKS.map(({ href, label }) => {
-              const active = pathname === href || (href !== "/trade" && pathname.startsWith(href));
+              const active = pathname === href || pathname.startsWith(href + "/");
               return (
                 <Link
                   key={label}

@@ -93,7 +93,7 @@ function RiskPanel() {
       </div>
 
       {/* Risk cards */}
-      <div className="mt-6 flex flex-col gap-4">
+      <div className="mt-5 flex flex-col gap-3">
         {LMT_RISKS.map((r) => {
           const pct     = Math.round(r.probability * 100);
           const bearish = r.impact === "bearish";
@@ -135,7 +135,7 @@ function RiskPanel() {
       {/* Full-width outline CTA */}
       <Link
         href="/structure"
-        className="mt-auto flex h-12 w-full items-center justify-between rounded-[12px] border border-[#111111] px-5 pt-6 text-[14px] font-medium text-[#111111] transition-all duration-[200ms] ease-out hover:bg-[#111111] hover:text-white"
+        className="mt-auto flex h-12 w-full shrink-0 items-center justify-between rounded-[12px] border border-[#111111] px-5 text-[14px] font-medium text-[#111111] transition-all duration-[200ms] ease-out hover:bg-[#111111] hover:text-white"
       >
         Hedge LMT against these
         <ArrowRight className="size-4" />
@@ -285,10 +285,10 @@ function StockPill({ s }: { s: (typeof trendingStocks)[0] }) {
 /* ── Section header ── */
 function Section({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
-    <section className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-[16px] font-semibold text-[#111111]">{title}</h2>
-        {sub && <p className="mt-1 text-[13px] text-[#9ca3af]">{sub}</p>}
+    <section className="flex flex-col gap-5">
+      <div className="flex flex-col gap-0.5">
+        <h2 className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">{title}</h2>
+        {sub && <p className="text-[14px] font-medium text-[#111111]">{sub}</p>}
       </div>
       {children}
     </section>
@@ -298,14 +298,12 @@ function Section({ title, sub, children }: { title: string; sub?: string; childr
 /* ── Page ── */
 export default function TradePage() {
   return (
-    <div className="flex flex-col gap-16">
+    <div className="flex flex-col gap-14">
       <TradeSearch />
 
-      {/* Hero — 62/38 split, top-aligned */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[62fr_38fr] lg:items-start">
-        <div className="min-h-[480px]">
-          <StockChart />
-        </div>
+      {/* Hero — 62/38 split, equal height columns */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[62fr_38fr] lg:[&>*]:h-full">
+        <StockChart />
         <RiskPanel />
       </div>
 

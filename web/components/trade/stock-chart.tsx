@@ -42,7 +42,7 @@ export function StockChart() {
   const diffPct = (diff / first) * 100;
 
   return (
-    <div className="flex h-full flex-col rounded-[18px] bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <div className="flex h-full min-h-[540px] flex-col rounded-[18px] bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
 
       {/* ── Company header + Buy/Sell ── */}
       <div className="flex items-start justify-between gap-4">
