@@ -47,10 +47,14 @@ function ByRegion({ regions }: { regions: RegionExposure[] }) {
       <GlobePlaceholder />
       <ul className="mt-3 flex flex-col gap-1.5">
         {regions.map((r) => (
-          <li key={r.region} className="flex items-center gap-2 text-[12px]">
-            <span className="text-[#3f3f46]">{r.region}</span>
-            <span className="mx-1 h-px flex-1 bg-[#e8e8e8]" />
-            <span className="font-mono font-medium text-[#181925]">{r.pct}%</span>
+          <li
+            key={r.region}
+            className="flex items-center justify-between gap-2 rounded-[8px] bg-white px-2.5 py-1.5 transition-colors hover:bg-[#fafafa]"
+          >
+            <span className="truncate text-[12px] text-[#3f3f46]">{r.region}</span>
+            <span className="shrink-0 rounded-[6px] bg-[#f3f1ff] px-2 py-0.5 font-mono text-[11px] font-semibold text-[#9580ff]">
+              {r.pct}%
+            </span>
           </li>
         ))}
       </ul>

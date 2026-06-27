@@ -43,12 +43,15 @@ function BySector({ sectors }: { sectors: SectorWeight[] }) {
         </div>
       </div>
 
-      <ul className="mt-3 grid grid-cols-1 gap-1.5">
+      <ul className="mt-3 flex flex-col gap-1">
         {sectors.map((s) => (
-          <li key={s.sector} className="flex items-center gap-2 text-[12px]">
-            <span className="size-2 rounded-full" style={{ background: s.color }} />
-            <span className="text-[#3f3f46]">{s.sector}</span>
-            <span className="ml-auto font-mono font-medium text-[#181925]">
+          <li
+            key={s.sector}
+            className="flex items-center gap-2 rounded-[8px] bg-white px-2.5 py-1.5 transition-colors hover:bg-[#fafafa]"
+          >
+            <span className="size-2 shrink-0 rounded-full" style={{ background: s.color }} />
+            <span className="truncate text-[12px] text-[#3f3f46]">{s.sector}</span>
+            <span className="ml-auto shrink-0 rounded-[6px] bg-[#f3f1ff] px-2 py-0.5 font-mono text-[11px] font-semibold text-[#9580ff]">
               {s.pct}%
             </span>
           </li>
