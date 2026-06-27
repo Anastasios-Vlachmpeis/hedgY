@@ -13,6 +13,7 @@ import {
   type PredictionMarket,
   type Stock,
   type MarketEvent,
+  type VenueQuote,
   type MarketCategory,
   type FeaturedMarket,
   type FeaturedPoint,
@@ -271,6 +272,27 @@ async function fetchUnified(): Promise<UnifiedMarket[]> {
   return res.json();
 }
 
+// Per-venue breakdown for one cluster, from the detail endpoint's member_markets.
+async function marketMembers(id: string): Promise<VenueQuote[]> {
+  try {
+    const r = await fetch(`${MARKETS_API}/markets/${encodeURIComponent(id)}`, { cache: "no-store" });
+    if (!r.ok) return [];
+    const d = await r.json();
+    return (d.member_markets ?? [])
+      .map((m: any): VenueQuote => ({
+        venue: String(m.venue ?? ""),
+        yes: Number(m.yes_price ?? 0),
+        no: Number(m.no_price ?? 0),
+        volume: Number(m.volume ?? 0),
+        link: typeof m.deep_link === "string" ? m.deep_link : undefined,
+      }))
+      .filter((m: VenueQuote) => m.venue && (m.yes > 0 || m.no > 0))
+      .sort((a: VenueQuote, b: VenueQuote) => b.volume - a.volume);
+  } catch {
+    return [];
+  }
+}
+
 /** Map a live UnifiedMarket into the FE MarketEvent shape. */
 function toMarketEvent(u: UnifiedMarket): MarketEvent {
   const { category, icon } = feCategory(u);
@@ -304,7 +326,35 @@ async function discoveryEvents(limit = 60): Promise<MarketEvent[]> {
 
 export async function getMarketEvents(limit = 60): Promise<MarketEvent[]> {
   try {
-    const events = await discoveryEvents(limit);
+    const unified = (await fetchUnified())
+      .filter(isInteresting)
+      .sort(discoveryRank)
+      .slice(0, limit);
+
+    // enrich with the per-venue (Kalshi/Polymarket) breakdown for cross-venue clusters
+    const events = await Promise.all(
+      unified.map(async (u): Promise<MarketEvent> => {
+        const crossVenue = u.venues.length > 1;
+        const members = crossVenue ? await marketMembers(u.id) : [];
+        return {
+          ...toMarketEvent(u),
+          noProbability: u.best_no?.price,
+          venues: u.venues,
+          bestYesVenue: u.best_yes?.venue,
+          bestNoVenue: u.best_no?.venue,
+          members: members.length
+            ? members
+            : [
+                {
+                  venue: u.best_yes!.venue,
+                  yes: u.best_yes!.price,
+                  no: u.best_no?.price ?? 1 - u.best_yes!.price,
+                  volume: u.volume,
+                },
+              ],
+        };
+      }),
+    );
     return events.length >= 6 ? events : eventsFallback;
   } catch {
     return eventsFallback;

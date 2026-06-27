@@ -6,5 +6,5 @@ export default function MarketsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <AppShell>{children}</AppShell>;
+  return <AppShell className="markets-canvas">{children}</AppShell>;
 }

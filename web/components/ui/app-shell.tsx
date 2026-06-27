@@ -19,10 +19,10 @@ const NAV_LINKS = [
  * App shell — sticky top nav on the white base, matching the landing
  * wordmark + violet dot. Denser than marketing chrome (it's an app).
  */
-function AppShell({ children }: { children: React.ReactNode }) {
+function AppShell({ children, className }: { children: React.ReactNode; className?: string }) {
   const pathname = usePathname();
   return (
-    <div className="flex min-h-full flex-col bg-white">
+    <div className={cn("flex min-h-full flex-col", className ?? "bg-white")}>
       <header className="sticky top-0 z-40 border-b border-[#ececec] bg-white/85 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center gap-6 px-4 sm:px-6">
           <Link href="/markets" className="flex items-center gap-2">
