@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { pct } from "@/lib/format";
+import { TradeButton } from "@/components/trade/trade-modal";
 import type { Stock } from "@/lib/mockData";
 
 /**
@@ -52,17 +53,28 @@ function PromoRail({ stocks }: { stocks: Stock[] }) {
                     {stock.name}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-[13px] font-semibold tabular-nums text-[#181925]">
-                    ${stock.price.toFixed(2)}
-                  </p>
-                  <p
-                    className={`text-[11px] tabular-nums ${
-                      down ? "text-[#dc2626]" : "text-[#16a34a]"
-                    }`}
+                <div className="flex items-center gap-2.5">
+                  <div className="text-right">
+                    <p className="text-[13px] font-semibold tabular-nums text-[#181925]">
+                      ${stock.price.toFixed(2)}
+                    </p>
+                    <p
+                      className={`text-[11px] tabular-nums ${
+                        down ? "text-[#dc2626]" : "text-[#16a34a]"
+                      }`}
+                    >
+                      {pct(stock.changePct)}
+                    </p>
+                  </div>
+                  <TradeButton
+                    kind="stock"
+                    tone="buy"
+                    label={stock.name}
+                    symbol={stock.symbol}
+                    price={stock.price}
                   >
-                    {pct(stock.changePct)}
-                  </p>
+                    Buy
+                  </TradeButton>
                 </div>
               </li>
             );

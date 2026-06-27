@@ -4,6 +4,7 @@ import { ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { points, usdCompact } from "@/lib/format";
 import { ActionButton } from "@/components/ui/action-button";
+import { TradeButton } from "@/components/trade/trade-modal";
 import { yesCents, noCents, type MarketEvent, type MarketOutcomeRow } from "@/lib/mockData";
 
 function CardHeader({ event, trailing }: { event: MarketEvent; trailing?: React.ReactNode }) {
@@ -93,12 +94,28 @@ function MarketCard({ event }: { event: MarketEvent }) {
           }
         />
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <ActionButton tone="yes" className="w-full">
+          <TradeButton
+            kind="prediction"
+            tone="yes"
+            className="w-full"
+            label={event.title}
+            marketId={event.id}
+            side="YES"
+            price={p}
+          >
             Yes <span className="tabular-nums opacity-80">{yesCents(p)}¢</span>
-          </ActionButton>
-          <ActionButton tone="no" className="w-full">
+          </TradeButton>
+          <TradeButton
+            kind="prediction"
+            tone="no"
+            className="w-full"
+            label={event.title}
+            marketId={event.id}
+            side="NO"
+            price={1 - p}
+          >
             No <span className="tabular-nums opacity-80">{noCents(p)}¢</span>
-          </ActionButton>
+          </TradeButton>
         </div>
         <CardFooter event={event} />
       </div>

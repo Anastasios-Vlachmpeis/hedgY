@@ -37,47 +37,67 @@ function HedgeBar({ ratio }: { ratio: number }) {
   );
 }
 
-/** Combined position. Headline = total + P&L; legs are a quiet sub-detail. */
+/** Combined position — flex-col card so leg rows share the same column grid as the title row. */
 function CombinedRow({ p }: { p: Position }) {
-  // hedge proportion derived from the leg amounts (hedge relative to equity).
   const ratio =
     p.equityLeg && p.hedgeLeg
       ? Math.round((p.hedgeLeg.value / p.equityLeg.value) * 100)
       : 0;
+  const pnlColor = p.pnl >= 0 ? "text-[#16a34a]" : "text-[#dc2626]";
+
   return (
-    <li className="flex items-start gap-3 rounded-[10px] border border-[#ececec] bg-white px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-semibold text-[#181925]">
+    <li className="flex flex-col rounded-[10px] border border-[#ececec] bg-white px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+      {/* Title + total value / P&L */}
+      <div className="flex items-start gap-3">
+        <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#181925]">
           {p.title}
         </p>
-
-        <HedgeBar ratio={ratio} />
-
-        {/* quiet leg breakdown — supporting evidence, not headlines */}
-        <div className="mt-1.5 flex flex-col gap-0.5 rounded-[6px] bg-[#fafafa] px-2 py-1">
-          {p.equityLeg && (
-            <div className="flex items-center gap-1.5 text-[11px]">
-              <span className="w-10 shrink-0 text-[#666666]">Equity</span>
-              <span className="truncate text-[#666666]">{p.equityLeg.label}</span>
-              <span className="ml-auto shrink-0 tabular-nums text-[#a3a3a3]">
-                {usd(p.equityLeg.value, 0)}
-              </span>
-            </div>
-          )}
-          {p.hedgeLeg && (
-            <div className="flex items-center gap-1.5 text-[11px]">
-              <span className="w-10 shrink-0 text-[#666666]">Hedge</span>
-              <span className="truncate text-[#666666]">{p.hedgeLeg.label}</span>
-              <span className="ml-auto shrink-0 tabular-nums text-[#a3a3a3]">
-                {usd(p.hedgeLeg.value, 0)}
-              </span>
-            </div>
-          )}
+        <div className="flex shrink-0 gap-3">
+          <span className="hidden w-24 shrink-0 text-right text-[13px] font-semibold tabular-nums text-[#181925] sm:block">
+            {usd(p.value, 0)}
+          </span>
+          <div className="w-24 shrink-0 text-right">
+            <p className={cn("text-[13px] font-semibold tabular-nums", pnlColor)}>
+              {signedUsd(p.pnl, 0)}
+            </p>
+            <p className={cn("text-[11px] tabular-nums", pnlColor)}>({pct(p.pnlPct)})</p>
+          </div>
         </div>
       </div>
-      <div className="flex shrink-0 items-start gap-3">
-        <ValuePnl p={p} />
-      </div>
+
+      <HedgeBar ratio={ratio} />
+
+      {/* Equity leg — same gap-3 + w-24 columns, value lands under VALUE total */}
+      {p.equityLeg && (
+        <div className="mt-1.5 flex items-center gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2 text-[11px]">
+            <span className="w-10 shrink-0 font-semibold text-[#181925]">Equity</span>
+            <span className="truncate text-[#a3a3a3]">{p.equityLeg.label}</span>
+          </div>
+          <div className="flex shrink-0 gap-3">
+            <span className="hidden w-24 shrink-0 text-right text-[11px] tabular-nums text-[#a3a3a3] sm:block">
+              {usd(p.equityLeg.value, 0)}
+            </span>
+            <span className="w-24 shrink-0" />
+          </div>
+        </div>
+      )}
+
+      {/* Hedge leg */}
+      {p.hedgeLeg && (
+        <div className="mt-0.5 flex items-center gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2 text-[11px]">
+            <span className="w-10 shrink-0 font-semibold text-[#181925]">Hedge</span>
+            <span className="truncate text-[#a3a3a3]">{p.hedgeLeg.label}</span>
+          </div>
+          <div className="flex shrink-0 gap-3">
+            <span className="hidden w-24 shrink-0 text-right text-[11px] tabular-nums text-[#a3a3a3] sm:block">
+              {usd(p.hedgeLeg.value, 0)}
+            </span>
+            <span className="w-24 shrink-0" />
+          </div>
+        </div>
+      )}
     </li>
   );
 }

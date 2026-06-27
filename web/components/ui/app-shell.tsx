@@ -7,6 +7,7 @@ import { Bell, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { WORDMARK } from "@/lib/brand";
+import { GradientAvatar } from "@/components/ui/gradient-avatar";
 
 const NAV_LINKS = [
   { href: "/markets", label: "Markets" },
@@ -67,12 +68,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
             >
               <Bell className="size-[18px]" strokeWidth={1.9} />
             </button>
-            <span
-              className="ml-1 flex size-8 items-center justify-center rounded-full bg-[#181925] text-[12px] font-semibold text-white"
-              aria-label="Account"
-            >
-              MD
-            </span>
+            <GradientAvatar seed="maxim.durand" size={32} className="ml-1 cursor-pointer" />
           </div>
         </div>
       </header>
