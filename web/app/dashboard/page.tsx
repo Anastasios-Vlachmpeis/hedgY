@@ -3,7 +3,6 @@ import { AccountHeader } from "@/components/dashboard/account-header";
 import { PositionsActivity } from "@/components/dashboard/positions-activity";
 
 /** User account — Polymarket-style: summary + P&L, then positions/activity. */
-export default function DashboardPage() {
 import { exposure, regionExposure, sectorWeights, hedgeSuggestions } from "@/lib/mockData";
 import {
   getTrendingStocks,

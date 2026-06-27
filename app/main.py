@@ -22,6 +22,7 @@ from app.connectors.base import Connector
 from app.matching import cluster
 from app.models import HealthResponse, UnifiedMarket, UnifiedMarketDetail
 from app.store import store
+from structuring.service import suggest_hedges
 
 logging.basicConfig(
     level=logging.INFO,
@@ -125,11 +126,26 @@ async def get_market(unified_id: str) -> UnifiedMarketDetail:
     return detail
 
 
+@app.get("/suggestions")
+def suggestions(
+    notional: float = Query(default=10_000.0, gt=0, le=10_000_000),
+) -> list[dict]:
+    """Live hedge suggestions (P2 structuring).
+
+    Matches each starter template to a live unified market, sizes the hedge, and
+    returns one suggestion per template (``matched=False`` when no live market is
+    found). Wraps ``structuring.service.suggest_hedges`` over the current store
+    snapshot. Read-only / suggestion-only, like the rest of the service.
+    """
+    markets = [m.model_dump() for m in store.list_unified()]
+    return suggest_hedges(markets, notional=notional)
+
+
 @app.get("/")
 async def root() -> dict:
     return {
         "service": "prediction-market-aggregator",
         "mode": "read-only (suggestions only)",
-        "endpoints": ["/markets", "/markets/{id}", "/health"],
+        "endpoints": ["/markets", "/markets/{id}", "/suggestions", "/health"],
         "has_data": store.has_data,
     }
