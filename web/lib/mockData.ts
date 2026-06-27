@@ -748,7 +748,7 @@ export const activity: Activity[] = [
   { id: "a3", kind: "Sold", title: "Fed cuts rates in July 2026", detail: "YES · 80 contracts @ 38¢", amount: 304, time: "3h ago" },
   { id: "a4", kind: "Bought", title: "Nvidia hits $4T market cap", detail: "YES · 300 contracts @ 44¢", amount: -1320, time: "5h ago" },
   { id: "a5", kind: "Settled", title: "Q1 jobs report beats", detail: "YES resolved · 200 contracts", amount: 412, time: "Yesterday" },
-  { id: "a6", kind: "Bought", title: "ZIM Integrated", detail: "120 sh @ $20.90", amount: -2508, time: "Yesterday" },
+  { id: "a6", kind: "Bought", title: "ZIM Integrated", detail: "240 sh @ $20.90 avg/sh", amount: -5016, time: "Yesterday" },
   { id: "a7", kind: "Deposit", title: "Deposit", detail: "ACH transfer", amount: 10000, time: "2d ago" },
   { id: "a8", kind: "Settled", title: "Govt shutdown by March", detail: "NO resolved · 150 contracts", amount: -90, time: "3d ago" },
 ];
