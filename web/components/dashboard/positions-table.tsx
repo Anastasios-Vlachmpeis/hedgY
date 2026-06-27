@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Shield, TrendingUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { usd, signedUsd, pct } from "@/lib/format";
@@ -58,7 +57,6 @@ function CombinedRow({ p }: { p: Position }) {
         <div className="mt-1.5 flex flex-col gap-0.5 rounded-[6px] bg-[#fafafa] px-2 py-1">
           {p.equityLeg && (
             <div className="flex items-center gap-1.5 text-[11px]">
-              <TrendingUp className="size-3 shrink-0 text-[#16a34a]" />
               <span className="w-10 shrink-0 text-[#666666]">Equity</span>
               <span className="truncate text-[#666666]">{p.equityLeg.label}</span>
               <span className="ml-auto shrink-0 tabular-nums text-[#a3a3a3]">
@@ -68,7 +66,6 @@ function CombinedRow({ p }: { p: Position }) {
           )}
           {p.hedgeLeg && (
             <div className="flex items-center gap-1.5 text-[11px]">
-              <Shield className="size-3 shrink-0 text-[#9580ff]" />
               <span className="w-10 shrink-0 text-[#666666]">Hedge</span>
               <span className="truncate text-[#666666]">{p.hedgeLeg.label}</span>
               <span className="ml-auto shrink-0 tabular-nums text-[#a3a3a3]">
