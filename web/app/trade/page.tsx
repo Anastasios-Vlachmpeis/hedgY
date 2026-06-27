@@ -184,7 +184,6 @@ function HedgeRow({ s }: { s: (typeof hedgeSuggestions)[0] }) {
   const icon = HEDGE_ICONS[s.id] ?? "📊";
   const c    = STRENGTH_STYLES[s.strength];
 
-  /* YES probability is always 1 − NO price */
   const yesPrice = s.hedgeSide === "YES" ? s.hedgePrice : 1 - s.hedgePrice;
   const yesCents = Math.round(yesPrice * 100);
   const noCents  = 100 - yesCents;
@@ -192,60 +191,56 @@ function HedgeRow({ s }: { s: (typeof hedgeSuggestions)[0] }) {
   return (
     <Link
       href={`/structure?from=${s.id}`}
-      className="flex flex-col gap-3 px-5 py-4 transition-colors duration-[180ms] hover:bg-[#fafafa]"
+      className="flex flex-col gap-2.5 px-5 py-4 transition-colors duration-[180ms] hover:bg-[#fafafa]"
     >
-      {/* Row 1: icon + market title + strength badge */}
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 shrink-0 text-[18px] leading-none">{icon}</span>
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <p className="truncate text-[13px] font-semibold leading-snug text-[#111111]">
-            {s.hedgeMarket}
-          </p>
-          <p className="text-[11px] text-[#9ca3af]">
-            {s.equityLabel} · {s.equitySymbols.join(" · ")}
-          </p>
+      {/* Row 1: icon + title + YES/NO pills + strength */}
+      <div className="flex items-center gap-3">
+        <span className="shrink-0 text-[16px] leading-none">{icon}</span>
+        <p className="flex-1 truncate text-[13px] font-semibold text-[#111111]">
+          {s.hedgeMarket}
+        </p>
+        {/* YES / NO compact pills */}
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={(e) => e.preventDefault()}
+            className={cn(
+              "rounded-[6px] px-2.5 py-1 text-[11px] font-semibold transition-colors",
+              s.hedgeSide === "YES"
+                ? "bg-[#15803d] text-white"
+                : "bg-[#f0fdf4] text-[#15803d]",
+            )}
+          >
+            Yes {yesCents}¢
+          </button>
+          <button
+            type="button"
+            onClick={(e) => e.preventDefault()}
+            className={cn(
+              "rounded-[6px] px-2.5 py-1 text-[11px] font-semibold transition-colors",
+              s.hedgeSide === "NO"
+                ? "bg-[#b91c1c] text-white"
+                : "bg-[#fef2f2] text-[#b91c1c]",
+            )}
+          >
+            No {noCents}¢
+          </button>
         </div>
         <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold", c.pill)}>
           {s.strength}
         </span>
       </div>
 
-      {/* Row 2: probability bar + YES / NO buttons */}
-      <div className="ml-7 flex flex-col gap-2">
-        {/* Bar — shows YES probability */}
+      {/* Row 2: equity context + probability bar */}
+      <div className="ml-6 flex flex-col gap-1.5">
+        <p className="text-[11px] text-[#9ca3af]">
+          {s.equityLabel} · {s.equitySymbols.join(" · ")} · {yesCents}% chance
+        </p>
         <div className="h-[3px] w-full overflow-hidden rounded-full bg-[#f0f0f0]">
           <div
             className="h-full rounded-full"
             style={{ width: `${yesCents}%`, backgroundColor: c.bar }}
           />
-        </div>
-
-        {/* Buttons */}
-        <div className="flex gap-1.5">
-          <button
-            type="button"
-            onClick={(e) => e.preventDefault()}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1 rounded-[8px] py-1.5 text-[12px] font-semibold transition-colors",
-              s.hedgeSide === "YES"
-                ? "bg-[#111111] text-white"
-                : "bg-[#f0fdf4] text-[#15803d] hover:bg-[#dcfce7]",
-            )}
-          >
-            Yes <span className="font-normal opacity-60">{yesCents}¢</span>
-          </button>
-          <button
-            type="button"
-            onClick={(e) => e.preventDefault()}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1 rounded-[8px] py-1.5 text-[12px] font-semibold transition-colors",
-              s.hedgeSide === "NO"
-                ? "bg-[#111111] text-white"
-                : "bg-[#fef2f2] text-[#b91c1c] hover:bg-[#fee2e2]",
-            )}
-          >
-            No <span className="font-normal opacity-60">{noCents}¢</span>
-          </button>
         </div>
       </div>
     </Link>
