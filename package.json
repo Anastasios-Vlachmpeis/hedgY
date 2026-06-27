@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "bash dev.sh",
+    "backend": "./.venv/bin/uvicorn app.main:app --reload",
+    "web": "npm --prefix web run dev",
     "alpaca:test": "node --env-file=.env scripts/alpaca-test.ts",
     "poly:test": "node scripts/polymarket-test.ts"
   }

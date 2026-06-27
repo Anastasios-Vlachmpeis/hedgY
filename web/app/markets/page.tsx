@@ -1,26 +1,37 @@
+import { hedgeSuggestions } from "@/lib/mockData";
 import {
-  marketCategories,
-  marketEvents,
-  featuredMarket,
-  trendingStocks,
-  hedgeSuggestions,
-} from "@/lib/mockData";
+  getMarketCategories,
+  getFeaturedMarket,
+  getMarketEvents,
+  getTrendingStocks,
+} from "@/lib/server/marketData";
 import { CategoryNav } from "@/components/markets/category-nav";
 import { FeaturedMarketCard } from "@/components/markets/featured-market";
 import { PromoRail } from "@/components/markets/promo-rail";
 import { MarketCard } from "@/components/markets/market-card";
 import { HedgeSuggestions } from "@/components/dashboard/hedge-suggestions";
 
+// Live cross-venue aggregator data (Kalshi + Polymarket) + Alpaca stocks, with
+// mock fallback on any venue error. force-dynamic so each load is fresh.
+export const dynamic = "force-dynamic";
+
 /** Markets discovery home — Polymarket/Kalshi-style feed, tailored to us. */
-export default function MarketsPage() {
+export default async function MarketsPage() {
+  const [categories, featured, events, stocks] = await Promise.all([
+    getMarketCategories(),
+    getFeaturedMarket(),
+    getMarketEvents(),
+    getTrendingStocks(),
+  ]);
+
   return (
     <div className="flex flex-col gap-5">
-      <CategoryNav categories={marketCategories} />
+      <CategoryNav categories={categories} />
 
       {/* Hero band: featured market + promo rail */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px]">
-        <FeaturedMarketCard market={featuredMarket} />
-        <PromoRail stocks={trendingStocks} />
+        <FeaturedMarketCard market={featured} />
+        <PromoRail stocks={stocks} />
       </div>
 
       {/* All markets grid */}
@@ -29,7 +40,7 @@ export default function MarketsPage() {
           All markets
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {marketEvents.map((event) => (
+          {events.map((event) => (
             <MarketCard key={event.id} event={event} />
           ))}
         </div>
