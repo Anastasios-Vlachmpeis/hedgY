@@ -16,6 +16,22 @@ The product / strategy / quant rulebook. **P2 owns the methodology; P1 implement
 
 Diagrams: `methodology-scheme.png`, `linkage-hedge-graph.png`, `demo-results.png`, `product-tiers.png`.
 
+## Live service (`service.py`)
+`service.py` is the wiring that makes the wedge live: it reads the aggregator's `GET /markets`, matches each of the 5 templates to a live market, pulls the live price, runs the classifier, and returns the 5 hedge suggestions (hedge ratio, residual %, hedge/expression label).
+
+- Offline demo: `python3 structuring/service.py --sample`
+- Live: `python3 structuring/service.py --base http://127.0.0.1:8000`
+
+Expose it from the backend with one thin route (P1 wires this; the structuring logic stays here):
+```python
+# app/main.py
+from structuring.service import suggest_hedges
+@app.get("/suggestions")
+def suggestions(notional: float = 10_000):
+    markets = [m.model_dump() for m in store.list_unified()]
+    return suggest_hedges(markets, notional=notional)
+```
+
 ## Boundary (no overlap)
 - **P2** = the rules: hedge math, templates, calibration (`move_adverse`), residual-risk definition, the schema shape.
 - **P1** = the engine: relationship engine, hedge classifier, payoff engine, OMS, connectors, ledger.
