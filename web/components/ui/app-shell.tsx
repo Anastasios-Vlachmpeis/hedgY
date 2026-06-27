@@ -22,7 +22,7 @@ const NAV_LINKS = [
 function AppShell({ children, className }: { children: React.ReactNode; className?: string }) {
   const pathname = usePathname();
   return (
-    <div className={cn("flex min-h-full flex-col bg-white", className)}>
+    <div className={cn("flex min-h-full flex-col bg-[#dde8f4]", className)}>
       <div className="sticky top-0 z-40 flex justify-center px-4 pt-3">
         <header className="flex w-full max-w-[860px] items-center gap-4 rounded-2xl bg-white/80 px-4 py-2.5 shadow-[0_2px_16px_rgba(0,0,0,0.08)] backdrop-blur-md">
           <Link href="/markets" className="flex items-center gap-2 shrink-0">
