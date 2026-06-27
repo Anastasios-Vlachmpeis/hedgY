@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowRight, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { StockChart } from "@/components/trade/stock-chart";
@@ -45,54 +45,105 @@ const LMT_RISKS = [
   },
 ];
 
-/* ── Single risk market row ── */
-function RiskRow({ r }: { r: (typeof LMT_RISKS)[0] }) {
-  const pct      = Math.round(r.probability * 100);
-  const bearish  = r.impact === "bearish";
-  const yesCents = pct;
-  const noCents  = 100 - pct;
+/* ── Polymarket-style semicircle gauge ── */
+function GaugeArc({ pct, bearish }: { pct: number; bearish: boolean }) {
+  const r = 17, cx = 21, cy = 21;
+  const arc = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
+  const color = bearish ? "#ef4444" : "#22c55e";
+  return (
+    <svg viewBox="0 0 42 25" className="w-[42px]">
+      <path
+        d={arc} fill="none" stroke="#f0f0f0"
+        strokeWidth="3.5" strokeLinecap="round" pathLength={100}
+      />
+      <path
+        d={arc} fill="none" stroke={color}
+        strokeWidth="3.5" strokeLinecap="round"
+        pathLength={100} strokeDasharray={`${pct} 100`}
+      />
+    </svg>
+  );
+}
+
+/* ── Polymarket-style risk card ── */
+function RiskCard({ r }: { r: (typeof LMT_RISKS)[0] }) {
+  const pct     = Math.round(r.probability * 100);
+  const bearish = r.impact === "bearish";
 
   return (
-    <div className="flex flex-col gap-2.5 py-4">
-      {/* Line 1: icon + title + % */}
-      <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 shrink-0 text-[15px] leading-none">{r.icon}</span>
+    <div className="rounded-[16px] border border-[#ececec] bg-white p-4">
+      {/* Row 1: icon + title + gauge */}
+      <div className="flex items-start gap-3">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-[#f5f5f5] text-[20px] leading-none">
+          {r.icon}
+        </div>
         <p className="flex-1 text-[13px] font-semibold leading-snug text-[#0a0a0a]">
           {r.event}
         </p>
-        <span className={cn(
-          "shrink-0 text-[14px] font-bold tabular-nums leading-none",
-          bearish ? "text-[#dc2626]" : "text-[#16a34a]",
-        )}>
-          {pct}%
-        </span>
+        {/* Gauge */}
+        <div className="flex shrink-0 flex-col items-center gap-0.5">
+          <GaugeArc pct={pct} bearish={bearish} />
+          <span className="text-[11px] font-bold tabular-nums leading-none text-[#0a0a0a]">
+            {pct}%
+          </span>
+          <span className="text-[9px] text-[#a3a3a3]">chance</span>
+        </div>
       </div>
 
-      {/* Line 2: probability bar */}
-      <div className="ml-[26px] h-[3px] w-full overflow-hidden rounded-full bg-[#f0f0f0]">
-        <div
-          className="h-full rounded-full"
-          style={{ width: `${pct}%`, backgroundColor: bearish ? "#fca5a5" : "#86efac" }}
-        />
+      {/* Row 2: YES / NO buttons */}
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          className="flex-1 rounded-[10px] bg-[#22c55e] py-[9px] text-[13px] font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          Yes
+        </button>
+        <button
+          type="button"
+          className="flex-1 rounded-[10px] bg-[#fef2f2] py-[9px] text-[13px] font-semibold text-[#dc2626] transition-colors hover:bg-[#fee2e2]"
+        >
+          No
+        </button>
       </div>
 
-      {/* Line 3: YES / NO pills + Hedge pill */}
-      <div className="ml-[26px] flex items-center gap-1.5">
-        <span className="rounded-full bg-[rgba(22,163,74,0.08)] px-3 py-[3px] text-[11px] font-semibold text-[#16a34a]">
-          Yes {yesCents}¢
+      {/* Row 3: volume + hedge */}
+      <div className="mt-3 flex items-center justify-between">
+        <span className="text-[11px] font-medium text-[#a3a3a3]">
+          {fmtVol(r.volume)} Vol.
         </span>
-        <span className="rounded-full bg-[rgba(220,38,38,0.06)] px-3 py-[3px] text-[11px] font-semibold text-[#dc2626]">
-          No {noCents}¢
-        </span>
-        <span className="text-[11px] text-[#d4d4d4]">·</span>
-        <span className="text-[10px] text-[#a3a3a3]">{fmtVol(r.volume)}</span>
         <Link
           href={`/structure?from=${r.hedgeFrom}`}
-          className="ml-auto rounded-full border border-[#e5e5e5] bg-white px-3 py-[3px] text-[11px] font-semibold text-[#0a0a0a] transition-colors duration-[150ms] hover:border-[#0a0a0a]"
+          className="rounded-full border border-[#e5e5e5] bg-white px-3 py-[3px] text-[11px] font-semibold text-[#0a0a0a] transition-colors hover:border-[#0a0a0a]"
         >
           Hedge →
         </Link>
       </div>
+    </div>
+  );
+}
+
+/* ── Risk panel ── */
+function RiskPanel() {
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Panel header */}
+      <div className="flex items-center justify-between px-0.5">
+        <div>
+          <h3 className="text-[13px] font-semibold text-[#0a0a0a]">Risk Markets</h3>
+          <p className="text-[11px] text-[#a3a3a3]">Correlated with LMT</p>
+        </div>
+        <span className={cn(
+          "flex items-center gap-1 rounded-full bg-[#fef3c7] px-2 py-0.5",
+          "text-[10px] font-semibold text-[#d97706]",
+        )}>
+          <ShieldAlert className="size-2.5" /> 3
+        </span>
+      </div>
+
+      {/* Cards */}
+      {LMT_RISKS.map((r) => (
+        <RiskCard key={r.id} r={r} />
+      ))}
     </div>
   );
 }
@@ -107,7 +158,9 @@ function StockBar() {
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-2">
           <span className="text-[15px] font-semibold text-[#0a0a0a]">Lockheed Martin</span>
-          <span className="rounded-full bg-[#f5f5f5] px-2 py-[2px] text-[11px] font-medium text-[#737373]">LMT · NYSE</span>
+          <span className="rounded-full bg-[#f5f5f5] px-2 py-[2px] text-[11px] font-medium text-[#737373]">
+            LMT · NYSE
+          </span>
         </div>
         <span className="text-[11px] text-[#a3a3a3]">Defense &amp; Aerospace</span>
       </div>
@@ -119,48 +172,13 @@ function StockBar() {
   );
 }
 
-/* ── Right panel: risk markets for LMT ── */
-function RiskPanel() {
-  return (
-    <div className="flex flex-col rounded-[18px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-[#f5f5f5] pb-4">
-        <div>
-          <h3 className="text-[15px] font-semibold text-[#0a0a0a]">Risk Markets</h3>
-          <p className="mt-0.5 text-[11px] text-[#a3a3a3]">Prediction markets correlated with LMT</p>
-        </div>
-        <span className="flex items-center gap-1 rounded-full bg-[#fef3c7] px-2 py-0.5 text-[10px] font-semibold text-[#d97706]">
-          <ShieldAlert className="size-2.5" /> 3 risks
-        </span>
-      </div>
-
-      {/* Market rows */}
-      <div className="flex flex-col divide-y divide-[#f5f5f5]">
-        {LMT_RISKS.map((r) => (
-          <RiskRow key={r.id} r={r} />
-        ))}
-      </div>
-
-      {/* CTA — sits right below the last row */}
-      <Link
-        href="/structure"
-        className="mt-5 flex items-center justify-center gap-2 rounded-full bg-[#0a0a0a] px-5 py-2.5 text-[13px] font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-all duration-[150ms] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
-      >
-        Hedge all 3 risks <ArrowRight className="size-3.5" />
-      </Link>
-    </div>
-  );
-}
-
 /* ── Page ── */
 export default function TradePage() {
   return (
     <div className="flex flex-col gap-5">
-      {/* Stock identity */}
       <StockBar />
-
-      {/* Chart + risk panel */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[58fr_42fr]">
+      {/* Chart gets 70%, risk panel gets 30% */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[70fr_30fr]">
         <StockChart />
         <RiskPanel />
       </div>
