@@ -1,5 +1,3 @@
-import { TradeShell } from "@/components/trade/trade-shell";
-
 export default function TradeLayout({ children }: { children: React.ReactNode }) {
-  return <TradeShell>{children}</TradeShell>;
+  return <div className="min-h-screen bg-[#f8f8f8]">{children}</div>;
 }
