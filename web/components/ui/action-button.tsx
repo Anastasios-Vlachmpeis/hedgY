@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
 
 import { cn } from "@/lib/utils";
 
@@ -21,22 +22,21 @@ const TONE_STYLES: Record<Tone, string> = {
 function ActionButton({
   tone,
   className,
-  children,
+  asChild = false,
   ...props
-}: React.ComponentProps<"button"> & { tone: Tone }) {
+}: React.ComponentProps<"button"> & { tone: Tone; asChild?: boolean }) {
+  const Comp = asChild ? Slot : "button";
   return (
-    <button
-      type="button"
+    <Comp
       data-slot="action-button"
       className={cn(
         "inline-flex items-center justify-center gap-1 rounded-[7px] px-3 py-1.5 text-[12px] font-semibold transition-colors active:translate-y-px",
         TONE_STYLES[tone],
         className,
       )}
+      {...(asChild ? {} : { type: "button" })}
       {...props}
-    >
-      {children}
-    </button>
+    />
   );
 }
 
