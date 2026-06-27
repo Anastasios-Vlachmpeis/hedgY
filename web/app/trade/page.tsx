@@ -137,8 +137,8 @@ export default function TradePage() {
       <TradeSearch />
 
       {/* Row 1: chart (left 60%) + stock cards + combine CTA (right 40%) */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_272px]">
-        <div className="h-[340px]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_272px] lg:items-stretch">
+        <div className="min-h-[340px]">
           <StockChart />
         </div>
         <div className="flex flex-col gap-3">
