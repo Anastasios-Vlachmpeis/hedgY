@@ -5,12 +5,6 @@ import { cn } from "@/lib/utils";
 import { usd, signedUsd, pct } from "@/lib/format";
 import type { Position } from "@/lib/mockData";
 
-const TYPE_CHIP: Record<Position["type"], string> = {
-  Combined: "bg-[#f3f1ff] text-[#9580ff]",
-  Equity: "bg-[#f5f5f5] text-[#666666]",
-  Prediction: "bg-[#f5f5f5] text-[#666666]",
-};
-
 function ValuePnl({ p }: { p: Position }) {
   const up = p.pnl >= 0;
   const pnlColor = up ? "text-[#16a34a]" : "text-[#dc2626]";
@@ -29,8 +23,24 @@ function ValuePnl({ p }: { p: Position }) {
   );
 }
 
-/** Combined position: show the equity leg + prediction hedge leg explicitly. */
+/** Two-segment bar: grey equity portion + violet hedge portion. */
+function HedgeBar({ ratio }: { ratio: number }) {
+  return (
+    <div className="mt-1 flex items-center gap-2">
+      <span className="flex h-1.5 w-20 shrink-0 overflow-hidden rounded-full">
+        <span className="h-full bg-[#d4d4d4]" style={{ width: `${100 - ratio}%` }} />
+        <span className="h-full bg-[#9580ff]" style={{ width: `${ratio}%` }} />
+      </span>
+      <span className="text-[11px] tabular-nums text-[#a3a3a3]">
+        {ratio}% hedged
+      </span>
+    </div>
+  );
+}
+
+/** Combined position. Headline = total + P&L; legs are a quiet sub-detail. */
 function CombinedRow({ p }: { p: Position }) {
+  // hedge proportion derived from the leg amounts (hedge relative to equity).
   const ratio =
     p.equityLeg && p.hedgeLeg
       ? Math.round((p.hedgeLeg.value / p.equityLeg.value) * 100)
@@ -38,36 +48,30 @@ function CombinedRow({ p }: { p: Position }) {
   return (
     <li className="flex items-start gap-3 py-2.5">
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className={cn("shrink-0 rounded-[5px] px-1.5 py-0.5 text-[10px] font-medium", TYPE_CHIP.Combined)}>
-            Combined
-          </span>
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-[5px] bg-[#f7f5ff] px-1.5 py-0.5 text-[10px] font-medium text-[#9580ff]">
-            <Shield className="size-2.5" /> Hedged {ratio}%
-          </span>
-          <span className="truncate text-[13px] font-semibold text-[#181925]">
-            {p.title}
-          </span>
-        </div>
+        <p className="truncate text-[13px] font-semibold text-[#181925]">
+          {p.title}
+        </p>
 
-        {/* two-leg breakdown */}
-        <div className="mt-1.5 flex flex-col gap-1 rounded-[8px] border-l-2 border-[#9580ff] bg-[#f7f5ff] py-1.5 pl-2.5 pr-2.5">
+        <HedgeBar ratio={ratio} />
+
+        {/* quiet leg breakdown — supporting evidence, not headlines */}
+        <div className="mt-1.5 flex flex-col gap-0.5 rounded-[6px] bg-[#fafafa] px-2 py-1">
           {p.equityLeg && (
-            <div className="flex items-center gap-2 text-[11.5px]">
+            <div className="flex items-center gap-1.5 text-[11px]">
               <TrendingUp className="size-3 shrink-0 text-[#16a34a]" />
-              <span className="w-12 shrink-0 font-medium text-[#666666]">Equity</span>
-              <span className="truncate text-[#181925]">{p.equityLeg.label}</span>
-              <span className="ml-auto shrink-0 tabular-nums text-[#666666]">
+              <span className="w-10 shrink-0 text-[#666666]">Equity</span>
+              <span className="truncate text-[#666666]">{p.equityLeg.label}</span>
+              <span className="ml-auto shrink-0 tabular-nums text-[#a3a3a3]">
                 {usd(p.equityLeg.value, 0)}
               </span>
             </div>
           )}
           {p.hedgeLeg && (
-            <div className="flex items-center gap-2 text-[11.5px]">
+            <div className="flex items-center gap-1.5 text-[11px]">
               <Shield className="size-3 shrink-0 text-[#9580ff]" />
-              <span className="w-12 shrink-0 font-medium text-[#666666]">Hedge</span>
-              <span className="truncate text-[#181925]">{p.hedgeLeg.label}</span>
-              <span className="ml-auto shrink-0 tabular-nums text-[#666666]">
+              <span className="w-10 shrink-0 text-[#666666]">Hedge</span>
+              <span className="truncate text-[#666666]">{p.hedgeLeg.label}</span>
+              <span className="ml-auto shrink-0 tabular-nums text-[#a3a3a3]">
                 {usd(p.hedgeLeg.value, 0)}
               </span>
             </div>
@@ -108,14 +112,9 @@ function PositionsRows({ positions }: { positions: Position[] }) {
         if (items.length === 0) return null;
         return (
           <div key={type} className="mt-3 first:mt-1">
-            <div className="mb-0.5 flex items-center justify-between">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
-                {label}
-              </p>
-              <span className="text-[11px] tabular-nums text-[#a3a3a3]">
-                {items.length}
-              </span>
-            </div>
+            <p className="mb-0.5 text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
+              {label}
+            </p>
             <ul className="divide-y divide-[#f0f0f0]">
               {items.map((p) =>
                 type === "Combined" ? (
