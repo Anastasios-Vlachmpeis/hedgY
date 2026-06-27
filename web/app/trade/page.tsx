@@ -80,53 +80,53 @@ const LMT_RISKS = [
 
 function RiskPanel() {
   return (
-    <div className="flex h-full flex-col rounded-[18px] bg-white p-7 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <div className="flex h-full flex-col rounded-[18px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-[22px] font-semibold leading-tight text-[#111111]">LMT Risk Analysis</h3>
-          <p className="mt-1 text-[14px] text-[#6B7280]">3 macro events correlated with your position</p>
+          <h3 className="text-[16px] font-semibold leading-tight text-[#111111]">LMT Risk Analysis</h3>
+          <p className="mt-0.5 text-[12px] text-[#6B7280]">3 macro events correlated with your position</p>
         </div>
-        <span className="mt-1 flex items-center gap-1 rounded-full bg-[#fef3c7] px-2.5 py-1 text-[11px] font-semibold text-[#d97706]">
-          <ShieldAlert className="size-3" /> 3 events
+        <span className="flex items-center gap-1 rounded-full bg-[#fef3c7] px-2 py-0.5 text-[10px] font-semibold text-[#d97706]">
+          <ShieldAlert className="size-2.5" /> 3
         </span>
       </div>
 
       {/* Risk cards */}
-      <div className="mt-5 flex flex-col gap-3">
+      <div className="mt-4 flex flex-col gap-2.5">
         {LMT_RISKS.map((r) => {
           const pct     = Math.round(r.probability * 100);
           const bearish = r.impact === "bearish";
           return (
-            <div key={r.id} className="rounded-[14px] border border-[#ececec] p-5">
+            <div key={r.id} className="rounded-[12px] border border-[#ececec] p-4">
               {/* Top row: icon + title + badge */}
-              <div className="flex items-center gap-2.5">
-                <span className="shrink-0 text-[16px] leading-none">{r.icon}</span>
-                <p className="flex-1 text-[13px] font-semibold leading-snug text-[#111111]">{r.event}</p>
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 text-[14px] leading-none">{r.icon}</span>
+                <p className="flex-1 text-[12px] font-semibold leading-snug text-[#111111]">{r.event}</p>
                 <span className={cn(
-                  "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                  "shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
                   bearish ? "bg-[#fef2f2] text-[#dc2626]" : "bg-[#f0fdf4] text-[#16a34a]",
                 )}>
-                  {bearish ? "↓ Bearish" : "↑ Bullish"}
+                  {bearish ? "↓ Bear" : "↑ Bull"}
                 </span>
               </div>
 
               {/* Probability */}
-              <div className="mt-3 flex items-end gap-2">
-                <span className="text-[30px] font-semibold leading-none tabular-nums text-[#111111]">{pct}%</span>
-                <span className="mb-0.5 text-[12px] text-[#9ca3af]">probability · {fmtVol(r.volume)} vol</span>
+              <div className="mt-2 flex items-end gap-2">
+                <span className="text-[22px] font-semibold leading-none tabular-nums text-[#111111]">{pct}%</span>
+                <span className="mb-0.5 text-[11px] text-[#9ca3af]">{fmtVol(r.volume)} vol</span>
               </div>
 
               {/* Bar */}
-              <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-[#f0f0f0]">
+              <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-[#f0f0f0]">
                 <div
-                  className={cn("h-full rounded-full transition-all", bearish ? "bg-[#fca5a5]" : "bg-[#86efac]")}
+                  className={cn("h-full rounded-full", bearish ? "bg-[#fca5a5]" : "bg-[#86efac]")}
                   style={{ width: `${pct}%` }}
                 />
               </div>
 
               {/* Reason */}
-              <p className="mt-2.5 text-[12px] leading-relaxed text-[#6B7280]">{r.reason}</p>
+              <p className="mt-2 text-[11px] leading-relaxed text-[#6B7280]">{r.reason}</p>
             </div>
           );
         })}
@@ -135,7 +135,7 @@ function RiskPanel() {
       {/* Full-width outline CTA */}
       <Link
         href="/structure"
-        className="mt-auto flex h-12 w-full shrink-0 items-center justify-between rounded-[12px] border border-[#111111] px-5 text-[14px] font-medium text-[#111111] transition-all duration-[200ms] ease-out hover:bg-[#111111] hover:text-white"
+        className="mt-auto flex h-10 w-full shrink-0 items-center justify-between rounded-[10px] border border-[#111111] px-4 text-[13px] font-medium text-[#111111] transition-all duration-[200ms] ease-out hover:bg-[#111111] hover:text-white"
       >
         Hedge LMT against these
         <ArrowRight className="size-4" />
@@ -149,26 +149,26 @@ function CombineCTA() {
   return (
     <Link
       href="/structure"
-      className="group flex h-[92px] items-center justify-between rounded-[18px] bg-[#171B3B] px-7 transition-opacity duration-[200ms] hover:opacity-95"
+      className="group flex h-[72px] items-center justify-between rounded-[16px] bg-[#171B3B] px-6 transition-opacity duration-[200ms] hover:opacity-95"
     >
-      <div className="flex items-center gap-5">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-white/10">
-          <span className="text-[18px]">🧩</span>
+      <div className="flex items-center gap-4">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-white/10">
+          <span className="text-[15px]">🧩</span>
         </div>
         <div>
-          <p className="text-[20px] font-semibold leading-tight text-white">
+          <p className="text-[15px] font-semibold leading-tight text-white">
             Build a hedged position on LMT
           </p>
-          <p className="mt-0.5 text-[14px] text-white/70">
-            Pair equity with prediction-market coverage — auto-sized hedge ratio, one click.
+          <p className="mt-0.5 text-[12px] text-white/60">
+            Pair equity with prediction-market coverage — auto-sized, one click.
           </p>
         </div>
       </div>
       <button
         type="button"
-        className="ml-8 flex shrink-0 items-center gap-2 rounded-[12px] bg-white px-6 py-2.5 text-[14px] font-semibold text-[#171B3B] transition-transform duration-[200ms] ease-out group-hover:-translate-y-px"
+        className="ml-6 flex shrink-0 items-center gap-1.5 rounded-[10px] bg-white px-4 py-2 text-[13px] font-semibold text-[#171B3B] transition-transform duration-[200ms] ease-out group-hover:-translate-y-px"
       >
-        Structure it <ArrowRight className="size-4" />
+        Structure it <ArrowRight className="size-3.5" />
       </button>
     </Link>
   );
@@ -193,50 +193,50 @@ function HedgeCard({ s }: { s: (typeof hedgeSuggestions)[0] }) {
   return (
     <Link
       href="/structure"
-      className="group flex flex-col rounded-[18px] bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all duration-[200ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.05)]"
+      className="group flex flex-col rounded-[16px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all duration-[200ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.05)]"
     >
       {/* Strength */}
       <div className="flex items-center gap-1.5">
         <span className={cn("size-1.5 rounded-full", c.dot)} />
-        <span className={cn("text-[11px] font-semibold uppercase tracking-wide", c.text)}>
+        <span className={cn("text-[10px] font-semibold uppercase tracking-wide", c.text)}>
           {s.strength} hedge
         </span>
       </div>
 
       {/* Thesis */}
-      <h3 className="mt-3 text-[15px] font-semibold text-[#111111]">{s.position.thesis}</h3>
-      <p className="mt-1 text-[13px] text-[#6B7280]">{HEDGE_SUBTITLE[s.id]}</p>
+      <h3 className="mt-2.5 text-[14px] font-semibold text-[#111111]">{s.position.thesis}</h3>
+      <p className="mt-0.5 text-[12px] text-[#6B7280]">{HEDGE_SUBTITLE[s.id]}</p>
 
       {/* Legs */}
-      <div className="mt-5 flex flex-col gap-3">
+      <div className="mt-4 flex flex-col gap-2.5">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#9ca3af]">Long exposure</p>
-          <p className="mt-1.5 text-[13px] font-medium text-[#111111]">
+          <p className="text-[9px] font-semibold uppercase tracking-widest text-[#9ca3af]">Long exposure</p>
+          <p className="mt-1 text-[12px] font-medium text-[#111111]">
             {s.equitySymbols.join(" · ")}
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <div className="h-px flex-1 bg-[#f0f0f0]" />
-          <span className="text-[10px] font-medium text-[#d1d5db]">hedged with</span>
+          <span className="text-[9px] font-medium text-[#d1d5db]">hedged with</span>
           <div className="h-px flex-1 bg-[#f0f0f0]" />
         </div>
 
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#9ca3af]">Hedge exposure</p>
-          <p className="mt-1.5 text-[13px] font-medium text-[#111111]">
+          <p className="text-[9px] font-semibold uppercase tracking-widest text-[#9ca3af]">Hedge exposure</p>
+          <p className="mt-1 text-[12px] font-medium text-[#111111]">
             {s.hedgeSide} — {s.hedgeMarket}
           </p>
-          <p className="mt-0.5 text-[12px] text-[#9ca3af]">@ {hedgePct}¢ implied</p>
+          <p className="mt-0.5 text-[11px] text-[#9ca3af]">@ {hedgePct}¢ implied</p>
         </div>
       </div>
 
       {/* Rationale */}
-      <p className="mt-4 text-[12px] leading-relaxed text-[#6B7280]">{s.rationale}</p>
+      <p className="mt-3 text-[11px] leading-relaxed text-[#6B7280]">{s.rationale}</p>
 
       {/* Text CTA */}
-      <div className="mt-5 flex items-center gap-1 text-[13px] font-medium text-[#111111] transition-all duration-[200ms] ease-out group-hover:gap-2">
-        Build this combo <ArrowRight className="size-3.5" />
+      <div className="mt-3 flex items-center gap-1 text-[12px] font-medium text-[#111111] transition-all duration-[200ms] ease-out group-hover:gap-2">
+        Build this combo <ArrowRight className="size-3" />
       </div>
     </Link>
   );
@@ -251,30 +251,30 @@ function StockPill({ s }: { s: (typeof trendingStocks)[0] }) {
   const up    = s.direction !== "down";
   const risks = STOCK_RISKS[s.symbol] ?? 0;
   return (
-    <div className="flex w-[190px] shrink-0 cursor-pointer flex-col rounded-[16px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all duration-[200ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.05)]">
+    <div className="flex w-[160px] shrink-0 cursor-pointer flex-col rounded-[14px] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all duration-[200ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.05)]">
       {/* Ticker + risk badge */}
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-[16px] font-semibold text-[#111111]">{s.symbol}</p>
-          <p className="mt-0.5 truncate text-[11px] text-[#9ca3af]">{s.name}</p>
+          <p className="text-[14px] font-semibold text-[#111111]">{s.symbol}</p>
+          <p className="mt-0.5 truncate text-[10px] text-[#9ca3af]">{s.name}</p>
         </div>
         {risks > 0 && (
-          <span className="mt-0.5 flex items-center gap-1 rounded-full bg-[#fef3c7] px-1.5 py-0.5">
-            <span className="size-[5px] rounded-full bg-[#f59e0b]" />
+          <span className="flex items-center gap-0.5 rounded-full bg-[#fef3c7] px-1.5 py-0.5">
+            <span className="size-[4px] rounded-full bg-[#f59e0b]" />
             <span className="text-[9px] font-bold text-[#d97706]">{risks}</span>
           </span>
         )}
       </div>
 
       {/* Sparkline */}
-      <div className="mt-4">
+      <div className="mt-3">
         <Spark data={s.spark} up={up} />
       </div>
 
       {/* Price + change */}
-      <div className="mt-3 flex items-end justify-between">
-        <p className="text-[17px] font-semibold tabular-nums text-[#111111]">${s.price.toFixed(2)}</p>
-        <p className={cn("text-[12px] font-medium tabular-nums", up ? "text-[#16a34a]" : "text-[#ef4444]")}>
+      <div className="mt-2 flex items-end justify-between">
+        <p className="text-[14px] font-semibold tabular-nums text-[#111111]">${s.price.toFixed(2)}</p>
+        <p className={cn("text-[11px] font-medium tabular-nums", up ? "text-[#16a34a]" : "text-[#ef4444]")}>
           {up ? "+" : ""}{s.changePct.toFixed(1)}%
         </p>
       </div>
@@ -298,7 +298,7 @@ function Section({ title, sub, children }: { title: string; sub?: string; childr
 /* ── Page ── */
 export default function TradePage() {
   return (
-    <div className="flex flex-col gap-14">
+    <div className="flex flex-col gap-10">
       <TradeSearch />
 
       {/* Hero — 62/38 split, equal height columns */}

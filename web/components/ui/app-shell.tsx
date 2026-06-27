@@ -79,7 +79,7 @@ function AppShell({ children, className }: { children: React.ReactNode; classNam
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1500px] flex-1 px-10 py-10">
+      <main className="mx-auto w-full max-w-[1500px] flex-1 px-10 py-8">
         {children}
       </main>
     </div>

@@ -42,18 +42,18 @@ export function StockChart() {
   const diffPct = (diff / first) * 100;
 
   return (
-    <div className="flex h-full min-h-[540px] flex-col rounded-[18px] bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <div className="flex h-full min-h-[440px] flex-col rounded-[18px] bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
 
       {/* ── Company header + Buy/Sell ── */}
       <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {/* Logo placeholder */}
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-[12px] bg-[#f5f7fa] text-[22px]">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-[#f5f7fa] text-[16px]">
             🛡️
           </div>
           <div>
-            <h2 className="text-[24px] font-semibold leading-tight text-[#111111]">Lockheed Martin</h2>
-            <p className="mt-[4px] text-[15px] text-[#6B7280]">LMT · NYSE</p>
+            <h2 className="text-[17px] font-semibold leading-tight text-[#111111]">Lockheed Martin</h2>
+            <p className="mt-[2px] text-[13px] text-[#6B7280]">LMT · NYSE</p>
           </div>
         </div>
 
@@ -88,17 +88,17 @@ export function StockChart() {
       </div>
 
       {/* ── Price ── */}
-      <div className="mt-6 flex items-baseline gap-3">
-        <span className="text-[46px] font-semibold leading-none tabular-nums tracking-[-0.02em] text-[#111111]">
+      <div className="mt-4 flex items-baseline gap-3">
+        <span className="text-[36px] font-semibold leading-none tabular-nums tracking-[-0.02em] text-[#111111]">
           ${current.toFixed(2)}
         </span>
-        <span className="text-[14px] font-medium tabular-nums text-[#16a34a]">
+        <span className="text-[13px] font-medium tabular-nums text-[#16a34a]">
           +{diff.toFixed(2)} (+{diffPct.toFixed(2)}%)
         </span>
       </div>
 
       {/* ── Segmented time selector ── */}
-      <div className="mt-5">
+      <div className="mt-4">
         <div className="inline-flex items-center rounded-[10px] border border-[#ececec] bg-[#f5f5f5] p-[3px]">
           {TFS.map((t) => (
             <button
@@ -119,7 +119,7 @@ export function StockChart() {
       </div>
 
       {/* ── Chart ── */}
-      <div className="mt-5 min-h-0 flex-1">
+      <div className="mt-4 min-h-0 flex-1">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={SERIES} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
             <defs>
@@ -168,13 +168,13 @@ export function StockChart() {
       </div>
 
       {/* ── Bottom statistics ── */}
-      <div className="mt-5 grid grid-cols-5 border-t border-[#f5f5f5] pt-5">
+      <div className="mt-4 grid grid-cols-5 border-t border-[#f5f5f5] pt-4">
         {STATS.map((s) => (
-          <div key={s.label} className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-[#9ca3af]">
+          <div key={s.label} className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af]">
               {s.label}
             </span>
-            <span className="text-[17px] font-semibold tabular-nums text-[#111111]">
+            <span className="text-[14px] font-semibold tabular-nums text-[#111111]">
               {s.value}
             </span>
           </div>
