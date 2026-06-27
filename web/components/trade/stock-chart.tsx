@@ -34,7 +34,7 @@ export function StockChart() {
   const diffPct = (diff / first) * 100;
 
   return (
-    <div className="flex h-full flex-col rounded-[14px] border border-[#181925] bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.10)]">
+    <div className="flex h-full flex-col rounded-[14px] border border-[#ececec] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       {/* Header */}
       <div className="mb-3 flex items-start justify-between gap-4">
         <div>
