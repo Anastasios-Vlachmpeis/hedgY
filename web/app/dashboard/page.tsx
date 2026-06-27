@@ -4,13 +4,18 @@ import {
   exposure,
   trendingStocks,
   trendingMarkets,
+  regionExposure,
+  sectorWeights,
+  hedgeSuggestions,
 } from "@/lib/mockData";
 import { PortfolioOverview } from "@/components/dashboard/portfolio-overview";
 import { TrendingStocks } from "@/components/dashboard/trending-stocks";
 import { TrendingMarkets } from "@/components/dashboard/trending-markets";
-import { StructuringPanel } from "@/components/dashboard/structuring-panel";
+import { ByRegion } from "@/components/dashboard/by-region";
+import { BySector } from "@/components/dashboard/by-sector";
+import { HedgeSuggestions } from "@/components/dashboard/hedge-suggestions";
 
-/** User home screen. Light dashboard with one dark Structuring hero column. */
+/** User home screen — fully light, two row-bands on a 12-col grid. */
 export default function DashboardPage() {
   return (
     <div>
@@ -21,25 +26,31 @@ export default function DashboardPage() {
         <p className="text-[13px] text-[#a3a3a3]">Markets open · Mock data</p>
       </div>
 
-      <div className="grid grid-cols-12 gap-3 lg:auto-rows-min lg:grid-rows-[auto_1fr]">
-        {/* LEFT-TOP — Portfolio / Overview */}
-        <div className="col-span-12 lg:col-span-8">
+      <div className="grid grid-cols-12 gap-4">
+        {/* TOP BAND: Portfolio (1–6) · By Region (7–9) · By Sector (10–12) */}
+        <div className="col-span-12 lg:col-span-6">
           <PortfolioOverview
             portfolio={portfolio}
             series={portfolioSeries}
             exposure={exposure}
           />
         </div>
-
-        {/* RIGHT (full height) — Structuring hero (dark) */}
-        <div className="col-span-12 lg:col-span-4 lg:row-span-2">
-          <StructuringPanel />
+        <div className="col-span-6 lg:col-span-3">
+          <ByRegion regions={regionExposure} />
+        </div>
+        <div className="col-span-6 lg:col-span-3">
+          <BySector sectors={sectorWeights} />
         </div>
 
-        {/* LEFT-BOTTOM — Trending Stocks | Trending Prediction Markets */}
-        <div className="col-span-12 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-8">
+        {/* BOTTOM BAND: Trending Stocks (1–3) · Trending Predictions (4–6) · Hedge Suggestions (7–12) */}
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
           <TrendingStocks stocks={trendingStocks} />
+        </div>
+        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
           <TrendingMarkets markets={trendingMarkets} />
+        </div>
+        <div className="col-span-12 lg:col-span-6">
+          <HedgeSuggestions suggestions={hedgeSuggestions} />
         </div>
       </div>
     </div>
