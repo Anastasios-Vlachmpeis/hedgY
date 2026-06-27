@@ -13,9 +13,12 @@ import asyncio
 import contextlib
 import logging
 from datetime import datetime, timezone
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Query
+from pydantic import BaseModel, Field
 
+from app.account import account_service, place_alpaca_order, stock_price
 from app.config import settings
 from app.connectors import KalshiConnector, PolymarketConnector
 from app.connectors.base import Connector
@@ -141,11 +144,108 @@ def suggestions(
     return suggest_hedges(markets, notional=notional)
 
 
+# --------------------------------------------------------------------------- #
+# Paper-trading account (the $1000 wallet).                                     #
+# Stocks execute on Alpaca paper; predictions fill in-app at live odds.         #
+# --------------------------------------------------------------------------- #
+class DepositRequest(BaseModel):
+    amount: float = Field(default=settings.default_deposit, gt=0, le=10_000_000)
+
+
+class OrderRequest(BaseModel):
+    kind: Literal["stock", "prediction"]
+    action: Literal["buy", "sell"] = "buy"
+    notionalUsd: float = Field(gt=0, le=10_000_000)
+    symbol: str | None = None      # stocks
+    market_id: str | None = None   # predictions (unified market id)
+    side: Literal["YES", "NO"] | None = None  # predictions
+
+
+def _prediction_price(market_id: str, side: str) -> tuple[float | None, str | None]:
+    """(live side price, question) for a unified market id, from the live store."""
+    detail = store.get_unified_detail(market_id)
+    if detail is None:
+        return None, None
+    quote = detail.best_yes if side == "YES" else detail.best_no
+    return (quote.price if quote else None), detail.canonical_question
+
+
+def _mark(position: dict) -> float | None:
+    """Current price for a held position (stock → Alpaca, prediction → store)."""
+    if position["kind"] == "stock":
+        return stock_price(position["symbol"])
+    price, _ = _prediction_price(position["market_id"], position["side"])
+    return price
+
+
+@app.get("/account")
+def get_account() -> dict:
+    return account_service.account(_mark)
+
+
+@app.get("/positions")
+def get_positions() -> list[dict]:
+    return account_service.positions_marked(_mark)
+
+
+@app.get("/trades")
+def get_trades() -> list[dict]:
+    return account_service.trades()
+
+
+@app.post("/account/deposit")
+def deposit(req: DepositRequest) -> dict:
+    account_service.deposit(req.amount)
+    return account_service.account(_mark)
+
+
+@app.post("/account/reset")
+def reset_account() -> dict:
+    account_service.reset()
+    return account_service.account(_mark)
+
+
+@app.post("/orders")
+def create_order(req: OrderRequest) -> dict:
+    if req.kind == "stock":
+        if not req.symbol:
+            raise HTTPException(status_code=422, detail="stock order requires 'symbol'")
+        price = stock_price(req.symbol)
+        if price is None:
+            raise HTTPException(status_code=503, detail=f"no live price for {req.symbol}")
+        order_id = place_alpaca_order(req.symbol, req.notionalUsd, req.action)
+        try:
+            return account_service.place_order(
+                kind="stock", action=req.action, notional=req.notionalUsd, price=price,
+                symbol=req.symbol.upper(), label=req.symbol.upper(), alpaca_order_id=order_id,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    # prediction
+    if not req.market_id or req.side not in ("YES", "NO"):
+        raise HTTPException(status_code=422, detail="prediction order requires 'market_id' and side YES|NO")
+    price, question = _prediction_price(req.market_id, req.side)
+    if price is None:
+        raise HTTPException(status_code=503, detail="no live price for that market/side")
+    try:
+        return account_service.place_order(
+            kind="prediction", action=req.action, notional=req.notionalUsd, price=price,
+            market_id=req.market_id, side=req.side, label=question,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @app.get("/")
 async def root() -> dict:
     return {
         "service": "prediction-market-aggregator",
         "mode": "read-only (suggestions only)",
-        "endpoints": ["/markets", "/markets/{id}", "/suggestions", "/health"],
+        "endpoints": [
+            "/markets", "/markets/{id}", "/suggestions", "/health",
+            "/account", "/positions", "/trades",
+            "/account/deposit", "/account/reset", "/orders",
+        ],
         "has_data": store.has_data,
     }
