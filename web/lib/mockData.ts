@@ -563,6 +563,11 @@ export const featuredMarket: FeaturedMarket = {
    PORTFOLIO POSITIONS  (/dashboard)
    ==================================================================== */
 
+export interface PositionLeg {
+  label: string;
+  value: number;
+}
+
 export interface Position {
   id: string;
   title: string;
@@ -572,6 +577,9 @@ export interface Position {
   cost: number; // cost basis
   pnl: number; // value − cost
   pnlPct: number;
+  // Combined positions expose their two legs so the hedge structure is visible.
+  equityLeg?: PositionLeg;
+  hedgeLeg?: PositionLeg;
 }
 
 export const positions: Position[] = [
@@ -584,12 +592,14 @@ export const positions: Position[] = [
     cost: 10_000,
     pnl: 840,
     pnlPct: 8.4,
+    equityLeg: { label: "Defense basket · LMT·RTX·NOC", value: 8_300 },
+    hedgeLeg: { label: "NO — Incumbent wins @57%", value: 2_540 },
   },
   {
     id: "p-lmt",
     title: "Lockheed Martin",
     type: "Equity",
-    detail: "12 sh @ $452.10 avg",
+    detail: "12 shares @ $452.10 avg",
     value: 5_667.6,
     cost: 5_425.2,
     pnl: 242.4,
@@ -604,6 +614,8 @@ export const positions: Position[] = [
     cost: 6_500,
     pnl: -180,
     pnlPct: -2.8,
+    equityLeg: { label: "Pharma basket · PFE·MRK", value: 4_900 },
+    hedgeLeg: { label: "NO — Drug X Phase 3 succeeds @61%", value: 1_420 },
   },
   {
     id: "p-fed",
@@ -619,7 +631,7 @@ export const positions: Position[] = [
     id: "p-zim",
     title: "ZIM Integrated",
     type: "Equity",
-    detail: "240 sh @ $20.90 avg",
+    detail: "240 shares @ $20.90 avg",
     value: 5_376,
     cost: 5_016,
     pnl: 360,
@@ -639,7 +651,7 @@ export const positions: Position[] = [
     id: "p-rtx",
     title: "RTX Corp",
     type: "Equity",
-    detail: "60 sh @ $112.80 avg",
+    detail: "60 shares @ $112.80 avg",
     value: 7_104,
     cost: 6_768,
     pnl: 336,
@@ -649,7 +661,7 @@ export const positions: Position[] = [
     id: "p-noc",
     title: "Northrop Grumman",
     type: "Equity",
-    detail: "8 sh @ $498.40 avg",
+    detail: "8 shares @ $498.40 avg",
     value: 4_089.6,
     cost: 3_987.2,
     pnl: 102.4,
@@ -664,6 +676,8 @@ export const positions: Position[] = [
     cost: 5_000,
     pnl: 180,
     pnlPct: 3.6,
+    equityLeg: { label: "Shipping · ZIM", value: 3_980 },
+    hedgeLeg: { label: "YES — Hormuz blockade @17%", value: 1_200 },
   },
   {
     id: "p-btc",
@@ -679,7 +693,7 @@ export const positions: Position[] = [
     id: "p-mrk",
     title: "Merck & Co",
     type: "Equity",
-    detail: "30 sh @ $101.20 avg",
+    detail: "30 shares @ $101.20 avg",
     value: 3_126,
     cost: 3_036,
     pnl: 90,
@@ -709,7 +723,7 @@ export const positions: Position[] = [
     id: "p-gd",
     title: "General Dynamics",
     type: "Equity",
-    detail: "10 sh @ $290.50 avg",
+    detail: "10 shares @ $290.50 avg",
     value: 2_981,
     cost: 2_905,
     pnl: 76,
@@ -730,11 +744,11 @@ export interface Activity {
 
 export const activity: Activity[] = [
   { id: "a1", kind: "Hedged", title: "Long defense, hedge the election", detail: "Added NO Incumbent wins · 40%", amount: -1500, time: "12m ago" },
-  { id: "a2", kind: "Bought", title: "Lockheed Martin", detail: "4 sh @ $471.20", amount: -1884.8, time: "1h ago" },
+  { id: "a2", kind: "Bought", title: "Lockheed Martin", detail: "4 shares @ $471.20", amount: -1884.8, time: "1h ago" },
   { id: "a3", kind: "Sold", title: "Fed cuts rates in July 2026", detail: "YES · 80 contracts @ 38¢", amount: 304, time: "3h ago" },
   { id: "a4", kind: "Bought", title: "Nvidia hits $4T market cap", detail: "YES · 300 contracts @ 44¢", amount: -1320, time: "5h ago" },
   { id: "a5", kind: "Settled", title: "Q1 jobs report beats", detail: "YES resolved · 200 contracts", amount: 412, time: "Yesterday" },
-  { id: "a6", kind: "Bought", title: "ZIM Integrated", detail: "120 sh @ $20.90", amount: -2508, time: "Yesterday" },
+  { id: "a6", kind: "Bought", title: "ZIM Integrated", detail: "240 shares @ $20.90 avg", amount: -5016, time: "Yesterday" },
   { id: "a7", kind: "Deposit", title: "Deposit", detail: "ACH transfer", amount: 10000, time: "2d ago" },
   { id: "a8", kind: "Settled", title: "Govt shutdown by March", detail: "NO resolved · 150 contracts", amount: -90, time: "3d ago" },
 ];
