@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Search, ArrowRight, ShieldAlert } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { trendingStocks, hedgeSuggestions } from "@/lib/mockData";
+import { trendingStocks, hedgeSuggestions, marketEvents } from "@/lib/mockData";
 import { StockChart } from "@/components/trade/stock-chart";
 
 /* ── helpers ── */
@@ -282,6 +282,95 @@ function StockPill({ s }: { s: (typeof trendingStocks)[0] }) {
   );
 }
 
+/* ── Polymarket-style donut ring ── */
+function DonutRing({ pct, color = "#f0b429" }: { pct: number; color?: string }) {
+  const r = 26;
+  const C = 2 * Math.PI * r;
+  return (
+    <svg viewBox="0 0 60 60" className="size-[60px] -rotate-90">
+      <circle cx="30" cy="30" r={r} fill="none" stroke="#f0f0f0" strokeWidth="5" />
+      <circle
+        cx="30" cy="30" r={r}
+        fill="none" stroke={color} strokeWidth="5"
+        strokeLinecap="round"
+        strokeDasharray={C}
+        strokeDashoffset={C * (1 - pct / 100)}
+      />
+    </svg>
+  );
+}
+
+/* ── Polymarket card ── */
+function PolyCard({ m }: { m: (typeof marketEvents)[0] }) {
+  const isBinary = m.yesProbability != null;
+  const yPct = isBinary ? Math.round((m.yesProbability ?? 0) * 100) : null;
+
+  return (
+    <div className="flex flex-col rounded-[16px] border border-[#e5e7eb] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow duration-[200ms] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
+      <div className="flex flex-col gap-3 p-4">
+        {/* Header: icon + title + ring */}
+        <div className="flex items-start gap-2.5">
+          <span className="mt-0.5 shrink-0 text-[20px] leading-none">{m.icon}</span>
+          <p className="flex-1 text-[13px] font-semibold leading-snug text-[#111111]">{m.title}</p>
+
+          {/* Binary: donut ring with % */}
+          {isBinary && yPct != null && (
+            <div className="flex shrink-0 flex-col items-center">
+              <div className="relative">
+                <DonutRing pct={yPct} />
+                {/* percentage + chance inside positioning trick */}
+              </div>
+              <span className="mt-0.5 text-[13px] font-bold tabular-nums text-[#111111]">{yPct}%</span>
+              <span className="text-[10px] text-[#9ca3af]">chance</span>
+            </div>
+          )}
+        </div>
+
+        {/* Multi-outcome rows */}
+        {!isBinary && m.outcomes && (
+          <div className="flex flex-col gap-1.5">
+            {m.outcomes.slice(0, 3).map((o) => {
+              const pct = Math.round(o.yes * 100);
+              return (
+                <div key={o.label} className="flex items-center gap-2">
+                  <span className="flex-1 truncate text-[12px] text-[#374151]">{o.label}</span>
+                  <span className="w-9 text-right text-[12px] font-semibold tabular-nums text-[#111111]">{pct}%</span>
+                  <button type="button" className="rounded-[6px] bg-[#f0fdf4] px-2.5 py-0.5 text-[11px] font-semibold text-[#15803d] hover:bg-[#dcfce7]">Yes</button>
+                  <button type="button" className="rounded-[6px] bg-[#fef2f2] px-2.5 py-0.5 text-[11px] font-semibold text-[#b91c1c] hover:bg-[#fee2e2]">No</button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Binary YES / NO buttons */}
+      {isBinary && (
+        <div className="flex gap-2 px-4 pb-3">
+          <button type="button" className="flex-1 rounded-[10px] bg-[#f0fdf4] py-2 text-[13px] font-semibold text-[#15803d] transition-colors hover:bg-[#dcfce7]">
+            Yes
+          </button>
+          <button type="button" className="flex-1 rounded-[10px] bg-[#fef2f2] py-2 text-[13px] font-semibold text-[#b91c1c] transition-colors hover:bg-[#fee2e2]">
+            No
+          </button>
+        </div>
+      )}
+
+      {/* Footer: volume + live badge */}
+      <div className="flex items-center justify-between border-t border-[#f5f5f5] px-4 py-2.5">
+        <span className="text-[11px] text-[#9ca3af]">{fmtVol(m.volume)} Vol.</span>
+        <div className="flex items-center gap-2">
+          {m.live && (
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-[#dc2626]">
+              <span className="size-1.5 rounded-full bg-[#dc2626]" />LIVE
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Section header ── */
 function Section({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
@@ -318,6 +407,18 @@ export default function TradePage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {hedgeSuggestions.map((s) => (
             <HedgeCard key={s.id} s={s} />
+          ))}
+        </div>
+      </Section>
+
+      {/* Prediction markets */}
+      <Section
+        title="Prediction Markets"
+        sub="Live markets. Trade the outcome directly or use as a hedge."
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {marketEvents.map((m) => (
+            <PolyCard key={m.id} m={m} />
           ))}
         </div>
       </Section>
