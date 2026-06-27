@@ -2,20 +2,16 @@ import {
   portfolio,
   portfolioSeries,
   exposure,
-  trendingStocks,
-  trendingMarkets,
   regionExposure,
   sectorWeights,
-  hedgeSuggestions,
+  positions,
 } from "@/lib/mockData";
 import { PortfolioOverview } from "@/components/dashboard/portfolio-overview";
-import { TrendingStocks } from "@/components/dashboard/trending-stocks";
-import { TrendingMarkets } from "@/components/dashboard/trending-markets";
 import { ByRegion } from "@/components/dashboard/by-region";
 import { BySector } from "@/components/dashboard/by-sector";
-import { HedgeSuggestions } from "@/components/dashboard/hedge-suggestions";
+import { PositionsTable } from "@/components/dashboard/positions-table";
 
-/** User home screen — fully light, two row-bands on a 12-col grid. */
+/** User account — portfolio, exposure, and open positions. Stats only. */
 export default function DashboardPage() {
   return (
     <div>
@@ -27,30 +23,22 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-12 gap-4">
-        {/* TOP BAND: Portfolio (1–6) · By Region (7–9) · By Sector (10–12) */}
-        <div className="col-span-12 lg:col-span-6">
+        {/* Portfolio overview (main) + personal exposure (right) */}
+        <div className="col-span-12 lg:col-span-8">
           <PortfolioOverview
             portfolio={portfolio}
             series={portfolioSeries}
             exposure={exposure}
           />
         </div>
-        <div className="col-span-6 lg:col-span-3">
+        <div className="col-span-12 flex flex-col gap-4 lg:col-span-4">
           <ByRegion regions={regionExposure} />
-        </div>
-        <div className="col-span-6 lg:col-span-3">
           <BySector sectors={sectorWeights} />
         </div>
 
-        {/* BOTTOM BAND: Trending Stocks (1–3) · Trending Predictions (4–6) · Hedge Suggestions (7–12) */}
-        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
-          <TrendingStocks stocks={trendingStocks} />
-        </div>
-        <div className="col-span-12 sm:col-span-6 lg:col-span-3">
-          <TrendingMarkets markets={trendingMarkets} />
-        </div>
-        <div className="col-span-12 lg:col-span-6">
-          <HedgeSuggestions suggestions={hedgeSuggestions} />
+        {/* Open positions */}
+        <div className="col-span-12">
+          <PositionsTable positions={positions} />
         </div>
       </div>
     </div>
