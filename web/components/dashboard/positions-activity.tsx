@@ -116,7 +116,7 @@ function PositionsActivity({
           </div>
 
           {/* Column header — px-3 + gap-3 matches pill card internal layout */}
-          <div className="mb-2 flex items-center gap-3 border-b border-[#f0f0f0] px-3 pb-2">
+          <div className="mb-2 flex items-center gap-3 px-3 pb-2">
             <span className="flex-1 text-[11px] font-medium uppercase tracking-[0.05em] text-[#737373]">
               Market
             </span>
