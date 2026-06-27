@@ -51,7 +51,7 @@ function SuggestionCard({ s }: { s: HedgeSuggestion }) {
             <span
               className={cn(
                 "rounded-[5px] px-1.5 py-0.5 text-[10px] font-semibold",
-                yes ? "bg-[#dcfce7] text-[#16a34a]" : "bg-[#f3f1ff] text-[#9580ff]",
+                yes ? "bg-[#dcfce7] text-[#16a34a]" : "bg-[#fee2e2] text-[#dc2626]",
               )}
             >
               {s.hedgeSide}
