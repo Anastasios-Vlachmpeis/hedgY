@@ -42,8 +42,8 @@ function PositionsActivity({
   }, [positions, typeFilter, search, sort]);
 
   return (
-    <section className="rounded-[14px] border border-[#ececec] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-      {/* Tab bar */}
+    <div>
+      {/* Tab bar — plain text, no container card */}
       <div className="mb-3 flex items-center gap-4 border-b border-[#f0f0f0]">
         {(["positions", "activity"] as const).map((t) => (
           <button
@@ -69,7 +69,6 @@ function PositionsActivity({
         <>
           {/* Control toolbar */}
           <div className="mb-3 flex items-center gap-2">
-            {/* Type filter — segmented pill with hairline border around track */}
             <div className="flex shrink-0 items-center rounded-[8px] border border-[#e8e8e8] bg-[#f5f5f5] p-0.5">
               {TYPE_FILTERS.map((f) => (
                 <button
@@ -88,7 +87,6 @@ function PositionsActivity({
               ))}
             </div>
 
-            {/* Search — dominant flex-grow element */}
             <div className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[#a3a3a3]" />
               <input
@@ -100,7 +98,6 @@ function PositionsActivity({
               />
             </div>
 
-            {/* Sort */}
             <button
               type="button"
               onClick={() =>
@@ -118,22 +115,6 @@ function PositionsActivity({
             </button>
           </div>
 
-          {/* Table header — ledger columns aligned to ValuePnl layout */}
-          <div className="mb-0.5 flex items-center border-b border-[#f0f0f0] pb-2">
-            <span className="flex-1 text-[11px] font-medium uppercase tracking-[0.05em] text-[#737373]">
-              Market
-            </span>
-            <div className="flex shrink-0 items-center gap-3">
-              <span className="hidden w-24 text-right text-[11px] font-medium uppercase tracking-[0.05em] text-[#737373] sm:block">
-                Value
-              </span>
-              <span className="w-24 text-right text-[11px] font-medium uppercase tracking-[0.05em] text-[#737373]">
-                P&amp;L
-              </span>
-            </div>
-          </div>
-
-          {/* Positions list or empty state */}
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-1 py-12 text-center">
               <span className="text-[13px] font-medium text-[#444444]">No positions found</span>
@@ -149,7 +130,7 @@ function PositionsActivity({
       ) : (
         <ActivityRows activity={activity} />
       )}
-    </section>
+    </div>
   );
 }
 

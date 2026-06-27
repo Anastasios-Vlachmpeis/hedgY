@@ -46,7 +46,7 @@ function CombinedRow({ p }: { p: Position }) {
       ? Math.round((p.hedgeLeg.value / p.equityLeg.value) * 100)
       : 0;
   return (
-    <li className="flex items-start gap-3 py-3">
+    <li className="flex items-start gap-3 rounded-[10px] border border-[#ececec] bg-white px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-semibold text-[#181925]">
           {p.title}
@@ -87,7 +87,7 @@ function CombinedRow({ p }: { p: Position }) {
 
 function SimpleRow({ p }: { p: Position }) {
   return (
-    <li className="flex items-center gap-3 py-3">
+    <li className="flex items-center gap-3 rounded-[10px] border border-[#ececec] bg-white px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-semibold text-[#181925]">{p.title}</p>
         <p className="truncate text-[11px] text-[#a3a3a3]">{p.detail}</p>
@@ -113,7 +113,7 @@ function PositionsRows({
 }) {
   if (hideGroupHeaders) {
     return (
-      <ul className="divide-y divide-[#f0f0f0]">
+      <ul className="flex flex-col gap-2">
         {positions.map((p) =>
           p.type === "Combined" ? (
             <CombinedRow key={p.id} p={p} />
@@ -126,16 +126,16 @@ function PositionsRows({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-4">
       {GROUPS.map(({ type, label }) => {
         const items = positions.filter((p) => p.type === type);
         if (items.length === 0) return null;
         return (
-          <div key={type} className="mt-3 first:mt-1">
-            <p className="mb-0.5 text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
+          <div key={type}>
+            <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
               {label}
             </p>
-            <ul className="divide-y divide-[#f0f0f0]">
+            <ul className="flex flex-col gap-2">
               {items.map((p) =>
                 type === "Combined" ? (
                   <CombinedRow key={p.id} p={p} />
