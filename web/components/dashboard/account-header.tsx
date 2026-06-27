@@ -241,34 +241,17 @@ function AccountHeader({ portfolio }: { portfolio: Portfolio }) {
         </section>
 
         {/* P&L card */}
-        <section className={CARD}>
-          <div className="flex items-start justify-between gap-2">
+        <section className={cn(CARD, "flex flex-col")}>
+          <div className="flex items-start justify-between gap-3">
             <p className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
               Profit / Loss
             </p>
             <BreakdownButton onClick={() => setPnlOpen(true)} />
           </div>
-          <div className="mt-1 flex justify-end gap-0.5">
-            {timeframeOrder.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setTf(t)}
-                className={cn(
-                  "rounded-full px-2.5 py-1 text-[12px] font-medium tabular-nums transition-colors",
-                  t === tf
-                    ? "bg-[#181925] text-white"
-                    : "text-[#666666] hover:bg-[#f5f5f5]",
-                )}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
 
           <p
             className={cn(
-              "mt-1 text-[30px] font-semibold leading-none tracking-[-0.02em] tabular-nums",
+              "mt-1 text-[34px] font-semibold leading-none tracking-[-0.03em] tabular-nums",
               up ? "text-[#16a34a]" : "text-[#dc2626]",
             )}
           >
@@ -276,33 +259,52 @@ function AccountHeader({ portfolio }: { portfolio: Portfolio }) {
           </p>
           <p
             className={cn(
-              "mt-1 text-[13px] font-medium tabular-nums",
+              "mt-1.5 text-[13px] font-medium tabular-nums",
               up ? "text-[#16a34a]" : "text-[#dc2626]",
             )}
           >
             {pct(data.pct)} <span className="text-[#a3a3a3]">· past {tf}</span>
           </p>
 
-          <div className="mt-3 h-[96px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data.series} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-                <defs>
-                  <linearGradient id="pnl" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={up ? "#16a34a" : "#dc2626"} stopOpacity={0.18} />
-                    <stop offset="100%" stopColor={up ? "#16a34a" : "#dc2626"} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <YAxis domain={["dataMin", "dataMax"]} hide />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke={up ? "#16a34a" : "#dc2626"}
-                  strokeWidth={2}
-                  fill="url(#pnl)"
-                  isAnimationActive={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="mt-auto pt-4">
+            <div className="h-[64px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data.series} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+                  <defs>
+                    <linearGradient id="pnl" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={up ? "#16a34a" : "#dc2626"} stopOpacity={0.18} />
+                      <stop offset="100%" stopColor={up ? "#16a34a" : "#dc2626"} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <YAxis domain={["dataMin", "dataMax"]} hide />
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke={up ? "#16a34a" : "#dc2626"}
+                    strokeWidth={2}
+                    fill="url(#pnl)"
+                    isAnimationActive={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-2 flex justify-end gap-0.5">
+              {timeframeOrder.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTf(t)}
+                  className={cn(
+                    "rounded-full px-2.5 py-1 text-[12px] font-medium tabular-nums transition-colors",
+                    t === tf
+                      ? "bg-[#181925] text-white"
+                      : "text-[#666666] hover:bg-[#f5f5f5]",
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
       </div>
