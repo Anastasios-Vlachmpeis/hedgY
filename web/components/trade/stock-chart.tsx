@@ -8,7 +8,7 @@ declare global {
   }
 }
 
-export function StockChart({ symbol = "NYSE:LMT" }: { symbol?: string }) {
+export function StockChart({ symbol = "NYSE:LMT", className }: { symbol?: string; className?: string }) {
   const containerId = "tv_chart_main";
 
   React.useEffect(() => {
@@ -56,7 +56,7 @@ export function StockChart({ symbol = "NYSE:LMT" }: { symbol?: string }) {
   }, [symbol]);
 
   return (
-    <div className="flex h-full min-h-[480px] flex-col overflow-hidden rounded-[18px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <div className={`flex h-full min-h-[280px] flex-col overflow-hidden rounded-[14px] bg-white${className ? ` ${className}` : ""}`}>
       <div id={containerId} className="flex-1" />
     </div>
   );

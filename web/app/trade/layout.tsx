@@ -1,5 +1,5 @@
-import { AppShell } from "@/components/ui/app-shell";
+import { TradeShell } from "@/components/trade/trade-shell";
 
 export default function TradeLayout({ children }: { children: React.ReactNode }) {
-  return <AppShell>{children}</AppShell>;
+  return <TradeShell>{children}</TradeShell>;
 }
