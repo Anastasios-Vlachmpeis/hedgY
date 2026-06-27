@@ -84,55 +84,48 @@ function RiskPanel() {
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-[16px] font-semibold leading-tight text-[#111111]">LMT Risk Analysis</h3>
-          <p className="mt-0.5 text-[12px] text-[#6B7280]">3 macro events correlated with your position</p>
+          <h3 className="text-[15px] font-semibold leading-tight text-[#111111]">Risk Factors</h3>
+          <p className="mt-0.5 text-[12px] text-[#9ca3af]">Macro markets correlated with LMT</p>
         </div>
         <span className="flex items-center gap-1 rounded-full bg-[#fef3c7] px-2 py-0.5 text-[10px] font-semibold text-[#d97706]">
           <ShieldAlert className="size-2.5" /> 3
         </span>
       </div>
 
-      {/* Risk cards */}
-      <div className="mt-4 flex flex-col gap-2.5">
+      {/* Risk rows — Polymarket list style */}
+      <div className="mt-3 flex flex-col divide-y divide-[#f5f5f5]">
         {LMT_RISKS.map((r) => {
           const pct     = Math.round(r.probability * 100);
           const bearish = r.impact === "bearish";
           return (
-            <div key={r.id} className="rounded-[12px] border border-[#ececec] p-4">
-              {/* Top row: icon + title + badge */}
-              <div className="flex items-center gap-2">
-                <span className="shrink-0 text-[14px] leading-none">{r.icon}</span>
+            <div key={r.id} className="flex flex-col gap-2 py-3.5">
+              {/* Title + % */}
+              <div className="flex items-start gap-2.5">
+                <span className="mt-0.5 shrink-0 text-[15px] leading-none">{r.icon}</span>
                 <p className="flex-1 text-[12px] font-semibold leading-snug text-[#111111]">{r.event}</p>
-                <span className={cn(
-                  "shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
-                  bearish ? "bg-[#fef2f2] text-[#dc2626]" : "bg-[#f0fdf4] text-[#16a34a]",
-                )}>
-                  {bearish ? "↓ Bear" : "↑ Bull"}
-                </span>
+                <div className="flex shrink-0 flex-col items-end gap-0.5">
+                  <span className="text-[15px] font-bold tabular-nums text-[#111111]">{pct}%</span>
+                  <span className={cn("text-[9px] font-semibold uppercase tracking-wide", bearish ? "text-[#dc2626]" : "text-[#16a34a]")}>
+                    {bearish ? "↓ Bear" : "↑ Bull"}
+                  </span>
+                </div>
               </div>
-
-              {/* Probability */}
-              <div className="mt-2 flex items-end gap-2">
-                <span className="text-[22px] font-semibold leading-none tabular-nums text-[#111111]">{pct}%</span>
-                <span className="mb-0.5 text-[11px] text-[#9ca3af]">{fmtVol(r.volume)} vol</span>
+              {/* Bar + volume */}
+              <div className="ml-[26px] flex flex-col gap-1">
+                <div className="h-[3px] w-full overflow-hidden rounded-full bg-[#f0f0f0]">
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${pct}%`, backgroundColor: bearish ? "#fca5a5" : "#86efac" }}
+                  />
+                </div>
+                <p className="text-[10px] text-[#9ca3af]">{fmtVol(r.volume)} vol</p>
               </div>
-
-              {/* Bar */}
-              <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-[#f0f0f0]">
-                <div
-                  className={cn("h-full rounded-full", bearish ? "bg-[#fca5a5]" : "bg-[#86efac]")}
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-
-              {/* Reason */}
-              <p className="mt-2 text-[11px] leading-relaxed text-[#6B7280]">{r.reason}</p>
             </div>
           );
         })}
       </div>
 
-      {/* Full-width outline CTA */}
+      {/* CTA */}
       <Link
         href="/structure"
         className="mt-auto flex h-10 w-full shrink-0 items-center justify-between rounded-[10px] border border-[#111111] px-4 text-[13px] font-medium text-[#111111] transition-all duration-[200ms] ease-out hover:bg-[#111111] hover:text-white"
