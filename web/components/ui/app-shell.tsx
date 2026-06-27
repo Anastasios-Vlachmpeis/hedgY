@@ -10,7 +10,7 @@ import { WORDMARK } from "@/lib/brand";
 import { GradientAvatar } from "@/components/ui/gradient-avatar";
 
 const NAV_LINKS = [
-  { href: "/markets", label: "Markets" },
+  { href: "/trade", label: "Trade" },
   { href: "/dashboard", label: "Portfolio" },
   { href: "/structure", label: "Structure" },
 ] as const;
