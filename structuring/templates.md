@@ -76,4 +76,4 @@ Proposed shape if we encode these as data (P1 to confirm where it lives):
   }
 ]
 ```
-(Remaining three follow the same shape.)
+**All 5 templates, fully specified, live in `templates.json`** (the file the classifier loads in template mode). The two above are just an inline preview.

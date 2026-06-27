@@ -72,7 +72,8 @@ Event contracts are binary, so a scenario/payoff-matching hedge is the honest mo
 - Resolution-timing mismatch: the event may resolve before/after the equity reaction. Template must flag when expiry alignment is poor.
 - Liquidity: if the event market can't absorb `N_hedge` at ~`price`, the engine must scale down and tell the user, not silently slip.
 
-## 6. Open questions for P1 (need a decision)
+## 6. Decisions + remaining
+**Decided with P1:** atomicity = **atomic / all-or-nothing** basket; `move_adverse` lives in **`templates.json`** in this repo; scope = **binary contracts only** (v1); sizing = **full offset + optional premium cap**.
+
+Still open (implementation detail):
 1. Does the engine return one `OrderPlan` and let the Risk Engine veto, or should it pre-check buying power itself? (I assume Risk Engine vetoes.)
-2. Atomicity: if the hedge leg fills but the primary doesn't (or vice versa), what's the rollback/contingency? Proposed: OMS treats an `OrderPlan` as all-or-nothing where possible, else flags a partial-fill state.
-3. Where does `move_adverse` config live - in this repo (`templates.md` → a JSON), or a config service you own?
