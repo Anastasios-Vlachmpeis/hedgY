@@ -20,6 +20,7 @@ import os
 import urllib.request
 
 from structuring.relationships import relate, EventLink
+from structuring.enrichment import enrich
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -98,10 +99,20 @@ def portfolio_risks(
         if not sym or val <= 0:
             continue
 
+        # Enrich unknown holdings (sector + industry) so the curated sector rules fire for
+        # ANY ticker, not just the ~40 curated symbols. No-op if already provided.
+        sector = str(h.get("sector", "") or "")
+        industry = str(h.get("industry", "") or "")
+        if not sector or not industry:
+            info = enrich(sym)
+            sector = sector or (info.get("sector") or "")
+            industry = industry or (info.get("industry") or "")
+
         # relationship engine: which events threaten this holding?
         links = relate(sym, markets,
-                       holding_sector=str(h.get("sector", "")),
-                       holding_themes=h.get("themes"))
+                       holding_sector=sector,
+                       holding_themes=h.get("themes"),
+                       holding_industry=industry)
 
         for link in links:
             mkt = market_by_id.get(link.event_market_id)

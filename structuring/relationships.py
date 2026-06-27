@@ -39,7 +39,9 @@ CURATED_RULES: list[dict] = [
     {
         "name": "defense_election",
         "match_symbols": {"ITA", "LMT", "RTX", "NOC", "GD", "BA", "HII", "LHX"},
-        "match_sectors": {"Industrials", "Aerospace & Defense", "Defense"},
+        # match on industry ("Aerospace & Defense"), NOT the broad "Industrials" sector,
+        # so generic industrials/shipping names don't false-fire the defense rule.
+        "match_sectors": {"Aerospace & Defense", "aerospace", "defense"},
         "event_keywords": ["election", "president", "2028", "nominee", "ceasefire", "peace deal", "incumbent"],
         "hedge_leg": "YES",
         "direction": "adverse",
@@ -51,7 +53,8 @@ CURATED_RULES: list[dict] = [
     {
         "name": "rates_fed",
         "match_symbols": {"KRE", "XLF", "BAC", "JPM", "WFC", "C", "GS", "MS", "SCHW", "IYR", "VNQ", "IWM"},
-        "match_sectors": {"Financials", "Banking", "Real Estate", "REITs"},
+        # Yahoo: "Financial Services" + "Banks - Regional/Diversified"; "Real Estate" + "REIT - ...".
+        "match_sectors": {"Financial Services", "Financials", "Banking", "bank", "Real Estate", "REIT"},
         "event_keywords": ["fed rate", "rate cut", "rate hike", "fomc", "federal reserve", "interest rate"],
         "hedge_leg": "NO",
         "direction": "adverse",
@@ -76,7 +79,8 @@ CURATED_RULES: list[dict] = [
     {
         "name": "shipping_hormuz",
         "match_symbols": {"BOAT", "BDRY", "SBLK", "GOGL", "ZIM", "MATX"},
-        "match_sectors": {"Shipping", "Logistics", "Marine Transportation"},
+        # Yahoo industry for shipping names is "Marine Shipping" (sector is the broad "Industrials").
+        "match_sectors": {"Marine Shipping", "marine", "shipping", "Marine Transportation", "Logistics"},
         "event_keywords": ["hormuz", "strait of hormuz", "shipping lane blocked"],
         "hedge_leg": "YES",
         "direction": "adverse",
@@ -101,7 +105,9 @@ CURATED_RULES: list[dict] = [
     {
         "name": "tech_regulation",
         "match_symbols": {"META", "GOOGL", "GOOG", "AMZN", "AAPL", "MSFT", "NVDA"},
-        "match_sectors": {"Technology", "Big Tech"},
+        # "Technology" sector + "Internet Content & Information" industry (GOOGL/META live under
+        # Yahoo's "Communication Services" sector, so match their industry string too).
+        "match_sectors": {"Technology", "Internet Content", "Big Tech"},
         "event_keywords": ["antitrust", "tech regulation", "ai regulation", "section 230",
                            "big tech breakup"],
         "hedge_leg": "YES",
@@ -133,21 +139,26 @@ def _best_market(keywords: list[str], markets: list[dict]) -> dict | None:
 
 
 def relate(holding_symbol: str, markets: list[dict],
-           holding_sector: str = "", holding_themes: list[str] | None = None) -> list[EventLink]:
+           holding_sector: str = "", holding_themes: list[str] | None = None,
+           holding_industry: str = "") -> list[EventLink]:
     """Layer-1 relationship engine: curated priors only.
 
     For a single holding, returns all matching EventLinks (may be 0..N).
+    Matching fires on symbol, or on the enriched sector/industry text (so the rules
+    generalize to ANY ticker via structuring.enrichment, not just the curated symbols).
     Later layers (embeddings, LLM, event-study) extend this without changing the signature.
     """
     sym = holding_symbol.upper().strip()
-    sector = holding_sector.lower()
+    # Match curated terms against the combined sector + industry text. Industry carries the
+    # precise signal (e.g. "Aerospace & Defense", "Marine Shipping", "Banks - Regional").
+    sector_text = f"{holding_sector} {holding_industry}".lower()
     themes = set(t.lower() for t in (holding_themes or []))
     links: list[EventLink] = []
 
     for rule in CURATED_RULES:
         # Does the holding match this rule?
         symbol_match = sym in rule["match_symbols"]
-        sector_match = any(s.lower() in sector for s in rule["match_sectors"]) if sector else False
+        sector_match = any(s.lower() in sector_text for s in rule["match_sectors"]) if sector_text.strip() else False
         theme_match = any(s.lower() in themes for s in rule["match_sectors"]) if themes else False
 
         if not (symbol_match or sector_match or theme_match):
