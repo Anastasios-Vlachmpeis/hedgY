@@ -18,6 +18,8 @@ import {
   type FeaturedPoint,
   type Position,
   type Activity,
+  type PlatformBreakdown,
+  platformBreakdown as breakdownFallback,
   trendingStocks as stocksFallback,
   trendingMarkets as marketsFallback,
   portfolio as portfolioFallback,
@@ -664,5 +666,50 @@ export async function getActivity(): Promise<Activity[]> {
     }));
   } catch {
     return activityFallback;
+  }
+}
+
+/** Real equity curve (backend snapshots on deposit/order/load) → P&L chart. */
+export async function getAccountHistory(): Promise<PortfolioPoint[]> {
+  try {
+    const res = await fetch(`${MARKETS_API}/account/history`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`history ${res.status}`);
+    const pts: { t: number; value: number }[] = await res.json();
+    return pts.map((p, i) => ({ t: `P${i + 1}`, value: p.value }));
+  } catch {
+    return [];
+  }
+}
+
+/** Real portfolio allocation by platform, computed from live positions + cash. */
+export async function getPlatformBreakdown(): Promise<PlatformBreakdown[]> {
+  try {
+    const [accRes, posRes] = await Promise.all([
+      fetch(`${MARKETS_API}/account`, { cache: "no-store" }),
+      fetch(`${MARKETS_API}/positions`, { cache: "no-store" }),
+    ]);
+    if (!accRes.ok || !posRes.ok) throw new Error("breakdown fetch");
+    const acc: LiveAccount = await accRes.json();
+    const pos: LivePosition[] = await posRes.json();
+
+    const agg = (kind: "stock" | "prediction") => {
+      const items = pos.filter((p) => p.kind === kind);
+      const value = items.reduce((s, p) => s + p.market_value, 0);
+      const cost = items.reduce((s, p) => s + p.cost, 0);
+      const pnl = items.reduce((s, p) => s + p.unrealized_pnl, 0);
+      return { value, pnl, pnlPct: cost > 0 ? (pnl / cost) * 100 : 0 };
+    };
+
+    const stocks = agg("stock");
+    const preds = agg("prediction");
+    const rows: PlatformBreakdown[] = [];
+    if (stocks.value > 0)
+      rows.push({ platform: "Alpaca", kind: "Stocks (paper)", value: stocks.value, pnl: stocks.pnl, pnlPct: stocks.pnlPct, color: "#9580ff" });
+    if (preds.value > 0)
+      rows.push({ platform: "Polymarket / Kalshi", kind: "Prediction Markets", value: preds.value, pnl: preds.pnl, pnlPct: preds.pnlPct, color: "#181925" });
+    rows.push({ platform: "Cash", kind: "Available Balance", value: acc.cash, pnl: 0, pnlPct: 0, color: "#a3a3a3" });
+    return rows;
+  } catch {
+    return breakdownFallback;
   }
 }

@@ -180,7 +180,14 @@ def _mark(position: dict) -> float | None:
 
 @app.get("/account")
 def get_account() -> dict:
-    return account_service.account(_mark)
+    summary = account_service.account(_mark)
+    account_service.record_equity(summary["equity"])  # throttled — builds the real P&L curve
+    return summary
+
+
+@app.get("/account/history")
+def account_history() -> list[dict]:
+    return account_service.equity_history()
 
 
 @app.get("/positions")
@@ -196,7 +203,9 @@ def get_trades() -> list[dict]:
 @app.post("/account/deposit")
 def deposit(req: DepositRequest) -> dict:
     account_service.deposit(req.amount)
-    return account_service.account(_mark)
+    summary = account_service.account(_mark)
+    account_service.record_equity(summary["equity"], force=True)
+    return summary
 
 
 @app.post("/account/reset")
@@ -215,12 +224,14 @@ def create_order(req: OrderRequest) -> dict:
             raise HTTPException(status_code=503, detail=f"no live price for {req.symbol}")
         order_id = place_alpaca_order(req.symbol, req.notionalUsd, req.action)
         try:
-            return account_service.place_order(
+            result = account_service.place_order(
                 kind="stock", action=req.action, notional=req.notionalUsd, price=price,
                 symbol=req.symbol.upper(), label=req.symbol.upper(), alpaca_order_id=order_id,
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+        account_service.record_equity(account_service.account(_mark)["equity"], force=True)
+        return result
 
     # prediction
     if not req.market_id or req.side not in ("YES", "NO"):
@@ -229,12 +240,14 @@ def create_order(req: OrderRequest) -> dict:
     if price is None:
         raise HTTPException(status_code=503, detail="no live price for that market/side")
     try:
-        return account_service.place_order(
+        result = account_service.place_order(
             kind="prediction", action=req.action, notional=req.notionalUsd, price=price,
             market_id=req.market_id, side=req.side, label=question,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    account_service.record_equity(account_service.account(_mark)["equity"], force=True)
+    return result
 
 
 @app.get("/")
@@ -244,7 +257,7 @@ async def root() -> dict:
         "mode": "read-only (suggestions only)",
         "endpoints": [
             "/markets", "/markets/{id}", "/suggestions", "/health",
-            "/account", "/positions", "/trades",
+            "/account", "/account/history", "/positions", "/trades",
             "/account/deposit", "/account/reset", "/orders",
         ],
         "has_data": store.has_data,

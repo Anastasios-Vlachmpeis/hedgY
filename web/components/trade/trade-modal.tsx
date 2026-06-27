@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Loader2, Check } from "lucide-react";
 
@@ -82,9 +83,9 @@ function TradeModalBody({ params, onClose }: { params: TradeParams; onClose: () 
     }
   }
 
-  return (
+  const overlay = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -174,6 +175,12 @@ function TradeModalBody({ params, onClose }: { params: TradeParams; onClose: () 
       </div>
     </div>
   );
+
+  // Portal to <body> so the overlay centers on the viewport regardless of any
+  // transformed/backdrop-blurred ancestor (which would otherwise become the
+  // containing block for position:fixed).
+  if (typeof document === "undefined") return null;
+  return createPortal(overlay, document.body);
 }
 
 /**
