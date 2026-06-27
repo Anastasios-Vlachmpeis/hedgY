@@ -80,7 +80,7 @@ function Pricing() {
               variant={t.popular ? "primary" : "secondary"}
               className="mt-7 w-full"
             >
-              <Link href="/dashboard">
+              <Link href={t.name === "Institutional" ? "/dashboard" : "/signup"}>
                 {t.name === "Institutional" ? "Contact sales" : "Get started"}
               </Link>
             </Button>
