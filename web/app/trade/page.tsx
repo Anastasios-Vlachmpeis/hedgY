@@ -174,70 +174,48 @@ function CombineCTA() {
   );
 }
 
-/* ── Hedge idea card ── */
-const STRENGTH_COLORS: Record<string, { dot: string; text: string }> = {
-  Strong:   { dot: "bg-[#16a34a]",  text: "text-[#16a34a]"  },
-  Moderate: { dot: "bg-[#f59e0b]",  text: "text-[#d97706]"  },
-  Light:    { dot: "bg-[#9ca3af]",  text: "text-[#6B7280]"  },
+/* ── Hedge idea list row ── */
+const STRENGTH_DOT: Record<string, string> = {
+  Strong:   "bg-[#16a34a]",
+  Moderate: "bg-[#f59e0b]",
+  Light:    "bg-[#9ca3af]",
 };
 
-const HEDGE_SUBTITLE: Record<string, string> = {
-  "defense-election": "Hedging political risk in defense spending",
-  "pharma-fda":       "Hedging binary FDA readout risk in pharma",
-  "shipping-hormuz":  "Hedging geopolitical disruption in shipping",
-};
-
-function HedgeCard({ s }: { s: (typeof hedgeSuggestions)[0] }) {
+function HedgeRow({ s }: { s: (typeof hedgeSuggestions)[0] }) {
   const hedgePct = Math.round(s.hedgePrice * 100);
-  const c = STRENGTH_COLORS[s.strength];
   return (
     <Link
       href="/structure"
-      className="group flex flex-col rounded-[16px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all duration-[200ms] ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(0,0,0,0.05)]"
+      className="group flex items-center gap-5 px-5 py-4 transition-colors duration-[180ms] hover:bg-[#fafafa]"
     >
-      {/* Strength */}
-      <div className="flex items-center gap-1.5">
-        <span className={cn("size-1.5 rounded-full", c.dot)} />
-        <span className={cn("text-[10px] font-semibold uppercase tracking-wide", c.text)}>
-          {s.strength} hedge
-        </span>
-      </div>
+      {/* Strength dot */}
+      <span className={cn("size-2 shrink-0 rounded-full", STRENGTH_DOT[s.strength])} />
 
       {/* Thesis */}
-      <h3 className="mt-2.5 text-[14px] font-semibold text-[#111111]">{s.position.thesis}</h3>
-      <p className="mt-0.5 text-[12px] text-[#6B7280]">{HEDGE_SUBTITLE[s.id]}</p>
+      <p className="w-52 shrink-0 text-[13px] font-semibold text-[#111111]">
+        {s.position.thesis}
+      </p>
 
-      {/* Legs */}
-      <div className="mt-4 flex flex-col gap-2.5">
-        <div>
-          <p className="text-[9px] font-semibold uppercase tracking-widest text-[#9ca3af]">Long exposure</p>
-          <p className="mt-1 text-[12px] font-medium text-[#111111]">
-            {s.equitySymbols.join(" · ")}
-          </p>
-        </div>
+      {/* Equity tickers */}
+      <p className="w-28 shrink-0 text-[12px] font-medium text-[#6B7280]">
+        {s.equitySymbols.join(" · ")}
+      </p>
 
-        <div className="flex items-center gap-2">
-          <div className="h-px flex-1 bg-[#f0f0f0]" />
-          <span className="text-[9px] font-medium text-[#d1d5db]">hedged with</span>
-          <div className="h-px flex-1 bg-[#f0f0f0]" />
-        </div>
+      {/* Arrow connector */}
+      <ArrowRight className="size-3.5 shrink-0 text-[#d1d5db]" />
 
-        <div>
-          <p className="text-[9px] font-semibold uppercase tracking-widest text-[#9ca3af]">Hedge exposure</p>
-          <p className="mt-1 text-[12px] font-medium text-[#111111]">
-            {s.hedgeSide} — {s.hedgeMarket}
-          </p>
-          <p className="mt-0.5 text-[11px] text-[#9ca3af]">@ {hedgePct}¢ implied</p>
-        </div>
-      </div>
+      {/* Hedge market */}
+      <p className="flex-1 truncate text-[12px] text-[#6B7280]">
+        {s.hedgeSide} — {s.hedgeMarket}
+      </p>
 
-      {/* Rationale */}
-      <p className="mt-3 text-[11px] leading-relaxed text-[#6B7280]">{s.rationale}</p>
+      {/* Implied price */}
+      <p className="shrink-0 text-[11px] tabular-nums text-[#9ca3af]">@ {hedgePct}¢</p>
 
-      {/* Text CTA */}
-      <div className="mt-3 flex items-center gap-1 text-[12px] font-medium text-[#111111] transition-all duration-[200ms] ease-out group-hover:gap-2">
-        Build this combo <ArrowRight className="size-3" />
-      </div>
+      {/* CTA — appears on hover */}
+      <span className="flex shrink-0 items-center gap-1 text-[12px] font-medium text-[#111111] opacity-0 transition-all duration-[180ms] group-hover:gap-1.5 group-hover:opacity-100">
+        Build <ArrowRight className="size-3" />
+      </span>
     </Link>
   );
 }
@@ -404,9 +382,9 @@ export default function TradePage() {
         title="Hedge Ideas"
         sub="Pre-built equity + prediction market pairs. Pick one, we handle the sizing."
       >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-col divide-y divide-[#f5f5f5] rounded-[16px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           {hedgeSuggestions.map((s) => (
-            <HedgeCard key={s.id} s={s} />
+            <HedgeRow key={s.id} s={s} />
           ))}
         </div>
       </Section>
