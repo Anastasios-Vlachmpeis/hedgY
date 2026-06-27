@@ -635,6 +635,150 @@ export const positions: Position[] = [
     pnl: -4.5,
     pnlPct: -4.2,
   },
+  {
+    id: "p-rtx",
+    title: "RTX Corp",
+    type: "Equity",
+    detail: "60 sh @ $112.80 avg",
+    value: 7_104,
+    cost: 6_768,
+    pnl: 336,
+    pnlPct: 4.96,
+  },
+  {
+    id: "p-noc",
+    title: "Northrop Grumman",
+    type: "Equity",
+    detail: "8 sh @ $498.40 avg",
+    value: 4_089.6,
+    cost: 3_987.2,
+    pnl: 102.4,
+    pnlPct: 2.57,
+  },
+  {
+    id: "p-shipping",
+    title: "Long shipping, hedge route risk",
+    type: "Combined",
+    detail: "ZIM + YES Hormuz blockade",
+    value: 5_180,
+    cost: 5_000,
+    pnl: 180,
+    pnlPct: 3.6,
+  },
+  {
+    id: "p-btc",
+    title: "Bitcoin above $100k in 2026",
+    type: "Prediction",
+    detail: "YES · 54¢ · 400 contracts",
+    value: 232,
+    cost: 216,
+    pnl: 16,
+    pnlPct: 7.41,
+  },
+  {
+    id: "p-mrk",
+    title: "Merck & Co",
+    type: "Equity",
+    detail: "30 sh @ $101.20 avg",
+    value: 3_126,
+    cost: 3_036,
+    pnl: 90,
+    pnlPct: 2.96,
+  },
+  {
+    id: "p-hormuz",
+    title: "Strait of Hormuz blockade 2026",
+    type: "Prediction",
+    detail: "YES · 17¢ · 500 contracts",
+    value: 85,
+    cost: 90,
+    pnl: -5,
+    pnlPct: -5.56,
+  },
+  {
+    id: "p-nvda",
+    title: "Nvidia hits $4T market cap",
+    type: "Prediction",
+    detail: "YES · 49¢ · 300 contracts",
+    value: 147,
+    cost: 132,
+    pnl: 15,
+    pnlPct: 11.36,
+  },
+  {
+    id: "p-gd",
+    title: "General Dynamics",
+    type: "Equity",
+    detail: "10 sh @ $290.50 avg",
+    value: 2_981,
+    cost: 2_905,
+    pnl: 76,
+    pnlPct: 2.62,
+  },
+];
+
+/* ---------- Recent activity ---------- */
+
+export interface Activity {
+  id: string;
+  kind: "Bought" | "Sold" | "Hedged" | "Deposit" | "Settled";
+  title: string;
+  detail: string;
+  amount: number; // signed cash flow
+  time: string; // relative label
+}
+
+export const activity: Activity[] = [
+  { id: "a1", kind: "Hedged", title: "Long defense, hedge the election", detail: "Added NO Incumbent wins · 40%", amount: -1500, time: "12m ago" },
+  { id: "a2", kind: "Bought", title: "Lockheed Martin", detail: "4 sh @ $471.20", amount: -1884.8, time: "1h ago" },
+  { id: "a3", kind: "Sold", title: "Fed cuts rates in July 2026", detail: "YES · 80 contracts @ 38¢", amount: 304, time: "3h ago" },
+  { id: "a4", kind: "Bought", title: "Nvidia hits $4T market cap", detail: "YES · 300 contracts @ 44¢", amount: -1320, time: "5h ago" },
+  { id: "a5", kind: "Settled", title: "Q1 jobs report beats", detail: "YES resolved · 200 contracts", amount: 412, time: "Yesterday" },
+  { id: "a6", kind: "Bought", title: "ZIM Integrated", detail: "120 sh @ $20.90", amount: -2508, time: "Yesterday" },
+  { id: "a7", kind: "Deposit", title: "Deposit", detail: "ACH transfer", amount: 10000, time: "2d ago" },
+  { id: "a8", kind: "Settled", title: "Govt shutdown by March", detail: "NO resolved · 150 contracts", amount: -90, time: "3d ago" },
+];
+
+/* ---------- Watchlist ---------- */
+
+export interface WatchItem {
+  id: string;
+  label: string;
+  sub: string;
+  kind: "Stock" | "Market";
+  valueLabel: string; // price or implied %
+  change: number; // % for stocks, pts for markets
+  direction: Direction;
+}
+
+export const watchlist: WatchItem[] = [
+  { id: "w1", label: "NOC", sub: "Northrop Grumman", kind: "Stock", valueLabel: "$511.20", change: 1.5, direction: "up" },
+  { id: "w2", label: "GPT-6 in 2026?", sub: "Tech · Prediction", kind: "Market", valueLabel: "47%", change: 6, direction: "up" },
+  { id: "w3", label: "PFE", sub: "Pfizer", kind: "Stock", valueLabel: "$28.60", change: -0.6, direction: "down" },
+  { id: "w4", label: "Brent above $100", sub: "Energy · Prediction", kind: "Market", valueLabel: "34%", change: 2, direction: "up" },
+  { id: "w5", label: "RTX", sub: "RTX Corp", kind: "Stock", valueLabel: "$118.40", change: 0.8, direction: "up" },
+  { id: "w6", label: "Fed decision (next)", sub: "Macro · Prediction", kind: "Market", valueLabel: "62%", change: 3, direction: "up" },
+  { id: "w7", label: "Defense budget > $900B", sub: "Politics · Prediction", kind: "Market", valueLabel: "55%", change: 1, direction: "up" },
+];
+
+/* ---------- Open (resting) orders ---------- */
+
+export interface OpenOrder {
+  id: string;
+  market: string;
+  side: "Buy" | "Sell";
+  outcome: string;
+  price: string;
+  qty: number;
+  filledPct: number;
+}
+
+export const openOrders: OpenOrder[] = [
+  { id: "o1", market: "Incumbent wins 2026", side: "Buy", outcome: "NO", price: "55¢", qty: 300, filledPct: 40 },
+  { id: "o2", market: "Lockheed Martin", side: "Buy", outcome: "LMT", price: "$465.00", qty: 10, filledPct: 0 },
+  { id: "o3", market: "Bitcoin above $100k 2026", side: "Sell", outcome: "YES", price: "58¢", qty: 200, filledPct: 65 },
+  { id: "o4", market: "US recession 2026", side: "Buy", outcome: "NO", price: "70¢", qty: 150, filledPct: 0 },
+  { id: "o5", market: "ZIM Integrated", side: "Sell", outcome: "ZIM", price: "$24.00", qty: 120, filledPct: 0 },
 ];
 
 /** Cents helpers for the prediction-market pricing convention. */
