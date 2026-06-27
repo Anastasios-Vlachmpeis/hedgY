@@ -13,13 +13,15 @@ import {
 
 import { usdCompact } from "@/lib/format";
 import type { FeaturedMarket } from "@/lib/mockData";
+import { TradeModal, type TradeParams } from "@/components/trade/trade-modal";
 
 /**
  * Hero market card for the markets page. Left column carries the framing
  * (icon, category, title, outcome odds), the right column plots one probability
- * line per outcome. Pure presentation — odds buttons are mock only.
+ * line per outcome. Clicking an outcome opens the trade modal (buys its YES).
  */
 function FeaturedMarketCard({ market }: { market: FeaturedMarket }) {
+  const [trade, setTrade] = React.useState<TradeParams | null>(null);
   return (
     <section className="rounded-[14px] border border-[#ececec] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <div className="flex flex-col gap-4 lg:flex-row">
@@ -47,14 +49,30 @@ function FeaturedMarketCard({ market }: { market: FeaturedMarket }) {
               <button
                 key={outcome.label}
                 type="button"
-                className="flex w-full items-center gap-2 rounded-[8px] border border-[#ececec] px-3 py-2.5 text-[14px] hover:bg-[#f5f5f5]"
+                disabled={!outcome.marketId}
+                onClick={() =>
+                  outcome.marketId &&
+                  setTrade({
+                    kind: "prediction",
+                    label: outcome.label,
+                    price: outcome.pct / 100,
+                    marketId: outcome.marketId,
+                    side: outcome.side ?? "YES",
+                  })
+                }
+                className="group flex w-full items-center gap-2 rounded-[8px] border border-[#ececec] px-3 py-2.5 text-[14px] transition-colors hover:border-[#9580ff] hover:bg-[#f5f5f5] disabled:cursor-default disabled:hover:border-[#ececec] disabled:hover:bg-transparent"
               >
                 <span
                   className="size-2 rounded-full"
                   style={{ background: outcome.color }}
                 />
                 <span className="text-[#181925]">{outcome.label}</span>
-                <span className="ml-auto font-semibold tabular-nums text-[#181925]">
+                {outcome.marketId && (
+                  <span className="ml-auto text-[11px] font-semibold uppercase tracking-wide text-[#9580ff] opacity-0 transition-opacity group-hover:opacity-100">
+                    Buy {outcome.side ?? "YES"}
+                  </span>
+                )}
+                <span className="font-semibold tabular-nums text-[#181925]">
                   {outcome.pct}%
                 </span>
               </button>
@@ -122,6 +140,8 @@ function FeaturedMarketCard({ market }: { market: FeaturedMarket }) {
           </ul>
         </div>
       </div>
+
+      <TradeModal params={trade} onClose={() => setTrade(null)} />
     </section>
   );
 }

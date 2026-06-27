@@ -505,6 +505,8 @@ export interface FeaturedOutcome {
   label: string;
   pct: number; // 0–100
   color: string;
+  marketId?: string; // unified market id, when this outcome is tradeable
+  side?: "YES" | "NO";
 }
 
 export interface FeaturedPoint {

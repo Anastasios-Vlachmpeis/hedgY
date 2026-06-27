@@ -371,6 +371,8 @@ function buildFeatured(all: UnifiedMarket[]): FeaturedMarket | null {
       label: c.label,
       pct: c.pct,
       color: FEATURED_COLORS[i % FEATURED_COLORS.length],
+      marketId: c.source.id, // each candidate is its own tradeable YES market
+      side: "YES" as const,
     }));
     return {
       id: top[0].source.id,
@@ -393,8 +395,8 @@ function buildFeatured(all: UnifiedMarket[]): FeaturedMarket | null {
   const yes = Math.round(single.best_yes.price * 100);
   const { category, icon } = feCategory(single);
   const outcomes = [
-    { label: "Yes", pct: yes, color: "#9580ff" },
-    { label: "No", pct: 100 - yes, color: "#181925" },
+    { label: "Yes", pct: yes, color: "#9580ff", marketId: single.id, side: "YES" as const },
+    { label: "No", pct: 100 - yes, color: "#181925", marketId: single.id, side: "NO" as const },
   ];
   return {
     id: single.id,
