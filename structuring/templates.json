@@ -1,0 +1,66 @@
+{
+  "_comment": "P2 calibration config for the 5 starter combo templates. Consumed by the hedge classifier in template mode (see hedge-classifier.md). 'price' (implied prob of the adverse outcome) is NOT here - it comes live from the connectors. moveAdverse/confidence/sigmaOther are the P2-owned calibration knobs.",
+  "version": 1,
+  "templates": [
+    {
+      "id": "defense_election",
+      "thesis": "Long defense; risk = a peace-favoring / incumbent-change outcome cuts defense budgets.",
+      "primary": { "type": "etf", "symbol": "ITA" },
+      "hedge": { "eventQuery": "ceasefire OR incumbent-loss", "leg": "YES" },
+      "expectedDirection": "adverse",
+      "moveAdverse": -0.08,
+      "confidence": 0.5,
+      "sigmaOther": 0.10,
+      "expiryAlignment": "medium",
+      "note": "Budget impact lags the event -> sentiment hedge more than cash-flow hedge."
+    },
+    {
+      "id": "pharma_trial",
+      "thesis": "Long a single biopharma name into a binary FDA / Phase-3 readout.",
+      "primary": { "type": "equity", "symbol": "<single-name>" },
+      "hedge": { "eventQuery": "drug-approval", "leg": "NO" },
+      "expectedDirection": "adverse",
+      "moveAdverse": -0.25,
+      "confidence": 0.7,
+      "sigmaOther": 0.12,
+      "expiryAlignment": "good",
+      "note": "Cleanest template - equity and contract resolve on the same readout date."
+    },
+    {
+      "id": "shipping_hormuz",
+      "thesis": "Long broad shipping / logistics; risk = a Strait of Hormuz blockade disrupts routes and hits a selloff.",
+      "primary": { "type": "etf", "symbol": "BOAT" },
+      "hedge": { "eventQuery": "strait-of-hormuz-blocked", "leg": "YES" },
+      "expectedDirection": "adverse",
+      "moveAdverse": -0.15,
+      "confidence": 0.4,
+      "sigmaOther": 0.14,
+      "expiryAlignment": "medium",
+      "note": "Sign is instrument-dependent: pure tankers (STNG/FRO) RISE on a blockade, so for them the adverse leg flips to 'blocked NO'."
+    },
+    {
+      "id": "rates_fed",
+      "thesis": "Long rate-sensitive equities (regional banks); risk = the next FOMC holds/hikes instead of cutting.",
+      "primary": { "type": "etf", "symbol": "KRE" },
+      "hedge": { "eventQuery": "fed-cut-next-meeting", "leg": "NO" },
+      "expectedDirection": "adverse",
+      "moveAdverse": -0.05,
+      "confidence": 0.6,
+      "sigmaOther": 0.08,
+      "expiryAlignment": "good",
+      "note": "Small move but very clean fixed-date timing; good 'macro hedge' example."
+    },
+    {
+      "id": "crypto_legislation",
+      "thesis": "Long crypto-proxy equities (COIN/MSTR); risk = key market-structure legislation (e.g. CLARITY) stalls.",
+      "primary": { "type": "equity", "symbol": "COIN" },
+      "hedge": { "eventQuery": "crypto-bill-becomes-law", "leg": "NO" },
+      "expectedDirection": "adverse",
+      "moveAdverse": -0.18,
+      "confidence": 0.45,
+      "sigmaOther": 0.20,
+      "expiryAlignment": "poor",
+      "note": "Mirrors a real institutional trade (funds have hedged legislative risk via these contracts). Legislative timelines slip -> flag poor alignment."
+    }
+  ]
+}
