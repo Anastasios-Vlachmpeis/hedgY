@@ -113,6 +113,9 @@ export interface CombinedPosition {
   equityLeg: EquityLeg;
   hedgeLeg: HedgeLeg;
   defaultHedgeRatio: number; // 0–1
+  /** plain-language nouns used to build the summary sentence */
+  equityNoun: string; // e.g. "defense equities"
+  hedgeAgainst: string; // e.g. "the incumbent winning"
 }
 
 export const combinedPosition: CombinedPosition = {
@@ -120,6 +123,8 @@ export const combinedPosition: CombinedPosition = {
   equityLeg: { label: "Defense basket", symbols: ["LMT", "RTX", "NOC"], size: 5000 },
   hedgeLeg: { label: "NO — incumbent wins", side: "NO", marketPrice: 0.57, size: 1500 },
   defaultHedgeRatio: 0.3,
+  equityNoun: "defense equities",
+  hedgeAgainst: "the incumbent winning",
 };
 
 /** Result of recomputing the preview for a given hedge ratio. */
@@ -152,7 +157,7 @@ export function computePreview(
 export function summarize(p: CombinedPosition, hedgeRatio: number): string {
   const k = Math.round(p.equityLeg.size / 1000);
   const pct = Math.round(hedgeRatio * 100);
-  return `Long ~$${k}k defense equities, hedged ${pct}% against the incumbent winning.`;
+  return `Long ~$${k}k ${p.equityNoun}, hedged ${pct}% against ${p.hedgeAgainst}.`;
 }
 
 /** One point on the payoff/scenario chart. */
@@ -188,4 +193,105 @@ export function computePayoff(
       unhedged: Math.round(lerp(base.maxLoss, base.maxGain, x)),
     };
   });
+}
+
+/* ---------- By region ---------- */
+
+export interface RegionExposure {
+  region: string;
+  pct: number; // 0–100
+}
+
+export const regionExposure: RegionExposure[] = [
+  { region: "North America", pct: 58 },
+  { region: "Europe", pct: 19 },
+  { region: "Asia", pct: 14 },
+  { region: "Middle East", pct: 9 },
+];
+
+/* ---------- By sector ---------- */
+
+export interface SectorWeight {
+  sector: string;
+  pct: number; // 0–100
+  color: string;
+}
+
+export const sectorWeights: SectorWeight[] = [
+  { sector: "Defense", pct: 24, color: "#9580ff" },
+  { sector: "Tech", pct: 22, color: "#7c3aed" },
+  { sector: "Pharma", pct: 18, color: "#b3a6ff" },
+  { sector: "Energy", pct: 14, color: "#cdbcff" },
+  { sector: "Shipping", pct: 12, color: "#a3a3a3" },
+  { sector: "Financials", pct: 10, color: "#c9c9d4" },
+];
+
+/* ---------- Hedge suggestions (curated) ---------- */
+
+export interface HedgeSuggestion {
+  id: string;
+  equityLabel: string;
+  equitySymbols: string[];
+  hedgeMarket: string;
+  hedgeSide: "YES" | "NO";
+  hedgePrice: number; // 0–1
+  rationale: string;
+  strength: "Strong" | "Moderate" | "Light";
+  /** pre-fills the /structure builder when "Build this" is clicked */
+  position: CombinedPosition;
+}
+
+export const hedgeSuggestions: HedgeSuggestion[] = [
+  {
+    id: "defense-election",
+    equityLabel: "Long Defense",
+    equitySymbols: ["LMT", "RTX", "NOC"],
+    hedgeMarket: "Incumbent wins 2026",
+    hedgeSide: "NO",
+    hedgePrice: 0.57,
+    rationale: "Defense budgets track the administration.",
+    strength: "Strong",
+    position: combinedPosition,
+  },
+  {
+    id: "pharma-trial",
+    equityLabel: "Long Pharma",
+    equitySymbols: ["PFE", "MRK"],
+    hedgeMarket: "Drug X Phase 3 succeeds",
+    hedgeSide: "NO",
+    hedgePrice: 0.61,
+    rationale: "Single binary clinical-trial risk.",
+    strength: "Moderate",
+    position: {
+      thesis: "Long pharma, hedge the trial.",
+      equityLeg: { label: "Pharma basket", symbols: ["PFE", "MRK"], size: 5000 },
+      hedgeLeg: { label: "NO — Drug X Phase 3 succeeds", side: "NO", marketPrice: 0.61, size: 1500 },
+      defaultHedgeRatio: 0.3,
+      equityNoun: "pharma names",
+      hedgeAgainst: "a failed Phase 3 readout",
+    },
+  },
+  {
+    id: "shipping-hormuz",
+    equityLabel: "Long Shipping",
+    equitySymbols: ["ZIM"],
+    hedgeMarket: "Hormuz blockade 2026",
+    hedgeSide: "YES",
+    hedgePrice: 0.17,
+    rationale: "Route disruption offset by the hedge payout.",
+    strength: "Light",
+    position: {
+      thesis: "Long shipping, hedge route risk.",
+      equityLeg: { label: "Shipping", symbols: ["ZIM"], size: 5000 },
+      hedgeLeg: { label: "YES — Hormuz blockade 2026", side: "YES", marketPrice: 0.17, size: 1500 },
+      defaultHedgeRatio: 0.3,
+      equityNoun: "shipping (ZIM)",
+      hedgeAgainst: "a Hormuz blockade",
+    },
+  },
+];
+
+/** Look up a suggestion's pre-fill position by id (for /structure?from=). */
+export function positionFromSuggestion(id?: string): CombinedPosition {
+  return hedgeSuggestions.find((s) => s.id === id)?.position ?? combinedPosition;
 }
