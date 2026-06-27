@@ -89,6 +89,11 @@ class AccountService:
                     label TEXT,
                     ts REAL NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS equity_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ts REAL NOT NULL,
+                    equity REAL NOT NULL
+                );
                 """
             )
             conn.execute("INSERT OR IGNORE INTO account (id, cash, total_deposited) VALUES (1, 0, 0)")
@@ -120,6 +125,7 @@ class AccountService:
             conn.execute("UPDATE account SET cash = 0, total_deposited = 0 WHERE id = 1")
             conn.execute("DELETE FROM positions")
             conn.execute("DELETE FROM trades")
+            conn.execute("DELETE FROM equity_log")
             conn.commit()
             return self._summary(conn)
         finally:
@@ -273,6 +279,40 @@ class AccountService:
                 "SELECT * FROM trades ORDER BY ts DESC, id DESC LIMIT ?", (limit,)
             ).fetchall()
             return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    # ---- equity history (for the real P&L curve) -------------------------
+    def record_equity(self, equity: float, *, force: bool = False, min_gap: float = 8.0) -> None:
+        """Append an equity snapshot. Throttled to one per `min_gap` seconds
+        unless `force` (used on deposits/orders so each action lands a point)."""
+        now = time.time()
+        conn = self._connect()
+        try:
+            if not force:
+                last = conn.execute("SELECT ts FROM equity_log ORDER BY id DESC LIMIT 1").fetchone()
+                if last is not None and now - last["ts"] < min_gap:
+                    return
+            conn.execute("INSERT INTO equity_log (ts, equity) VALUES (?, ?)", (now, equity))
+            # keep the log bounded
+            conn.execute(
+                "DELETE FROM equity_log WHERE id NOT IN "
+                "(SELECT id FROM equity_log ORDER BY id DESC LIMIT 500)"
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def equity_history(self, limit: int = 200) -> list[dict]:
+        """Chronological equity points: [{t: iso-ish label, value}]."""
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT ts, equity FROM (SELECT * FROM equity_log ORDER BY id DESC LIMIT ?) "
+                "ORDER BY ts ASC",
+                (limit,),
+            ).fetchall()
+            return [{"t": r["ts"], "value": r["equity"]} for r in rows]
         finally:
             conn.close()
 
