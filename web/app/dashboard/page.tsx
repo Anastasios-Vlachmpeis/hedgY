@@ -1,15 +1,18 @@
-import { positions, activity } from "@/lib/mockData";
 import { AccountHeader } from "@/components/dashboard/account-header";
 import { PositionsActivity } from "@/components/dashboard/positions-activity";
-import { getPortfolio } from "@/lib/server/marketData";
+import { getAccount, getPositions, getActivity } from "@/lib/server/marketData";
 
-// Live Alpaca paper account (balance/equity/buying-power); positions & activity
-// are the styled UI fixtures for now. force-dynamic so each load is fresh.
+// Live $1000 paper-trading account (deposit + real positions/activity from the
+// backend ledger). force-dynamic so every load reflects the latest trades.
 export const dynamic = "force-dynamic";
 
 /** User account — Polymarket-style: summary + P&L, then positions/activity. */
 export default async function DashboardPage() {
-  const portfolio = await getPortfolio();
+  const [portfolio, positions, activity] = await Promise.all([
+    getAccount(),
+    getPositions(),
+    getActivity(),
+  ]);
 
   return (
     <div className="mx-auto max-w-[1100px]">
