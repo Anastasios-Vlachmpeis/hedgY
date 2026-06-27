@@ -203,7 +203,7 @@ function AccountHeader({ portfolio }: { portfolio: Portfolio }) {
     <>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Portfolio value card */}
-        <section className={CARD}>
+        <section className={cn(CARD, "flex flex-col")}>
           <div className="flex items-start justify-between gap-3">
             <p className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
               Portfolio value
@@ -224,7 +224,7 @@ function AccountHeader({ portfolio }: { portfolio: Portfolio }) {
             <span className="text-[#a3a3a3]">today</span>
           </div>
 
-          <div className="mt-4 flex gap-2">
+          <div className="mt-auto pt-4 flex gap-2">
             <button
               type="button"
               className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-[#9580ff] py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[#a99bff]"
