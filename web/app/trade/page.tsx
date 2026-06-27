@@ -174,48 +174,87 @@ function CombineCTA() {
   );
 }
 
-/* ── Hedge idea list row ── */
-const STRENGTH_DOT: Record<string, string> = {
-  Strong:   "bg-[#16a34a]",
-  Moderate: "bg-[#f59e0b]",
-  Light:    "bg-[#9ca3af]",
+/* ── Hedge idea list row — Polymarket-style ── */
+const HEDGE_ICONS: Record<string, string> = {
+  "defense-election": "🏛️",
+  "pharma-fda":       "💊",
+  "shipping-hormuz":  "⚓",
+};
+
+const STRENGTH_STYLES: Record<string, { pill: string; bar: string }> = {
+  Strong:   { pill: "bg-[#dcfce7] text-[#15803d]", bar: "#16a34a" },
+  Moderate: { pill: "bg-[#fef9c3] text-[#a16207]", bar: "#eab308" },
+  Light:    { pill: "bg-[#f3f4f6] text-[#6B7280]",  bar: "#9ca3af" },
 };
 
 function HedgeRow({ s }: { s: (typeof hedgeSuggestions)[0] }) {
-  const hedgePct = Math.round(s.hedgePrice * 100);
+  const icon = HEDGE_ICONS[s.id] ?? "📊";
+  const c    = STRENGTH_STYLES[s.strength];
+
+  /* YES probability is always 1 − NO price */
+  const yesPrice = s.hedgeSide === "YES" ? s.hedgePrice : 1 - s.hedgePrice;
+  const yesCents = Math.round(yesPrice * 100);
+  const noCents  = 100 - yesCents;
+
   return (
     <Link
-      href="/structure"
-      className="group flex items-center gap-5 px-5 py-4 transition-colors duration-[180ms] hover:bg-[#fafafa]"
+      href={`/structure?from=${s.id}`}
+      className="flex flex-col gap-3 px-5 py-4 transition-colors duration-[180ms] hover:bg-[#fafafa]"
     >
-      {/* Strength dot */}
-      <span className={cn("size-2 shrink-0 rounded-full", STRENGTH_DOT[s.strength])} />
+      {/* Row 1: icon + market title + strength badge */}
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 shrink-0 text-[18px] leading-none">{icon}</span>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <p className="truncate text-[13px] font-semibold leading-snug text-[#111111]">
+            {s.hedgeMarket}
+          </p>
+          <p className="text-[11px] text-[#9ca3af]">
+            {s.equityLabel} · {s.equitySymbols.join(" · ")}
+          </p>
+        </div>
+        <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold", c.pill)}>
+          {s.strength}
+        </span>
+      </div>
 
-      {/* Thesis */}
-      <p className="w-52 shrink-0 text-[13px] font-semibold text-[#111111]">
-        {s.position.thesis}
-      </p>
+      {/* Row 2: probability bar + YES / NO buttons */}
+      <div className="ml-7 flex flex-col gap-2">
+        {/* Bar — shows YES probability */}
+        <div className="h-[3px] w-full overflow-hidden rounded-full bg-[#f0f0f0]">
+          <div
+            className="h-full rounded-full"
+            style={{ width: `${yesCents}%`, backgroundColor: c.bar }}
+          />
+        </div>
 
-      {/* Equity tickers */}
-      <p className="w-28 shrink-0 text-[12px] font-medium text-[#6B7280]">
-        {s.equitySymbols.join(" · ")}
-      </p>
-
-      {/* Arrow connector */}
-      <ArrowRight className="size-3.5 shrink-0 text-[#d1d5db]" />
-
-      {/* Hedge market */}
-      <p className="flex-1 truncate text-[12px] text-[#6B7280]">
-        {s.hedgeSide} — {s.hedgeMarket}
-      </p>
-
-      {/* Implied price */}
-      <p className="shrink-0 text-[11px] tabular-nums text-[#9ca3af]">@ {hedgePct}¢</p>
-
-      {/* CTA — appears on hover */}
-      <span className="flex shrink-0 items-center gap-1 text-[12px] font-medium text-[#111111] opacity-0 transition-all duration-[180ms] group-hover:gap-1.5 group-hover:opacity-100">
-        Build <ArrowRight className="size-3" />
-      </span>
+        {/* Buttons */}
+        <div className="flex gap-1.5">
+          <button
+            type="button"
+            onClick={(e) => e.preventDefault()}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1 rounded-[8px] py-1.5 text-[12px] font-semibold transition-colors",
+              s.hedgeSide === "YES"
+                ? "bg-[#111111] text-white"
+                : "bg-[#f0fdf4] text-[#15803d] hover:bg-[#dcfce7]",
+            )}
+          >
+            Yes <span className="font-normal opacity-60">{yesCents}¢</span>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => e.preventDefault()}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1 rounded-[8px] py-1.5 text-[12px] font-semibold transition-colors",
+              s.hedgeSide === "NO"
+                ? "bg-[#111111] text-white"
+                : "bg-[#fef2f2] text-[#b91c1c] hover:bg-[#fee2e2]",
+            )}
+          >
+            No <span className="font-normal opacity-60">{noCents}¢</span>
+          </button>
+        </div>
+      </div>
     </Link>
   );
 }
