@@ -58,9 +58,6 @@ function PositionsActivity({
             )}
           >
             {t}
-            <span className="ml-1.5 text-[12px] font-medium tabular-nums text-[#a3a3a3]">
-              {t === "positions" ? positions.length : activity.length}
-            </span>
           </button>
         ))}
       </div>
