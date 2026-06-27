@@ -97,32 +97,54 @@ function RiskRow({ r }: { r: (typeof LMT_RISKS)[0] }) {
   );
 }
 
+/* ── Stock context bar ── */
+function StockBar() {
+  return (
+    <div className="flex items-center gap-4 rounded-[14px] bg-white px-5 py-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-[#f5f7fa] text-[16px]">
+        🛡️
+      </div>
+      <div className="flex flex-col gap-0.5">
+        <div className="flex items-center gap-2">
+          <span className="text-[15px] font-semibold text-[#0a0a0a]">Lockheed Martin</span>
+          <span className="rounded-full bg-[#f5f5f5] px-2 py-[2px] text-[11px] font-medium text-[#737373]">LMT · NYSE</span>
+        </div>
+        <span className="text-[11px] text-[#a3a3a3]">Defense &amp; Aerospace</span>
+      </div>
+      <div className="ml-auto text-right">
+        <p className="text-[18px] font-semibold tabular-nums leading-tight text-[#0a0a0a]">$507.40</p>
+        <p className="text-[12px] font-medium text-[#16a34a]">+$2.38 (+0.47%) today</p>
+      </div>
+    </div>
+  );
+}
+
 /* ── Right panel: risk markets for LMT ── */
 function RiskPanel() {
   return (
-    <div className="flex h-full flex-col rounded-[18px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+    <div className="flex flex-col rounded-[18px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between border-b border-[#f5f5f5] pb-4">
         <div>
-          <h3 className="text-[15px] font-semibold text-[#111111]">Markets affecting LMT</h3>
-          <p className="mt-0.5 text-[12px] text-[#9ca3af]">Prediction markets correlated with your position</p>
+          <h3 className="text-[15px] font-semibold text-[#0a0a0a]">Risk Markets</h3>
+          <p className="mt-0.5 text-[11px] text-[#a3a3a3]">Prediction markets correlated with LMT</p>
         </div>
         <span className="flex items-center gap-1 rounded-full bg-[#fef3c7] px-2 py-0.5 text-[10px] font-semibold text-[#d97706]">
-          <ShieldAlert className="size-2.5" /> 3
+          <ShieldAlert className="size-2.5" /> 3 risks
         </span>
       </div>
 
       {/* Market rows */}
-      <div className="mt-2 flex flex-col divide-y divide-[#f5f5f5]">
+      <div className="flex flex-col divide-y divide-[#f5f5f5]">
         {LMT_RISKS.map((r) => (
           <RiskRow key={r.id} r={r} />
         ))}
       </div>
 
-      {/* Panel CTA — applai black pill style */}
+      {/* CTA — sits right below the last row */}
       <Link
         href="/structure"
-        className="mt-auto flex items-center justify-center gap-2 rounded-full bg-[#0a0a0a] px-5 py-2.5 text-[13px] font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-all duration-[150ms] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+        className="mt-5 flex items-center justify-center gap-2 rounded-full bg-[#0a0a0a] px-5 py-2.5 text-[13px] font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-all duration-[150ms] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
       >
         Hedge all 3 risks <ArrowRight className="size-3.5" />
       </Link>
@@ -133,9 +155,12 @@ function RiskPanel() {
 /* ── Page ── */
 export default function TradePage() {
   return (
-    <div className="flex flex-col gap-6">
-      {/* The whole product: stock + its risk markets */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[58fr_42fr] lg:[&>*]:h-full">
+    <div className="flex flex-col gap-5">
+      {/* Stock identity */}
+      <StockBar />
+
+      {/* Chart + risk panel */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[58fr_42fr]">
         <StockChart />
         <RiskPanel />
       </div>
