@@ -1,12 +1,17 @@
+"use client";
+
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Bell, Search } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import { WORDMARK } from "@/lib/brand";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Markets" },
   { href: "/dashboard", label: "Portfolio" },
+  { href: "/structure", label: "Structure" },
 ] as const;
 
 /**
@@ -14,6 +19,7 @@ const NAV_LINKS = [
  * wordmark + violet dot. Denser than marketing chrome (it's an app).
  */
 function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   return (
     <div className="flex min-h-full flex-col bg-white">
       <header className="sticky top-0 z-40 border-b border-[#ececec] bg-white/85 backdrop-blur">
@@ -26,19 +32,24 @@ function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           <nav className="flex items-center gap-1">
-            {NAV_LINKS.map(({ href, label }, i) => (
-              <Link
-                key={label}
-                href={href}
-                className={
-                  i === 0
-                    ? "rounded-full bg-[#f5f5f5] px-3.5 py-1.5 text-[14px] font-medium text-[#181925]"
-                    : "rounded-full px-3.5 py-1.5 text-[14px] text-[#666666] transition-colors hover:bg-[#f5f5f5] hover:text-[#181925]"
-                }
-              >
-                {label}
-              </Link>
-            ))}
+            {NAV_LINKS.map(({ href, label }, i) => {
+              const active =
+                i === NAV_LINKS.findIndex((l) => l.href === pathname);
+              return (
+                <Link
+                  key={label}
+                  href={href}
+                  className={cn(
+                    "rounded-full px-3.5 py-1.5 text-[14px] transition-colors",
+                    active
+                      ? "bg-[#f5f5f5] font-medium text-[#181925]"
+                      : "text-[#666666] hover:bg-[#f5f5f5] hover:text-[#181925]",
+                  )}
+                >
+                  {label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="ml-auto flex items-center gap-1.5">

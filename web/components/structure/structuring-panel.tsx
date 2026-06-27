@@ -8,17 +8,22 @@ import {
   computePayoff,
   computePreview,
   summarize,
+  type CombinedPosition,
 } from "@/lib/mockData";
-import { BasketBuilder } from "@/components/dashboard/basket-builder";
-import { PositionPreview } from "@/components/dashboard/position-preview";
+import { BasketBuilder } from "@/components/structure/basket-builder";
+import { PositionPreview } from "@/components/structure/position-preview";
 
 /**
- * The hero feature. Dark surface against the white page. Owns the hedge-ratio
- * state so the slider in the Basket Builder live-updates BOTH the Position
- * Preview stats and the payoff/scenario chart.
+ * The hero feature. Dark surface. Owns the hedge-ratio state so the slider in
+ * the Basket Builder live-updates BOTH the Position Preview stats and the
+ * payoff/scenario chart. `position` defaults to the defense/election example
+ * but can be pre-filled from a hedge suggestion.
  */
-function StructuringPanel() {
-  const position = combinedPosition;
+function StructuringPanel({
+  position = combinedPosition,
+}: {
+  position?: CombinedPosition;
+}) {
   const [hedgeRatio, setHedgeRatio] = React.useState(position.defaultHedgeRatio);
   const [toast, setToast] = React.useState(false);
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
