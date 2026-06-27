@@ -1,67 +1,72 @@
 import * as React from "react";
 import Link from "next/link";
-import { Diamond, LayoutDashboard, Search, Bell } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { WORDMARK } from "@/lib/brand";
 
 const NAV_LINKS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Markets" },
+  { href: "/dashboard", label: "Portfolio" },
 ] as const;
 
 /**
- * App shell: sticky top nav + main content well.
- * Wraps every route so the chrome stays consistent across the app.
+ * App shell — sticky top nav on the white base, matching the landing
+ * wordmark + violet dot. Denser than marketing chrome (it's an app).
  */
 function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-full flex-col">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center gap-6 px-4 sm:px-6">
+    <div className="flex min-h-full flex-col bg-white">
+      <header className="sticky top-0 z-40 border-b border-[#ececec] bg-white/85 backdrop-blur">
+        <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center gap-6 px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2">
-            <Diamond
-              className="size-5 fill-structuring text-structuring"
-              aria-hidden
-            />
-            <span className="text-sm font-semibold tracking-tight">
-              Terminal
+            <span className="text-[16px] font-semibold tracking-[-0.02em] text-[#181925]">
+              {WORDMARK}
             </span>
-            <span className="rounded border border-border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              Preview
-            </span>
+            <span className="size-2 rounded-full bg-[#9580ff]" aria-hidden />
           </Link>
 
           <nav className="flex items-center gap-1">
-            {NAV_LINKS.map(({ href, label, icon: Icon }) => (
+            {NAV_LINKS.map(({ href, label }, i) => (
               <Link
-                key={href}
+                key={label}
                 href={href}
-                className={cn(
-                  "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-surface hover:text-foreground",
-                )}
+                className={
+                  i === 0
+                    ? "rounded-full bg-[#f5f5f5] px-3.5 py-1.5 text-[14px] font-medium text-[#181925]"
+                    : "rounded-full px-3.5 py-1.5 text-[14px] text-[#666666] transition-colors hover:bg-[#f5f5f5] hover:text-[#181925]"
+                }
               >
-                <Icon className="size-4" />
                 {label}
               </Link>
             ))}
           </nav>
 
-          <div className="ml-auto flex items-center gap-1">
-            <Button variant="ghost" size="icon" aria-label="Search">
-              <Search />
-            </Button>
-            <Button variant="ghost" size="icon" aria-label="Notifications">
-              <Bell />
-            </Button>
-            <div
-              className="ml-2 size-8 rounded-full border border-border-strong bg-surface"
-              aria-hidden
-            />
+          <div className="ml-auto flex items-center gap-1.5">
+            <button
+              type="button"
+              aria-label="Search"
+              className="flex size-9 items-center justify-center rounded-full text-[#666666] transition-colors hover:bg-[#f5f5f5]"
+            >
+              <Search className="size-[18px]" strokeWidth={1.9} />
+            </button>
+            <button
+              type="button"
+              aria-label="Notifications"
+              className="flex size-9 items-center justify-center rounded-full text-[#666666] transition-colors hover:bg-[#f5f5f5]"
+            >
+              <Bell className="size-[18px]" strokeWidth={1.9} />
+            </button>
+            <span
+              className="ml-1 flex size-8 items-center justify-center rounded-full bg-[#181925] text-[12px] font-semibold text-white"
+              aria-label="Account"
+            >
+              MD
+            </span>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-6">
+      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-5 sm:px-6">
         {children}
       </main>
     </div>

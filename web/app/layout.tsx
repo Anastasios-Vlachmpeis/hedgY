@@ -1,22 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import { AppShell } from "@/components/ui/app-shell";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { WORDMARK, TAGLINE } from "@/lib/brand";
 
 export const metadata: Metadata = {
-  title: "Terminal — Trading & Structuring",
-  description: "Dark fintech terminal: portfolio, markets, and structuring.",
+  title: `${WORDMARK} — ${TAGLINE}`,
+  description:
+    "Trade equities, bonds, derivatives and prediction markets in one position. Express a real-world view and hedge it across Kalshi, Polymarket, Alpaca and IBKR.",
 };
 
 export default function RootLayout({
@@ -25,13 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full">
-        <AppShell>{children}</AppShell>
-      </body>
+    <html lang="en" className="h-full antialiased">
+      <body className="min-h-full font-sans">{children}</body>
     </html>
   );
 }

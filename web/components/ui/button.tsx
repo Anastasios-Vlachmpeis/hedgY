@@ -5,27 +5,30 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full font-medium transition-all active:translate-y-px disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground hover:bg-primary/90",
+        // violet primary
+        primary:
+          "bg-[#9580ff] text-white hover:bg-[#a99bff] hover:-translate-y-px",
+        // flat grey secondary
+        secondary:
+          "bg-[#f5f5f5] text-[#181925] hover:bg-[#ececec] hover:-translate-y-px",
+        ghost: "text-[#3f3f46] hover:bg-[#f5f5f5]",
         outline:
-          "border border-border-strong bg-transparent text-foreground hover:bg-surface",
-        ghost: "text-foreground hover:bg-surface",
-        structuring:
-          "bg-structuring text-background hover:bg-structuring/90",
+          "border border-[#e8e8e8] bg-white text-[#181925] hover:bg-[#f5f5f5]",
       },
       size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 px-3 text-xs",
-        lg: "h-10 px-6",
-        icon: "size-9",
+        sm: "h-8 px-4 text-[13px]",
+        default: "h-10 px-5 text-[14px]",
+        // marketing CTA
+        cta: "px-7 py-3 text-[15px]",
+        icon: "size-10",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "primary",
       size: "default",
     },
   },
