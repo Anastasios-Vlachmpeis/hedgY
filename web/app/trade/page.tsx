@@ -113,7 +113,7 @@ function RiskCard({ r }: { r: (typeof LMT_RISKS)[0] }) {
         </span>
         <Link
           href={`/structure?from=${r.hedgeFrom}`}
-          className="rounded-full border border-[#e5e5e5] bg-white px-3 py-[3px] text-[11px] font-semibold text-[#0a0a0a] transition-colors hover:border-[#0a0a0a]"
+          className="rounded-[10px] bg-[#f0f0f0] px-3 py-[3px] text-[11px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#e5e5e5]"
         >
           Hedge →
         </Link>
