@@ -12,13 +12,11 @@ import {
   CheckCircle2,
   Cpu,
   ExternalLink,
-  EyeOff,
   FileText,
   Folder,
   Gauge,
   Info,
   Landmark,
-  Layers2,
   Pencil,
   Plus,
   SearchCheck,
@@ -740,7 +738,7 @@ function AssetLogo({ symbol, selected = false }: { symbol: string; selected?: bo
   );
 }
 
-function RiskIcon({ icon }: { icon: RiskMarket["icon"] }) {
+function RiskIcon({ icon, bare = false }: { icon: RiskMarket["icon"]; bare?: boolean }) {
   const icons = {
     landmark: Landmark,
     shield: ShieldCheck,
@@ -751,6 +749,7 @@ function RiskIcon({ icon }: { icon: RiskMarket["icon"] }) {
     file: FileText,
   };
   const Icon = icons[icon];
+  if (bare) return <Icon className="size-[17px] text-[#64748B]" strokeWidth={1.9} />;
   return (
     <span className="flex size-8 items-center justify-center rounded-full bg-[var(--muted-surface)] text-[#64748B]">
       <Icon className="size-[17px]" strokeWidth={1.9} />
@@ -848,7 +847,7 @@ function AssetChartCard({ asset }: { asset: Asset }) {
   const [watched, setWatched] = React.useState(false);
 
   return (
-    <Card className="h-fit overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-white shadow-none">
+    <Card className="overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-white shadow-none">
       <CardHeader className="border-b border-[var(--border-soft)] px-5 py-5">
         <div>
           <div className="flex items-center gap-3">
@@ -955,146 +954,94 @@ function AssetChartCard({ asset }: { asset: Asset }) {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-5 overflow-hidden rounded-[12px] border border-[var(--border-soft)]">
-          {[
-            ["Market cap", asset.metrics.marketCap],
-            ["P/E ratio", asset.metrics.pe],
-            ["52W range", asset.metrics.range52w],
-            ["Dividend yield", asset.metrics.dividendYield],
-            ["Beta (1Y)", asset.metrics.beta],
-          ].map(([label, value], index) => (
-            <div
-              key={label}
-              className={cn("bg-white px-3 py-2.5", index !== 0 && "border-l border-[var(--border-soft)]")}
-            >
-              <div className="text-[11px] font-semibold text-[var(--text-muted)]">{label}</div>
-              <div className="mt-1 text-[12px] font-bold text-[var(--text-primary)]">{value}</div>
-            </div>
-          ))}
-        </div>
       </CardContent>
     </Card>
   );
 }
 
-function MarketRow({
-  market,
-  selected,
-  compared,
-  onHedge,
-  onCompare,
-}: {
-  market: RiskMarket;
-  selected: boolean;
-  compared: boolean;
-  onHedge: () => void;
-  onCompare: () => void;
-}) {
+/* ── Arc probability gauge (trade-page style) ── */
+function ArcGauge({ pct, bearish }: { pct: number; bearish?: boolean }) {
+  const r = 18, cx = 22, cy = 22;
+  const arc = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
   return (
-    <div
-      className={cn(
-        "border-t border-[var(--border-soft)] py-4 first:border-t-0 first:pt-0",
-        selected && "rounded-[14px] bg-[#FBFAFF] px-3 ring-1 ring-[#E5DEFF]",
-      )}
-    >
-      <div className="flex items-start gap-3">
-        <RiskIcon icon={market.icon} />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[14px] font-semibold text-[var(--text-primary)]">
-                {market.title}
-              </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-[#EAF8EF] px-2.5 py-1 text-[11px] font-bold text-[var(--positive)]">
-                  Yes {market.yes}¢
-                </span>
-                <span className="rounded-full bg-[#FFF1F2] px-2.5 py-1 text-[11px] font-bold text-[var(--negative)]">
-                  No {market.no}¢
-                </span>
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
-                  {market.volume} vol
-                </span>
-              </div>
-            </div>
-            <div
-              className={cn(
-                "text-[16px] font-bold",
-                market.probability >= 50 ? "text-[var(--positive)]" : "text-[var(--negative)]",
-              )}
-            >
-              {market.probability}%
-            </div>
-          </div>
-
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--muted-surface)]">
-            <div
-              className="h-full rounded-full bg-[linear-gradient(90deg,#4F8DFF,#7C5CFF)]"
-              style={{ width: `${market.probability}%` }}
-            />
-          </div>
-
-          <div className="mt-3 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={onCompare}
-              className={cn(
-                "flex h-8 items-center gap-2 rounded-full border px-3 text-[11px] font-bold transition-colors",
-                compared
-                  ? "border-[#D8D2FF] bg-[var(--purple-light)] text-[var(--purple)]"
-                  : "border-[var(--border-soft)] bg-white text-[var(--text-secondary)] hover:border-[#D8D2FF] hover:text-[var(--purple)]",
-              )}
-            >
-              <span
-                className={cn(
-                  "size-3 rounded-[4px] border",
-                  compared ? "border-[var(--purple)] bg-[var(--purple)]" : "border-[#C8CEDA]",
-                )}
-              >
-                {compared ? <CheckCircle2 className="-m-[2px] size-[15px] text-white" /> : null}
-              </span>
-              Compare
-            </button>
-            <button
-              type="button"
-              onClick={onHedge}
-              className="flex h-8 items-center gap-2 rounded-full border border-[var(--border-soft)] bg-white px-3 text-[12px] font-bold text-[var(--text-primary)] transition-colors hover:border-[#D8D2FF] hover:text-[var(--purple)]"
-            >
-              Hedge
-              <ArrowRight className="size-3.5" strokeWidth={2} />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <svg viewBox="0 0 44 26" className="w-[44px]">
+      <path d={arc} fill="none" stroke="#f0f0f0" strokeWidth="3.5" strokeLinecap="round" pathLength={100} />
+      <path
+        d={arc} fill="none"
+        stroke={bearish ? "#ef4444" : "#22c55e"}
+        strokeWidth="3.5" strokeLinecap="round"
+        pathLength={100} strokeDasharray={`${pct} 100`}
+      />
+    </svg>
   );
 }
 
-function ComparePanel({ markets }: { markets: RiskMarket[] }) {
-  if (!markets.length) return null;
+function MarketCard({
+  market,
+  recommended,
+  onHedge,
+}: {
+  market: RiskMarket;
+  recommended: boolean;
+  onHedge: () => void;
+}) {
+  const bearish = market.correlation < 0;
   return (
-    <div className="mt-4 rounded-[15px] border border-[#E6E1FF] bg-[#FBFAFF] p-3">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-[12px] font-bold text-[var(--text-primary)]">
-          <Layers2 className="size-4 text-[var(--purple)]" />
-          Compare selected
+    <div
+      className={cn(
+        "rounded-[14px] border bg-white p-4",
+        recommended ? "border-[#171B3B]" : "border-[#ececec]",
+      )}
+    >
+      {recommended && (
+        <div className="mb-2 flex items-center gap-1">
+          <Zap className="size-2.5 text-[#f59e0b]" strokeWidth={2.5} fill="currentColor" />
+          <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#f59e0b]">
+            Recommended hedge
+          </span>
         </div>
-        <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
-          Best venue shown
+      )}
+      <div className="flex items-start gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-[9px] bg-[#f5f5f5]">
+          <RiskIcon icon={market.icon} bare />
         </span>
+        <p className="flex-1 text-[12.5px] font-semibold leading-snug text-[#0a0a0a]">
+          {market.title}
+        </p>
+        <div className="flex shrink-0 flex-col items-center gap-[1px]">
+          <ArcGauge pct={market.probability} bearish={bearish} />
+          <span className="text-[11px] font-bold tabular-nums text-[#0a0a0a]">{market.probability}%</span>
+          <span className="text-[9px] text-[#a3a3a3]">chance</span>
+        </div>
       </div>
-      <div className="grid gap-2">
-        {markets.map((market) => (
-          <div
-            key={market.id}
-            className="grid grid-cols-[1fr_48px_48px_74px] items-center gap-2 rounded-[11px] bg-white px-3 py-2 text-[11px] font-semibold"
-          >
-            <span className="truncate text-[var(--text-primary)]">{market.title}</span>
-            <span className="text-[var(--positive)]">{market.yes}¢</span>
-            <span className="text-[var(--negative)]">{market.no}¢</span>
-            <span className="truncate text-[var(--purple)]">{market.bestYesVenue}</span>
-          </div>
-        ))}
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          className="flex-1 rounded-[9px] bg-[#dcfce7] py-2 text-[12px] font-semibold text-[#16a34a] transition-colors hover:bg-[#bbf7d0]"
+        >
+          Yes {market.yes}¢
+        </button>
+        <button
+          type="button"
+          className="flex-1 rounded-[9px] bg-[#fee2e2] py-2 text-[12px] font-semibold text-[#dc2626] transition-colors hover:bg-[#fecaca]"
+        >
+          No {market.no}¢
+        </button>
+      </div>
+      <div className="mt-2.5 flex items-center justify-between">
+        <span className="text-[10px] text-[#a3a3a3]">{market.volume} vol</span>
+        <button
+          type="button"
+          onClick={onHedge}
+          className={cn(
+            "rounded-[8px] px-3 py-1 text-[11px] font-semibold transition-colors",
+            recommended
+              ? "bg-[#171B3B] text-white hover:opacity-90"
+              : "bg-[#f0f0f0] text-[#0a0a0a] hover:bg-[#e5e5e5]",
+          )}
+        >
+          Hedge →
+        </button>
       </div>
     </div>
   );
@@ -1104,61 +1051,39 @@ function RiskMarketsCard({
   assetSymbol,
   markets,
   activeMarketId,
-  compareIds,
   onSelectHedge,
-  onToggleCompare,
   onBrowse,
 }: {
   assetSymbol: string;
   markets: RiskMarket[];
   activeMarketId: string;
-  compareIds: string[];
   onSelectHedge: (id: string) => void;
-  onToggleCompare: (id: string) => void;
   onBrowse: () => void;
 }) {
-  const compared = markets.filter((market) => compareIds.includes(market.id));
-
   return (
-    <Card className="rounded-[20px] border border-[var(--border-soft)] bg-white shadow-none">
-      <CardHeader className="px-5 pb-3 pt-5">
-        <div>
-          <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
-            Risk markets
-          </h2>
-          <p className="mt-1 text-[12px] font-medium text-[var(--text-secondary)]">
-            Prediction markets correlated with {assetSymbol}
-          </p>
-        </div>
-        <Badge className="h-7 border-0 bg-[var(--purple-light)] text-[var(--purple)]">
-          <Sparkles className="mr-1 size-3.5" />
-          {markets.length} risks
-        </Badge>
-      </CardHeader>
-      <CardContent className="px-5 pb-5 pt-2">
-        <div>
-          {markets.map((market) => (
-            <MarketRow
-              key={market.id}
-              market={market}
-              selected={market.id === activeMarketId}
-              compared={compareIds.includes(market.id)}
-              onHedge={() => onSelectHedge(market.id)}
-              onCompare={() => onToggleCompare(market.id)}
-            />
-          ))}
-        </div>
-        <ComparePanel markets={compared} />
-        <button
-          type="button"
-          onClick={onBrowse}
-          className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-[12px] border border-[var(--border-soft)] bg-white text-[13px] font-semibold text-[var(--text-primary)] transition-colors hover:border-[#D8D2FF] hover:bg-[#FBFAFF] hover:text-[var(--purple)]"
-        >
-          <EyeOff className="size-4" strokeWidth={1.9} />
-          Browse all risk markets
-        </button>
-      </CardContent>
-    </Card>
+    <div className="flex h-full flex-col gap-2">
+      <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#7B849A]">
+        Correlated prediction markets · {assetSymbol}
+      </p>
+      <div className="flex flex-1 flex-col gap-2">
+        {markets.map((market, i) => (
+          <MarketCard
+            key={market.id}
+            market={market}
+            recommended={i === 0}
+            onHedge={() => onSelectHedge(market.id)}
+          />
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={onBrowse}
+        className="mt-1 flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-[12px] border border-[#ececec] bg-white text-[13px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#fafafa]"
+      >
+        Browse all risk markets
+        <ArrowRight className="size-4" strokeWidth={2} />
+      </button>
+    </div>
   );
 }
 
@@ -1840,15 +1765,13 @@ export default function DashboardPage() {
         <HeaderIntro />
         <AssetSwitcher selectedSymbol={selectedSymbol} onSelect={selectAsset} assetList={patchedAssets} />
 
-        <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_520px]">
+        <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-2">
           <AssetChartCard asset={selectedAsset} />
           <RiskMarketsCard
             assetSymbol={selectedAsset.symbol}
             markets={visibleRiskMarkets}
             activeMarketId={activeMarketId}
-            compareIds={compareIds}
             onSelectHedge={selectHedge}
-            onToggleCompare={toggleCompare}
             onBrowse={() => setBrowseOpen(true)}
           />
         </div>
