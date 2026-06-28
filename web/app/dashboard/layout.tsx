@@ -174,24 +174,24 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[var(--border-soft)] bg-white/88 py-6 backdrop-blur transition-[width] duration-200",
-        collapsed ? "w-16 items-center px-0" : "w-[200px] px-4",
+        "fixed bottom-3 left-3 top-3 z-50 flex flex-col rounded-[20px] border border-[#e8e8e8] bg-white py-4 shadow-[0_2px_20px_rgba(0,0,0,0.07)] transition-[width] duration-200",
+        collapsed ? "w-[60px] items-center px-0" : "w-[200px] px-4",
       )}
     >
       {/* Logo */}
       <button
         type="button"
         onClick={onToggle}
-        className={cn("mb-8 flex items-center", collapsed ? "justify-center" : "gap-3")}
+        className={cn("mb-6 flex items-center", collapsed ? "justify-center" : "gap-3")}
       >
         <VersoMark />
         {!collapsed && (
-          <span className="text-[25px] font-semibold tracking-[-0.04em] text-[#050505]">verso</span>
+          <span className="text-[22px] font-semibold tracking-[-0.04em] text-[#050505]">verso</span>
         )}
       </button>
 
       {/* Main nav */}
-      <nav className={cn("flex flex-col gap-1", collapsed && "w-full px-2")}>
+      <nav className={cn("flex flex-col gap-0.5", collapsed && "w-full px-2")}>
         {mainNav.map((item) => {
           const selected = item.exact
             ? pathname === item.href
@@ -210,7 +210,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
       </nav>
 
       {/* Bottom: Settings + Billing + User */}
-      <div className={cn("mt-auto flex flex-col gap-1", collapsed && "w-full px-2")}>
+      <div className={cn("mt-auto flex flex-col gap-0.5", collapsed && "w-full px-2")}>
         {bottomNav.map((item) => (
           <NavItem
             key={item.href}
@@ -222,7 +222,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
           />
         ))}
 
-        {/* User avatar — very bottom */}
+        {/* User avatar */}
         <button
           type="button"
           className={cn(
@@ -370,7 +370,7 @@ function Topbar({ collapsed }: { collapsed: boolean }) {
     <header
       className={cn(
         "fixed right-4 top-3 z-40 flex h-[56px] items-center rounded-[16px] border border-[#e8e8e8] bg-white/95 px-5 shadow-[0_2px_16px_rgba(0,0,0,0.07)] backdrop-blur-[10px] transition-[left] duration-200",
-        collapsed ? "left-[72px]" : "left-[208px]",
+        collapsed ? "left-[83px]" : "left-[223px]",
       )}
     >
       <SearchCommand />
@@ -404,7 +404,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
       <main
         className={cn(
           "min-h-screen pt-[76px] transition-[padding-left] duration-200",
-          collapsed ? "pl-16" : "pl-[200px]",
+          collapsed ? "pl-[83px]" : "pl-[223px]",
         )}
       >
         {children}

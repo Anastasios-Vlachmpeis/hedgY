@@ -1453,8 +1453,8 @@ function AssetSwitcher({
             className={cn(
               "flex h-[66px] min-w-[190px] items-center gap-3 rounded-[15px] border bg-white px-5 text-left transition-all duration-150",
               selected
-                ? "border-[#d0d0d0] bg-[#f8f8f8] shadow-[0_0_0_3px_rgba(0,0,0,0.04)]"
-                : "border-[#ececec] hover:-translate-y-0.5 hover:border-[#d0d0d0]",
+                ? "border-[#d0d0d0] shadow-[0_0_0_3px_rgba(0,0,0,0.04)]"
+                : "border-[#ececec] hover:border-[#d0d0d0]",
             )}
           >
             <AssetLogo symbol={asset.symbol} />
@@ -1472,7 +1472,7 @@ function AssetSwitcher({
       <button
         type="button"
         onClick={() => window.dispatchEvent(new Event("verso:focus-search"))}
-        className="flex h-[58px] min-w-[150px] items-center justify-center gap-2 rounded-[13px] border border-[#ececec] bg-white px-4 text-[13px] font-semibold text-[#0a0a0a] transition-colors hover:border-[#d0d0d0] hover:bg-[#f8f8f8]"
+        className="flex h-[66px] min-w-[190px] items-center justify-center gap-2 rounded-[15px] border border-[#ececec] bg-white px-4 text-[13px] font-semibold text-[#0a0a0a] transition-colors hover:border-[#d0d0d0]"
       >
         <Plus className="size-4" strokeWidth={2} />
         Add asset
@@ -1965,7 +1965,7 @@ function MarketBrowserModal({
         </button>
 
         {/* Left — market list */}
-        <div className="flex min-w-0 flex-col border-r border-[#ececec]">
+        <div className="flex min-w-0 flex-col overflow-hidden border-r border-[#ececec]">
           <div className="border-b border-[#ececec] px-5 py-4 pr-14">
             <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[#0a0a0a]">
               Browse risk markets
