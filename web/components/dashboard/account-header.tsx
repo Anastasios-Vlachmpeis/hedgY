@@ -6,13 +6,11 @@ import { ArrowDownToLine, ArrowUpFromLine, ChevronRight, X } from "lucide-react"
 
 import { cn } from "@/lib/utils";
 import { usd, signedUsd, pct } from "@/lib/format";
-import {
-  pnlTimeframes,
-  timeframeOrder,
-  platformBreakdown,
-  type Portfolio,
-  type PlatformBreakdown,
-} from "@/lib/mockData";
+import { type Portfolio, type PlatformBreakdown } from "@/lib/mockData";
+
+export interface EquityPoint {
+  value: number;
+}
 
 /* ── Generic slide-up modal backdrop ── */
 function Modal({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
@@ -65,19 +63,23 @@ function PlatformRow({ p, totalValue }: { p: PlatformBreakdown; totalValue: numb
 }
 
 /* ── Portfolio value breakdown modal ── */
-function ValueBreakdownModal({ open, onClose, totalValue }: { open: boolean; onClose: () => void; totalValue: number }) {
+function ValueBreakdownModal({ open, onClose, totalValue, breakdown }: { open: boolean; onClose: () => void; totalValue: number; breakdown: PlatformBreakdown[] }) {
   return (
     <Modal open={open} onClose={onClose}>
       <div className="mb-5 flex items-start justify-between">
         <div>
           <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[#0a0a0a]">Portfolio breakdown</h2>
-          <p className="mt-0.5 text-[12px] text-[#a3a3a3]">Value by connected platform</p>
+          <p className="mt-0.5 text-[12px] text-[#a3a3a3]">Value by position type</p>
         </div>
         <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-full bg-[#f5f5f5] text-[#737373] transition-colors hover:bg-[#ececec] hover:text-[#0a0a0a]">
           <X className="size-3.5" />
         </button>
       </div>
-      <div>{platformBreakdown.map((p) => <PlatformRow key={p.platform} p={p} totalValue={totalValue} />)}</div>
+      {breakdown.length ? (
+        <div>{breakdown.map((p) => <PlatformRow key={p.platform} p={p} totalValue={totalValue} />)}</div>
+      ) : (
+        <p className="py-6 text-center text-[13px] text-[#a3a3a3]">No open positions yet.</p>
+      )}
       <div className="mt-4 flex items-center justify-between border-t border-[#f0f0f0] pt-4">
         <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">Total</span>
         <span className="text-[15px] font-bold tabular-nums text-[#0a0a0a]">{usd(totalValue)}</span>
@@ -87,20 +89,24 @@ function ValueBreakdownModal({ open, onClose, totalValue }: { open: boolean; onC
 }
 
 /* ── P&L breakdown modal ── */
-function PnlBreakdownModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+function PnlBreakdownModal({ open, onClose, breakdown }: { open: boolean; onClose: () => void; breakdown: PlatformBreakdown[] }) {
+  const withPnl = breakdown.filter((p) => p.pnl !== 0);
   return (
     <Modal open={open} onClose={onClose}>
       <div className="mb-5 flex items-start justify-between">
         <div>
           <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[#0a0a0a]">P&amp;L breakdown</h2>
-          <p className="mt-0.5 text-[12px] text-[#a3a3a3]">Today's P&amp;L by platform</p>
+          <p className="mt-0.5 text-[12px] text-[#a3a3a3]">Unrealized P&amp;L by position type</p>
         </div>
         <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-full bg-[#f5f5f5] text-[#737373] transition-colors hover:bg-[#ececec] hover:text-[#0a0a0a]">
           <X className="size-3.5" />
         </button>
       </div>
+      {withPnl.length === 0 ? (
+        <p className="py-6 text-center text-[13px] text-[#a3a3a3]">No unrealized P&amp;L yet — your positions are at cost.</p>
+      ) : (
       <div>
-        {platformBreakdown.filter((p) => p.pnl !== 0).map((p) => {
+        {withPnl.map((p) => {
           const up = p.pnl >= 0;
           return (
             <div key={p.platform} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0 [&+&]:border-t [&+&]:border-[#f0f0f0]">
@@ -119,22 +125,29 @@ function PnlBreakdownModal({ open, onClose }: { open: boolean; onClose: () => vo
           );
         })}
       </div>
+      )}
       <div className="mt-4 flex items-center justify-between border-t border-[#f0f0f0] pt-4">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">Total today</span>
-        <span className="text-[15px] font-bold tabular-nums text-[#16a34a]">{signedUsd(platformBreakdown.reduce((s, p) => s + p.pnl, 0), 0)}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">Total unrealized</span>
+        <span className={cn("text-[15px] font-bold tabular-nums", breakdown.reduce((s, p) => s + p.pnl, 0) >= 0 ? "text-[#16a34a]" : "text-[#dc2626]")}>{signedUsd(breakdown.reduce((s, p) => s + p.pnl, 0), 0)}</span>
       </div>
     </Modal>
   );
 }
 
 /* ── Account header ── */
-function AccountHeader({ portfolio }: { portfolio: Portfolio }) {
-  const [tf, setTf] = React.useState<(typeof timeframeOrder)[number]>("1D");
+function AccountHeader({
+  portfolio,
+  series = [],
+  breakdown = [],
+}: {
+  portfolio: Portfolio;
+  series?: EquityPoint[];
+  breakdown?: PlatformBreakdown[];
+}) {
   const [valueOpen, setValueOpen] = React.useState(false);
   const [pnlOpen, setPnlOpen] = React.useState(false);
 
-  const data = pnlTimeframes[tf];
-  const up = data.change >= 0;
+  const up = portfolio.dayChange >= 0;
   const dayUp = portfolio.dayChange >= 0;
 
   return (
@@ -160,7 +173,7 @@ function AccountHeader({ portfolio }: { portfolio: Portfolio }) {
           <div className={cn("mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold tabular-nums", dayUp ? "text-[#16a34a]" : "text-[#dc2626]")}>
             <span>{signedUsd(portfolio.dayChange)}</span>
             <span>({pct(portfolio.dayChangePct)})</span>
-            <span className="font-normal text-[#a3a3a3]">today</span>
+            <span className="font-normal text-[#a3a3a3]">unrealized</span>
           </div>
 
           <div className="mt-auto flex gap-2 pt-5">
@@ -188,48 +201,39 @@ function AccountHeader({ portfolio }: { portfolio: Portfolio }) {
           </div>
 
           <p className={cn("mt-2 text-[32px] font-bold leading-none tracking-[-0.03em] tabular-nums", up ? "text-[#16a34a]" : "text-[#dc2626]")}>
-            {signedUsd(data.change, 0)}
+            {signedUsd(portfolio.dayChange, 0)}
           </p>
           <p className={cn("mt-1.5 text-[13px] font-semibold tabular-nums", up ? "text-[#16a34a]" : "text-[#dc2626]")}>
-            {pct(data.pct)} <span className="font-normal text-[#a3a3a3]">· past {tf}</span>
+            {pct(portfolio.dayChangePct)} <span className="font-normal text-[#a3a3a3]">· unrealized</span>
           </p>
 
           <div className="mt-auto pt-4">
             <div className="h-[64px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data.series} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-                  <defs>
-                    <linearGradient id="pnlGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={up ? "#16a34a" : "#dc2626"} stopOpacity={0.15} />
-                      <stop offset="100%" stopColor={up ? "#16a34a" : "#dc2626"} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <YAxis domain={["dataMin", "dataMax"]} hide />
-                  <Area type="monotone" dataKey="value" stroke={up ? "#16a34a" : "#dc2626"} strokeWidth={1.5} fill="url(#pnlGrad)" isAnimationActive={false} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="mt-3 flex justify-end gap-0.5">
-              {timeframeOrder.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTf(t)}
-                  className={cn(
-                    "h-7 rounded-full px-3 text-[12px] font-semibold transition-colors",
-                    t === tf ? "bg-[#f0f0f0] text-[#0a0a0a]" : "text-[#a3a3a3] hover:text-[#0a0a0a]",
-                  )}
-                >
-                  {t}
-                </button>
-              ))}
+              {series.length >= 2 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={series} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+                    <defs>
+                      <linearGradient id="pnlGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={up ? "#16a34a" : "#dc2626"} stopOpacity={0.15} />
+                        <stop offset="100%" stopColor={up ? "#16a34a" : "#dc2626"} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <YAxis domain={["dataMin", "dataMax"]} hide />
+                    <Area type="monotone" dataKey="value" stroke={up ? "#16a34a" : "#dc2626"} strokeWidth={1.5} fill="url(#pnlGrad)" isAnimationActive={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-full items-center justify-center text-[12px] text-[#a3a3a3]">
+                  Equity curve builds as you trade
+                </div>
+              )}
             </div>
           </div>
         </section>
       </div>
 
-      <ValueBreakdownModal open={valueOpen} onClose={() => setValueOpen(false)} totalValue={portfolio.totalValue} />
-      <PnlBreakdownModal open={pnlOpen} onClose={() => setPnlOpen(false)} />
+      <ValueBreakdownModal open={valueOpen} onClose={() => setValueOpen(false)} totalValue={portfolio.totalValue} breakdown={breakdown} />
+      <PnlBreakdownModal open={pnlOpen} onClose={() => setPnlOpen(false)} breakdown={breakdown} />
     </>
   );
 }

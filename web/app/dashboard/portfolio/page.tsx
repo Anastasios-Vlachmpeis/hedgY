@@ -1,9 +1,34 @@
 "use client";
 
 import * as React from "react";
-import { AccountHeader } from "@/components/dashboard/account-header";
+import { AccountHeader, type EquityPoint } from "@/components/dashboard/account-header";
 import { PositionsActivity } from "@/components/dashboard/positions-activity";
-import { type Activity, type Portfolio, type Position } from "@/lib/mockData";
+import { type Activity, type PlatformBreakdown, type Portfolio, type Position } from "@/lib/mockData";
+
+// Real value/P&L breakdown grouped by position type (no fabricated platforms).
+function buildBreakdown(positions: Position[]): PlatformBreakdown[] {
+  const groups: { key: Position["type"]; platform: string; kind: string; color: string }[] = [
+    { key: "Combined", platform: "Combined hedges", kind: "Equity + prediction", color: "#9580ff" },
+    { key: "Equity", platform: "Equities", kind: "Stocks · Alpaca", color: "#4F8DFF" },
+    { key: "Prediction", platform: "Prediction markets", kind: "Kalshi · Polymarket", color: "#16a34a" },
+  ];
+  return groups
+    .map((g) => {
+      const items = positions.filter((p) => p.type === g.key);
+      const value = items.reduce((s, p) => s + p.value, 0);
+      const cost = items.reduce((s, p) => s + p.cost, 0);
+      const pnl = items.reduce((s, p) => s + p.pnl, 0);
+      return {
+        platform: g.platform,
+        kind: g.kind,
+        value,
+        pnl,
+        pnlPct: cost > 0 ? (pnl / cost) * 100 : 0,
+        color: g.color,
+      };
+    })
+    .filter((g) => g.value !== 0 || g.pnl !== 0);
+}
 
 // Backend /positions item (stocks via Alpaca, predictions via Kalshi+Polymarket).
 interface BackendPosition {
@@ -122,7 +147,7 @@ function mapTrade(t: BackendTrade): Activity {
 type State =
   | { status: "loading" }
   | { status: "error" }
-  | { status: "ready"; portfolio: Portfolio; positions: Position[]; activity: Activity[] };
+  | { status: "ready"; portfolio: Portfolio; positions: Position[]; activity: Activity[]; series: EquityPoint[] };
 
 export default function PortfolioPage() {
   const [state, setState] = React.useState<State>({ status: "loading" });
@@ -131,15 +156,17 @@ export default function PortfolioPage() {
     let alive = true;
     (async () => {
       try {
-        const [accRes, posRes, trdRes] = await Promise.all([
+        const [accRes, posRes, trdRes, histRes] = await Promise.all([
           fetch("/api/account"),
           fetch("/api/positions"),
           fetch("/api/trades"),
+          fetch("/api/account/history"),
         ]);
         if (!accRes.ok || !posRes.ok) throw new Error("backend unreachable");
         const acc = await accRes.json();
         const pos: BackendPosition[] = await posRes.json();
         const trd: BackendTrade[] = trdRes.ok ? await trdRes.json() : [];
+        const hist: { t: number; value: number }[] = histRes.ok ? await histRes.json() : [];
         if (!alive) return;
         setState({
           status: "ready",
@@ -153,6 +180,7 @@ export default function PortfolioPage() {
           },
           positions: Array.isArray(pos) ? mapPositions(pos) : [],
           activity: Array.isArray(trd) ? trd.map(mapTrade) : [],
+          series: Array.isArray(hist) ? hist.map((h) => ({ value: h.value })) : [],
         });
       } catch {
         if (alive) setState({ status: "error" });
@@ -168,7 +196,11 @@ export default function PortfolioPage() {
 
   return (
     <div className="mx-auto flex max-w-[1400px] flex-col gap-5 px-8 py-6">
-      <AccountHeader portfolio={state.portfolio} />
+      <AccountHeader
+        portfolio={state.portfolio}
+        series={state.series}
+        breakdown={buildBreakdown(state.positions)}
+      />
       <PositionsActivity positions={state.positions} activity={state.activity} />
     </div>
   );

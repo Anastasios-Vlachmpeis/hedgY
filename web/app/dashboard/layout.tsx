@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   BriefcaseBusiness,
   ChartNoAxesCombined,
-  ChevronDown,
   ExternalLink,
   Home,
   Landmark,
@@ -379,6 +378,28 @@ function SearchCommand() {
 }
 
 function Topbar({ collapsed }: { collapsed: boolean }) {
+  const [equity, setEquity] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      try {
+        const r = await fetch("/api/account", { cache: "no-store" });
+        if (!r.ok) return;
+        const a = await r.json();
+        if (alive && typeof a.equity === "number") setEquity(a.equity);
+      } catch {
+        /* backend offline — leave previous value */
+      }
+    };
+    load();
+    window.addEventListener("verso:account-updated", load);
+    return () => {
+      alive = false;
+      window.removeEventListener("verso:account-updated", load);
+    };
+  }, []);
+
   return (
     <header
       className={cn(
@@ -397,9 +418,15 @@ function Topbar({ collapsed }: { collapsed: boolean }) {
           <Wallet className="size-4 text-[#a3a3a3]" strokeWidth={1.8} />
           <div>
             <div className="text-[11px] font-medium text-[#a3a3a3]">Portfolio</div>
-            <div className="flex items-center gap-1 text-[13px] font-semibold text-[#0a0a0a]">
-              $128,430.00
-              <ChevronDown className="size-3 text-[#a3a3a3]" strokeWidth={1.8} />
+            <div className="text-[13px] font-semibold tabular-nums text-[#0a0a0a]">
+              {equity != null
+                ? equity.toLocaleString("en-US", {
+                    style: "currency",
+                    currency: "USD",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })
+                : "—"}
             </div>
           </div>
         </Link>
