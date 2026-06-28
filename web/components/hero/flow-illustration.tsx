@@ -11,27 +11,28 @@ const R = 88;
 
 const EDGE_TOP = 18;
 const EDGE_BOT = H - 18;
-const BAND_TOP = CY - R + 16;
-const BAND_BOT = CY + R - 16;
-
 const N = 88;
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
+// Land each line on the sphere's circular edge so the convergence is hidden
+// behind the sphere itself (no pinch or gap beneath it).
+const R_END = R - 2;
+function arc(angleDeg: number): { x: number; y: number } {
+  const a = (angleDeg * Math.PI) / 180;
+  return { x: CX + R_END * Math.cos(a), y: CY + R_END * Math.sin(a) };
+}
+
 function leftPath(t: number): string {
   const y0 = lerp(EDGE_TOP, EDGE_BOT, t);
-  const ye = lerp(BAND_TOP, BAND_BOT, t);
-  return `M0 ${y0.toFixed(1)} C 330 ${y0.toFixed(1)}, ${CX - R - 160} ${ye.toFixed(
-    1,
-  )}, ${CX - R + 6} ${ye.toFixed(1)}`;
+  const e = arc(lerp(232, 128, t)); // top -> bottom of the left arc
+  return `M0 ${y0.toFixed(1)} C 330 ${y0.toFixed(1)}, ${(CX - R - 150).toFixed(1)} ${e.y.toFixed(1)}, ${e.x.toFixed(1)} ${e.y.toFixed(1)}`;
 }
 
 function rightPath(t: number): string {
   const y0 = lerp(EDGE_TOP, EDGE_BOT, t);
-  const ye = lerp(BAND_TOP, BAND_BOT, t);
-  return `M${CX + R - 6} ${ye.toFixed(1)} C ${CX + R + 160} ${ye.toFixed(1)}, ${
-    W - 330
-  } ${y0.toFixed(1)}, ${W} ${y0.toFixed(1)}`;
+  const s = arc(lerp(-52, 52, t)); // top -> bottom of the right arc
+  return `M${s.x.toFixed(1)} ${s.y.toFixed(1)} C ${(CX + R + 150).toFixed(1)} ${s.y.toFixed(1)}, ${(W - 330).toFixed(1)} ${y0.toFixed(1)}, ${W} ${y0.toFixed(1)}`;
 }
 
 const TS = Array.from({ length: N }, (_, i) => i / (N - 1));
