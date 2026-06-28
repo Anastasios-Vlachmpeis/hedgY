@@ -2252,6 +2252,11 @@ export default function DashboardPage() {
   // ── User-added / removed stocks ───────────────────────────────────────────
   const [extraAssets, setExtraAssets] = React.useState<Asset[]>([]);
   const [removedSymbols, setRemovedSymbols] = React.useState<string[]>([]);
+  // Real account exposure (symbol → live position), overrides the mock positions.
+  const [livePositions, setLivePositions] = React.useState<
+    Record<string, { shares: number; notional: number; avgPrice: number; pnl: number; pnlPct: string }>
+  >({});
+  const [equity, setEquity] = React.useState(0);
 
   // ── Live data patches ──────────────────────────────────────────────────────
   const [livePrices, setLivePrices] = React.useState<Record<string, { price: number; changePct: number; direction: "up" | "down" }>>({});
@@ -2333,25 +2338,58 @@ export default function DashboardPage() {
     });
   }, []);
 
-  // Merge live prices + charts into assets (base + user-added)
+  // Pull real account exposure from the backend (stocks only for the cards).
+  React.useEffect(() => {
+    fetch("/api/positions")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows: Array<{ kind: string; symbol?: string; qty: number; market_value: number; avg_entry: number; unrealized_pnl: number; unrealized_pnl_pct: number }>) => {
+        const map: Record<string, { shares: number; notional: number; avgPrice: number; pnl: number; pnlPct: string }> = {};
+        for (const p of rows ?? []) {
+          if (p.kind === "stock" && p.symbol) {
+            map[p.symbol] = {
+              shares: p.qty,
+              notional: p.market_value,
+              avgPrice: p.avg_entry,
+              pnl: p.unrealized_pnl,
+              pnlPct: `${p.unrealized_pnl_pct >= 0 ? "+" : ""}${Number(p.unrealized_pnl_pct).toFixed(2)}%`,
+            };
+          }
+        }
+        setLivePositions(map);
+      })
+      .catch(() => {});
+    fetch("/api/account")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((a) => { if (a?.equity != null) setEquity(a.equity); })
+      .catch(() => {});
+  }, []);
+
+  // Merge live prices + charts + REAL account exposure into assets.
   const patchedAssets = React.useMemo(() =>
     [...assets, ...extraAssets].map((a) => {
       const live = livePrices[a.symbol];
       const liveChart = liveCharts[a.symbol];
+      const held = livePositions[a.symbol];
+      // Real account position overrides the mock one — zeroed when not held.
+      const position = held
+        ? {
+            ...a.position,
+            shares: held.shares,
+            notional: held.notional,
+            avgPrice: held.avgPrice,
+            pnl: held.pnl,
+            pnlPct: held.pnlPct,
+            portfolioPct: equity ? `${((held.notional / equity) * 100).toFixed(1)}%` : a.position.portfolioPct,
+          }
+        : { ...a.position, shares: 0, notional: 0, pnl: 0, pnlPct: "+0.00%", portfolioPct: "0%" };
       return {
         ...a,
         ...(liveChart ? { chart: liveChart } : {}),
-        ...(live ? {
-          price: live.price,
-          position: {
-            ...a.position,
-            notional: live.price * a.position.shares,
-            pnl: (live.price - a.position.avgPrice) * a.position.shares,
-          },
-        } : {}),
+        ...(live ? { price: live.price } : {}),
+        position,
       };
     }),
-  [livePrices, liveCharts, extraAssets]);
+  [livePrices, liveCharts, extraAssets, livePositions, equity]);
 
   // Live prediction markets (replaces hardcoded riskMarkets once loaded)
   const patchedMarkets = liveBrowseMarkets;
