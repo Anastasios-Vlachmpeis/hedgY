@@ -18,7 +18,7 @@ function IconTile({
         className,
       )}
     >
-      <Icon className="size-5 text-[#b3a6ff]" strokeWidth={1.9} />
+      <Icon className="size-5 text-[#0F172A]" strokeWidth={1.9} />
     </span>
   );
 }

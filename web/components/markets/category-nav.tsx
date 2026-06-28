@@ -5,18 +5,32 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import type { MarketCategory } from "@/lib/mockData";
 
-function CategoryNav({ categories }: { categories: MarketCategory[] }) {
-  const [activeId, setActiveId] = React.useState(categories[0]?.id);
+function CategoryNav({
+  categories,
+  activeId,
+  onChange,
+}: {
+  categories: MarketCategory[];
+  activeId?: string;
+  onChange?: (id: string) => void;
+}) {
+  const [internalId, setInternalId] = React.useState(categories[0]?.id);
+  const selectedId = activeId ?? internalId;
+
+  const handleSelect = (id: string) => {
+    setInternalId(id);
+    onChange?.(id);
+  };
 
   return (
     <div className="flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {categories.map((c) => {
-        const active = c.id === activeId;
+        const active = c.id === selectedId;
         return (
           <button
             key={c.id}
             type="button"
-            onClick={() => setActiveId(c.id)}
+            onClick={() => handleSelect(c.id)}
             className={cn(
               "flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] transition-colors",
               active

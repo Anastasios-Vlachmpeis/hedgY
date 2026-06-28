@@ -1,0 +1,425 @@
+"""Paper-trading account — the $1000 wallet.
+
+A single demo account backed by SQLite. The ledger bookkeeping here is PURE:
+`place_order` is given the fill `price`, and `account`/`positions_marked` are
+given a `mark` callable. That keeps all money math unit-testable without touching
+the network. Live pricing (Alpaca for stocks, the aggregator store for
+predictions) lives in the thin helpers at the bottom and is wired in by the
+routes.
+
+Execution model (see docs/superpowers/specs/2026-06-27-paper-trading-account-design.md):
+stocks fire a real Alpaca paper order but this ledger is the source of truth for
+the $1000 world; predictions fill in-app at live odds. No real money / custody.
+"""
+
+from __future__ import annotations
+
+import sqlite3
+import time
+from typing import Callable
+
+import httpx
+
+from app.config import settings
+
+EPS = 1e-9
+
+
+def _row_to_position(row: sqlite3.Row) -> dict:
+    return {
+        "id": row["id"],
+        "kind": row["kind"],
+        "symbol": row["symbol"],
+        "market_id": row["market_id"],
+        "side": row["side"],
+        "qty": row["qty"],
+        "avg_entry": row["avg_entry"],
+        "label": row["label"],
+        "opened_at": row["opened_at"],
+    }
+
+
+class AccountService:
+    """SQLite-backed ledger: cash, positions, trade history. Pure money math."""
+
+    def __init__(self, db_path: str | None = None) -> None:
+        self.db_path = db_path or settings.account_db_path
+        self._init_db()
+
+    # ---- infra ------------------------------------------------------------
+    def _connect(self) -> sqlite3.Connection:
+        conn = sqlite3.connect(self.db_path, timeout=5.0)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    def _init_db(self) -> None:
+        conn = self._connect()
+        try:
+            conn.executescript(
+                """
+                CREATE TABLE IF NOT EXISTS account (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    cash REAL NOT NULL DEFAULT 0,
+                    total_deposited REAL NOT NULL DEFAULT 0,
+                    currency TEXT NOT NULL DEFAULT 'USD'
+                );
+                CREATE TABLE IF NOT EXISTS positions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    kind TEXT NOT NULL,
+                    symbol TEXT,
+                    market_id TEXT,
+                    side TEXT,
+                    qty REAL NOT NULL,
+                    avg_entry REAL NOT NULL,
+                    label TEXT,
+                    opened_at REAL NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS trades (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    kind TEXT NOT NULL,
+                    action TEXT NOT NULL,
+                    symbol TEXT,
+                    market_id TEXT,
+                    side TEXT,
+                    qty REAL NOT NULL,
+                    price REAL NOT NULL,
+                    notional REAL NOT NULL,
+                    realized_pnl REAL NOT NULL DEFAULT 0,
+                    alpaca_order_id TEXT,
+                    label TEXT,
+                    ts REAL NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS equity_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ts REAL NOT NULL,
+                    equity REAL NOT NULL
+                );
+                """
+            )
+            conn.execute("INSERT OR IGNORE INTO account (id, cash, total_deposited) VALUES (1, 0, 0)")
+            conn.commit()
+        finally:
+            conn.close()
+
+    # ---- account ----------------------------------------------------------
+    def _account_row(self, conn: sqlite3.Connection) -> sqlite3.Row:
+        return conn.execute("SELECT cash, total_deposited, currency FROM account WHERE id = 1").fetchone()
+
+    def deposit(self, amount: float) -> dict:
+        if amount <= 0:
+            raise ValueError("deposit amount must be positive")
+        conn = self._connect()
+        try:
+            conn.execute(
+                "UPDATE account SET cash = cash + ?, total_deposited = total_deposited + ? WHERE id = 1",
+                (amount, amount),
+            )
+            conn.commit()
+            return self._summary(conn)
+        finally:
+            conn.close()
+
+    def reset(self) -> dict:
+        conn = self._connect()
+        try:
+            conn.execute("UPDATE account SET cash = 0, total_deposited = 0 WHERE id = 1")
+            conn.execute("DELETE FROM positions")
+            conn.execute("DELETE FROM trades")
+            conn.execute("DELETE FROM equity_log")
+            conn.commit()
+            return self._summary(conn)
+        finally:
+            conn.close()
+
+    def _summary(self, conn: sqlite3.Connection) -> dict:
+        row = self._account_row(conn)
+        count = conn.execute("SELECT COUNT(*) AS n FROM positions").fetchone()["n"]
+        return {
+            "cash": row["cash"],
+            "total_deposited": row["total_deposited"],
+            "currency": row["currency"],
+            "positions_count": count,
+        }
+
+    # ---- positions --------------------------------------------------------
+    def _find_position(
+        self, conn: sqlite3.Connection, *, kind: str, symbol: str | None, market_id: str | None, side: str | None
+    ) -> sqlite3.Row | None:
+        if kind == "stock":
+            return conn.execute(
+                "SELECT * FROM positions WHERE kind = 'stock' AND symbol = ?", (symbol,)
+            ).fetchone()
+        return conn.execute(
+            "SELECT * FROM positions WHERE kind = 'prediction' AND market_id = ? AND side = ?",
+            (market_id, side),
+        ).fetchone()
+
+    def positions(self) -> list[dict]:
+        conn = self._connect()
+        try:
+            rows = conn.execute("SELECT * FROM positions ORDER BY opened_at DESC").fetchall()
+            return [_row_to_position(r) for r in rows]
+        finally:
+            conn.close()
+
+    # ---- orders -----------------------------------------------------------
+    def place_order(
+        self,
+        *,
+        kind: str,
+        action: str,
+        notional: float,
+        price: float,
+        symbol: str | None = None,
+        market_id: str | None = None,
+        side: str | None = None,
+        label: str | None = None,
+        alpaca_order_id: str | None = None,
+    ) -> dict:
+        """Apply a fill to the ledger. `price` is the (already-fetched) fill price.
+
+        buy:  spend `notional` cash → qty = notional/price, weighted-avg entry.
+        sell: sell up to the held qty worth `notional` at `price`, realize P&L.
+        Raises ValueError on bad input / insufficient funds / nothing to sell.
+        """
+        if kind not in ("stock", "prediction"):
+            raise ValueError(f"unknown kind '{kind}'")
+        if action not in ("buy", "sell"):
+            raise ValueError(f"unknown action '{action}'")
+        if notional <= 0:
+            raise ValueError("notional must be positive")
+        if price <= 0:
+            raise ValueError("price must be positive")
+        if kind == "stock" and not symbol:
+            raise ValueError("stock order requires a symbol")
+        if kind == "prediction" and (not market_id or side not in ("YES", "NO")):
+            raise ValueError("prediction order requires market_id and side YES|NO")
+
+        conn = self._connect()
+        try:
+            if action == "buy":
+                trade = self._apply_buy(conn, kind, notional, price, symbol, market_id, side, label, alpaca_order_id)
+            else:
+                trade = self._apply_sell(conn, kind, notional, price, symbol, market_id, side, label, alpaca_order_id)
+            conn.commit()
+            return {"trade": trade, "account": self._summary(conn)}
+        finally:
+            conn.close()
+
+    def _apply_buy(self, conn, kind, notional, price, symbol, market_id, side, label, alpaca_order_id) -> dict:
+        cash = self._account_row(conn)["cash"]
+        if notional > cash + EPS:
+            raise ValueError(f"insufficient funds: need ${notional:,.2f}, have ${cash:,.2f}")
+
+        qty = notional / price
+        conn.execute("UPDATE account SET cash = cash - ? WHERE id = 1", (notional,))
+
+        existing = self._find_position(conn, kind=kind, symbol=symbol, market_id=market_id, side=side)
+        if existing is None:
+            conn.execute(
+                "INSERT INTO positions (kind, symbol, market_id, side, qty, avg_entry, label, opened_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (kind, symbol, market_id, side, qty, price, label, time.time()),
+            )
+        else:
+            new_qty = existing["qty"] + qty
+            # weighted-average entry: (old_cost + this_cost) / new_qty
+            new_avg = (existing["qty"] * existing["avg_entry"] + notional) / new_qty
+            conn.execute(
+                "UPDATE positions SET qty = ?, avg_entry = ?, label = COALESCE(?, label) WHERE id = ?",
+                (new_qty, new_avg, label, existing["id"]),
+            )
+        return self._record_trade(conn, kind, "buy", symbol, market_id, side, qty, price, notional, 0.0, alpaca_order_id, label)
+
+    def _apply_sell(self, conn, kind, notional, price, symbol, market_id, side, label, alpaca_order_id) -> dict:
+        pos = self._find_position(conn, kind=kind, symbol=symbol, market_id=market_id, side=side)
+        if pos is None or pos["qty"] <= EPS:
+            raise ValueError("no position to sell")
+
+        qty_to_sell = min(pos["qty"], notional / price)
+        proceeds = qty_to_sell * price
+        realized = qty_to_sell * (price - pos["avg_entry"])
+        conn.execute("UPDATE account SET cash = cash + ? WHERE id = 1", (proceeds,))
+
+        remaining = pos["qty"] - qty_to_sell
+        if remaining <= EPS:
+            conn.execute("DELETE FROM positions WHERE id = ?", (pos["id"],))
+        else:
+            conn.execute("UPDATE positions SET qty = ? WHERE id = ?", (remaining, pos["id"]))
+        return self._record_trade(
+            conn, kind, "sell", symbol, market_id, side, qty_to_sell, price, proceeds, realized, alpaca_order_id,
+            label or pos["label"],
+        )
+
+    def _record_trade(self, conn, kind, action, symbol, market_id, side, qty, price, notional, realized, alpaca_order_id, label) -> dict:
+        cur = conn.execute(
+            "INSERT INTO trades (kind, action, symbol, market_id, side, qty, price, notional, realized_pnl, "
+            "alpaca_order_id, label, ts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (kind, action, symbol, market_id, side, qty, price, notional, realized, alpaca_order_id, label, time.time()),
+        )
+        return {
+            "id": cur.lastrowid,
+            "kind": kind,
+            "action": action,
+            "symbol": symbol,
+            "market_id": market_id,
+            "side": side,
+            "qty": qty,
+            "price": price,
+            "notional": notional,
+            "realized_pnl": realized,
+            "alpaca_order_id": alpaca_order_id,
+            "label": label,
+        }
+
+    def trades(self, limit: int = 100) -> list[dict]:
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM trades ORDER BY ts DESC, id DESC LIMIT ?", (limit,)
+            ).fetchall()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    # ---- equity history (for the real P&L curve) -------------------------
+    def record_equity(self, equity: float, *, force: bool = False, min_gap: float = 8.0) -> None:
+        """Append an equity snapshot. Throttled to one per `min_gap` seconds
+        unless `force` (used on deposits/orders so each action lands a point)."""
+        now = time.time()
+        conn = self._connect()
+        try:
+            if not force:
+                last = conn.execute("SELECT ts FROM equity_log ORDER BY id DESC LIMIT 1").fetchone()
+                if last is not None and now - last["ts"] < min_gap:
+                    return
+            conn.execute("INSERT INTO equity_log (ts, equity) VALUES (?, ?)", (now, equity))
+            # keep the log bounded
+            conn.execute(
+                "DELETE FROM equity_log WHERE id NOT IN "
+                "(SELECT id FROM equity_log ORDER BY id DESC LIMIT 500)"
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def equity_history(self, limit: int = 200) -> list[dict]:
+        """Chronological equity points: [{t: iso-ish label, value}]."""
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT ts, equity FROM (SELECT * FROM equity_log ORDER BY id DESC LIMIT ?) "
+                "ORDER BY ts ASC",
+                (limit,),
+            ).fetchall()
+            return [{"t": r["ts"], "value": r["equity"]} for r in rows]
+        finally:
+            conn.close()
+
+    # ---- marking to market ------------------------------------------------
+    def account(self, mark: Callable[[dict], float | None]) -> dict:
+        """Account summary with equity marked to live prices.
+
+        `mark(position) -> current price | None`. None falls back to avg_entry so
+        a transient price gap never corrupts equity.
+        """
+        conn = self._connect()
+        try:
+            row = self._account_row(conn)
+            positions = [_row_to_position(r) for r in conn.execute("SELECT * FROM positions").fetchall()]
+        finally:
+            conn.close()
+
+        cash = row["cash"]
+        market_value = 0.0
+        for p in positions:
+            mark_price = mark(p)
+            mark_price = p["avg_entry"] if mark_price is None else mark_price
+            market_value += p["qty"] * mark_price
+
+        equity = cash + market_value
+        deposited = row["total_deposited"]
+        pnl = equity - deposited
+        return {
+            "cash": cash,
+            "equity": equity,
+            "buying_power": cash,
+            "total_deposited": deposited,
+            "pnl": pnl,
+            "pnl_pct": (pnl / deposited * 100.0) if deposited > EPS else 0.0,
+            "positions_count": len(positions),
+            "currency": row["currency"],
+        }
+
+    def positions_marked(self, mark: Callable[[dict], float | None]) -> list[dict]:
+        out: list[dict] = []
+        for p in self.positions():
+            mark_price = mark(p)
+            mark_price = p["avg_entry"] if mark_price is None else mark_price
+            market_value = p["qty"] * mark_price
+            cost = p["qty"] * p["avg_entry"]
+            out.append(
+                {
+                    **p,
+                    "price": mark_price,
+                    "market_value": market_value,
+                    "cost": cost,
+                    "unrealized_pnl": market_value - cost,
+                    "unrealized_pnl_pct": ((market_value - cost) / cost * 100.0) if cost > EPS else 0.0,
+                }
+            )
+        return out
+
+
+# --------------------------------------------------------------------------- #
+# Live pricing helpers (network/store) — used by routes, injected as `mark`.   #
+# --------------------------------------------------------------------------- #
+def stock_price(symbol: str) -> float | None:
+    """Latest Alpaca price for a symbol (trade price, else quote mid)."""
+    try:
+        r = httpx.get(
+            f"{settings.alpaca_data_url}/v2/stocks/{symbol}/snapshot",
+            headers={
+                "APCA-API-KEY-ID": settings.alpaca_key_id,
+                "APCA-API-SECRET-KEY": settings.alpaca_secret_key,
+            },
+            timeout=settings.http_timeout_seconds,
+        )
+        r.raise_for_status()
+        snap = r.json()
+        trade = (snap.get("latestTrade") or {}).get("p")
+        if trade:
+            return float(trade)
+        quote = snap.get("latestQuote") or {}
+        bid, ask = quote.get("bp"), quote.get("ap")
+        if bid and ask:
+            return (float(bid) + float(ask)) / 2.0
+        bar = snap.get("dailyBar") or {}
+        return float(bar["c"]) if bar.get("c") else None
+    except Exception:  # noqa: BLE001 — pricing is best-effort
+        return None
+
+
+def place_alpaca_order(symbol: str, notional: float, side: str) -> str | None:
+    """Fire a real Alpaca paper market order; return its id (best-effort)."""
+    if not settings.alpaca_key_id:
+        return None
+    try:
+        r = httpx.post(
+            f"{settings.alpaca_trading_url}/v2/orders",
+            headers={
+                "APCA-API-KEY-ID": settings.alpaca_key_id,
+                "APCA-API-SECRET-KEY": settings.alpaca_secret_key,
+                "Content-Type": "application/json",
+            },
+            json={"symbol": symbol, "notional": round(notional, 2), "side": side, "type": "market", "time_in_force": "day"},
+            timeout=settings.http_timeout_seconds,
+        )
+        if r.status_code >= 400:
+            return None
+        return r.json().get("id")
+    except Exception:  # noqa: BLE001 — broker call is best-effort; ledger is source of truth
+        return None
+
+
+account_service = AccountService()

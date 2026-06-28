@@ -63,6 +63,10 @@ class UnifiedMarket(BaseModel):
     country: str | None = None
     theme: str | None = None
     venues: list[str] = Field(default_factory=list)
+    volume: float = Field(
+        default=0.0,
+        description="Sum of member-market volumes (USD). Lets list consumers rank/display without an N+1 detail fetch.",
+    )
 
 
 class UnifiedMarketDetail(UnifiedMarket):

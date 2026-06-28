@@ -17,7 +17,7 @@ function FinalCta() {
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Button asChild variant="primary" size="cta">
-            <Link href="/dashboard">
+            <Link href="/signup">
               Start trading <ArrowRight className="size-4" />
             </Link>
           </Button>

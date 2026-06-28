@@ -7,7 +7,7 @@ function Eyebrow({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full bg-[#f3f1ff] px-3 py-1 text-[12px] font-medium text-[#9580ff]",
+        "inline-flex items-center rounded-full bg-[#f3f1ff] px-3 py-1 text-[12px] font-medium text-[#0F172A]",
         className,
       )}
       {...props}

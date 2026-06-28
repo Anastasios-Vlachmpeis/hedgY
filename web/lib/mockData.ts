@@ -330,6 +330,15 @@ export interface MarketOutcomeRow {
   dir?: "up" | "down"; // threshold direction arrow
 }
 
+/** One venue's quote inside a cross-venue cluster (Kalshi / Polymarket). */
+export interface VenueQuote {
+  venue: string; // "kalshi" | "polymarket"
+  yes: number; // 0–1 implied YES
+  no: number; // 0–1 implied NO
+  volume: number; // USD
+  link?: string; // deep link to the market on that venue
+}
+
 export interface MarketEvent {
   id: string;
   title: string;
@@ -343,6 +352,12 @@ export interface MarketEvent {
   live?: boolean;
   yesProbability?: number; // binary
   outcomes?: MarketOutcomeRow[]; // multi / threshold (ranked)
+  // cross-venue detail (live aggregator only; absent on mock fallback)
+  noProbability?: number; // best NO price across venues
+  venues?: string[]; // venues this market clusters across
+  bestYesVenue?: string; // venue offering the best YES
+  bestNoVenue?: string; // venue offering the best NO
+  members?: VenueQuote[]; // per-venue breakdown (Kalshi vs Polymarket)
 }
 
 export const marketEvents: MarketEvent[] = [
@@ -505,6 +520,8 @@ export interface FeaturedOutcome {
   label: string;
   pct: number; // 0–100
   color: string;
+  marketId?: string; // unified market id, when this outcome is tradeable
+  side?: "YES" | "NO";
 }
 
 export interface FeaturedPoint {

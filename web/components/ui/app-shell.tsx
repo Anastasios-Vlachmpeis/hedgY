@@ -10,76 +10,72 @@ import { WORDMARK } from "@/lib/brand";
 import { GradientAvatar } from "@/components/ui/gradient-avatar";
 
 const NAV_LINKS = [
-  { href: "/trade",     label: "Trade" },
+  { href: "/markets", label: "Markets" },
   { href: "/dashboard", label: "Portfolio" },
   { href: "/structure", label: "Structure" },
 ] as const;
 
+/**
+ * App shell — sticky top nav on the white base, matching the landing
+ * wordmark + violet dot. Denser than marketing chrome (it's an app).
+ */
 function AppShell({ children, className }: { children: React.ReactNode; className?: string }) {
   const pathname = usePathname();
   return (
-    <div className={cn("flex min-h-full flex-col bg-[#fafafa]", className)}>
-      {/* Flat sticky nav */}
-      <header className="sticky top-0 z-40 border-b border-[#ececec] bg-[#fafafa]">
-        <div className="mx-auto flex h-14 max-w-[1500px] items-center gap-6 px-10">
-          {/* Logo */}
-          <Link href="/trade" className="flex shrink-0 items-center gap-2">
-            <span className="size-[7px] rounded-full bg-[#9580ff]" aria-hidden />
+    <div className={cn("flex min-h-full flex-col", className ?? "bg-white")}>
+      <header className="sticky top-0 z-40 border-b border-[#ececec] bg-white/85 backdrop-blur">
+        <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center gap-6 px-4 sm:px-6">
+          <Link href="/markets" className="flex items-center gap-2">
             {WORDMARK && (
-              <span className="text-[13px] font-semibold tracking-[-0.01em] text-[#111111]">
+              <span className="text-[16px] font-semibold tracking-[-0.02em] text-[#181925]">
                 {WORDMARK}
               </span>
             )}
+            <span className="size-2 rounded-full bg-[#9580ff]" aria-hidden />
           </Link>
 
-          {/* Nav */}
-          <nav className="flex items-center">
-            {NAV_LINKS.map(({ href, label }) => {
-              const active = pathname === href || pathname.startsWith(href + "/");
+          <nav className="flex items-center gap-1">
+            {NAV_LINKS.map(({ href, label }, i) => {
+              const active =
+                i === NAV_LINKS.findIndex((l) => l.href === pathname);
               return (
                 <Link
                   key={label}
                   href={href}
                   className={cn(
-                    "relative flex h-14 items-center px-4 text-[13px] font-medium transition-colors duration-[180ms] ease-out",
+                    "rounded-full px-3.5 py-1.5 text-[14px] transition-colors",
                     active
-                      ? "text-[#111111]"
-                      : "text-[#6B7280] hover:text-[#111111]",
+                      ? "bg-[#f5f5f5] font-medium text-[#181925]"
+                      : "text-[#666666] hover:bg-[#f5f5f5] hover:text-[#181925]",
                   )}
                 >
                   {label}
-                  {active && (
-                    <span className="absolute bottom-0 left-4 right-4 h-[2px] rounded-full bg-[#111111]" />
-                  )}
                 </Link>
               );
             })}
           </nav>
 
-          {/* Right */}
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1.5">
             <button
               type="button"
               aria-label="Search"
-              className="flex size-8 items-center justify-center rounded-[8px] text-[#9ca3af] transition-colors duration-[180ms] hover:bg-[#f0f0f0] hover:text-[#111111]"
+              className="flex size-9 items-center justify-center rounded-full text-[#666666] transition-colors hover:bg-[#f5f5f5]"
             >
-              <Search className="size-4" strokeWidth={1.75} />
+              <Search className="size-[18px]" strokeWidth={1.9} />
             </button>
             <button
               type="button"
               aria-label="Notifications"
-              className="flex size-8 items-center justify-center rounded-[8px] text-[#9ca3af] transition-colors duration-[180ms] hover:bg-[#f0f0f0] hover:text-[#111111]"
+              className="flex size-9 items-center justify-center rounded-full text-[#666666] transition-colors hover:bg-[#f5f5f5]"
             >
-              <Bell className="size-4" strokeWidth={1.75} />
+              <Bell className="size-[18px]" strokeWidth={1.9} />
             </button>
-            <div className="ml-2">
-              <GradientAvatar seed="maxim.durand" size={28} className="cursor-pointer" />
-            </div>
+            <GradientAvatar seed="maxim.durand" size={32} className="ml-1 cursor-pointer" />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1500px] flex-1 px-10 py-8">
+      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-5 sm:px-6">
         {children}
       </main>
     </div>

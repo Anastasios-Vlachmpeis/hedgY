@@ -1,78 +1,95 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import { pct } from "@/lib/format";
+import { TradeButton } from "@/components/trade/trade-modal";
 import type { Stock } from "@/lib/mockData";
 
 /**
- * Right-hand rail for the markets page: a violet promo nudging users into the
- * structuring flow, stacked over a compact trending-stocks list. Read-only.
+ * Right-hand rail for the markets terminal: the equities world (graphite) — a
+ * compact live trending-stocks list with real Buy actions — stacked under a
+ * violet nudge into the structuring flow.
  */
 function PromoRail({ stocks }: { stocks: Stock[] }) {
   return (
     <div className="flex flex-col gap-4">
-      {/* Promo */}
-      <div className="rounded-[14px] bg-gradient-to-br from-[#9580ff] to-[#7c3aed] p-5 text-white">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-white/70">
-          Structuring
-        </p>
-        <h3 className="mt-1 text-[19px] font-semibold">
-          Build a combined position
-        </h3>
-        <p className="mt-1 text-[13px] text-white/80">
-          Pair an equity view with a prediction-market hedge — in one position.
-        </p>
-        <Link
-          href="/structure"
-          className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[14px] font-semibold text-[#181925] hover:bg-white/90"
-        >
-          Build a position
-          <ArrowRight className="size-4" />
-        </Link>
-      </div>
+      {/* Trending stocks — equities identity */}
+      <div className="glass rounded-[16px] p-4">
+        <div className="flex items-center justify-between">
+          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#181925]">
+            <span className="size-1.5 rounded-full bg-[#181925]" />
+            Trending stocks
+          </p>
+          <span className="text-[10px] font-medium uppercase tracking-wide text-[#a3a3a3]">Equities</span>
+        </div>
 
-      {/* Trending stocks */}
-      <div className="rounded-[14px] border border-[#ececec] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
-          Trending Stocks
-        </p>
-        <ul className="mt-2 divide-y divide-[#f0f0f0]">
-          {stocks.slice(0, 4).map((stock) => {
+        <ul className="mt-3 flex flex-col">
+          {stocks.slice(0, 5).map((stock) => {
             const down = stock.direction === "down";
             return (
               <li
                 key={stock.symbol}
-                className="flex items-center justify-between gap-3 py-2.5"
+                className="group flex items-center justify-between gap-3 border-t border-[#f4f4f5] py-2.5 first:border-t-0"
               >
                 <div className="min-w-0">
-                  <p className="text-[13px] font-semibold text-[#181925]">
-                    {stock.symbol}
-                  </p>
-                  <p className="truncate text-[11px] text-[#a3a3a3]">
-                    {stock.name}
-                  </p>
+                  <p className="text-[13px] font-semibold text-[#181925]">{stock.symbol}</p>
+                  <p className="truncate text-[11px] text-[#a3a3a3]">{stock.name}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-[13px] font-semibold tabular-nums text-[#181925]">
-                    ${stock.price.toFixed(2)}
-                  </p>
-                  <p
-                    className={`text-[11px] tabular-nums ${
-                      down ? "text-[#dc2626]" : "text-[#16a34a]"
-                    }`}
+                <div className="flex items-center gap-2.5">
+                  <div className="text-right">
+                    <p className="font-num text-[13px] font-semibold tabular-nums text-[#181925]">
+                      ${stock.price.toFixed(2)}
+                    </p>
+                    <p
+                      className={cn(
+                        "font-num flex items-center justify-end gap-0.5 text-[11px] tabular-nums",
+                        down ? "text-[#dc2626]" : "text-[#16a34a]",
+                      )}
+                    >
+                      {down ? (
+                        <ArrowDownRight className="size-3" />
+                      ) : (
+                        <ArrowUpRight className="size-3" />
+                      )}
+                      {pct(stock.changePct)}
+                    </p>
+                  </div>
+                  <TradeButton
+                    kind="stock"
+                    tone="buy"
+                    label={stock.name}
+                    symbol={stock.symbol}
+                    price={stock.price}
                   >
-                    {pct(stock.changePct)}
-                  </p>
+                    Buy
+                  </TradeButton>
                 </div>
               </li>
             );
           })}
         </ul>
+      </div>
+
+      {/* Structuring nudge — the "one position" payoff */}
+      <div className="relative overflow-hidden rounded-[16px] bg-gradient-to-br from-[#9580ff] to-[#7c3aed] p-5 text-white">
+        <div
+          className="pointer-events-none absolute -right-8 -top-10 size-32 rounded-full bg-white/15 blur-2xl"
+          aria-hidden
+        />
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">Structuring</p>
+        <h3 className="mt-1.5 text-[19px] font-semibold leading-tight tracking-[-0.01em]">
+          Pair a stock with a hedge
+        </h3>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-white/80">
+          Express an equity view and offset it with a prediction-market hedge — in one position.
+        </p>
         <Link
-          href="/trade"
-          className="mt-3 inline-flex items-center justify-center rounded-full bg-[#f5f5f5] px-4 py-2 text-[13px] font-medium text-[#181925] hover:bg-[#ececec]"
+          href="/structure"
+          className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13px] font-semibold text-[#181925] transition-transform hover:-translate-y-0.5"
         >
-          View all stocks
+          Build a position
+          <ArrowRight className="size-4" />
         </Link>
       </div>
     </div>

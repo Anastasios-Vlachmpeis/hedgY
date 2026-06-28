@@ -1,9 +1,18 @@
 .env
+.env.*
+!.env.example
+env
 node_modules/
 
 # python backend
 .venv/
 __pycache__/
 *.pyc
+*.db
+app/account.db
 
 .DS_Store
+
+# runtime artifacts
+account.db
+*.db
