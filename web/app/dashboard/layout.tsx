@@ -396,7 +396,10 @@ function Topbar() {
           <Bell className="size-[19px]" strokeWidth={1.8} />
         </button>
         <button type="button" className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#7C5CFF,#4F8DFF)] text-[13px] font-semibold text-white">
+          <span
+            className="flex size-10 items-center justify-center rounded-full text-[13px] font-semibold text-white"
+            style={{ background: "radial-gradient(circle at 30% 25%, #9580ff, transparent 72%), linear-gradient(140deg, #9580ff, #4F8DFF)" }}
+          >
             GM
           </span>
           <ChevronDown className="size-4 text-[var(--purple)]" strokeWidth={2} />

@@ -188,7 +188,10 @@ export default function TradePage() {
             <Link href="/dashboard" className="text-[12px] font-medium text-[#737373] hover:text-[#0a0a0a]">
               Portfolio
             </Link>
-            <div className="size-8 rounded-full bg-gradient-to-br from-[#9580ff] to-[#6366f1] flex items-center justify-center text-[12px] font-bold text-white">
+            <div
+              className="size-8 rounded-full flex items-center justify-center text-[12px] font-bold text-white"
+              style={{ background: "radial-gradient(circle at 30% 25%, #9580ff, transparent 72%), linear-gradient(140deg, #9580ff, #4F8DFF)" }}
+            >
               MD
             </div>
           </div>
