@@ -16,3 +16,5 @@ app/account.db
 # runtime artifacts
 account.db
 *.db
+*.log
+uvicorn.*.log
