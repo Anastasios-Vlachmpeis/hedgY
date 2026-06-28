@@ -1311,26 +1311,32 @@ const timeframes = ["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "All"];
 
 // Keywords per stock for market relevance scoring
 const STOCK_KEYWORDS: Record<string, string[]> = {
-  AAPL:  ["apple", "iphone", "ios", "app store", "antitrust", "eu", "dma", "tech", "china", "taiwan"],
-  NVDA:  ["nvidia", "chip", "semiconductor", "gpu", "ai", "export", "china", "taiwan", "tech"],
-  AMD:   ["amd", "chip", "semiconductor", "cpu", "export", "china", "taiwan", "tech"],
-  MSFT:  ["microsoft", "openai", "ai", "cloud", "antitrust", "tech", "eu", "layoff"],
+  // Supply-chain / hardware — correlates to Taiwan/China risk, NOT generic tech layoffs
+  AAPL:  ["apple", "iphone", "ios", "app store", "antitrust", "eu", "dma", "china", "taiwan", "supply"],
+  NVDA:  ["nvidia", "chip", "semiconductor", "gpu", "export", "china", "taiwan", "ai chip"],
+  AMD:   ["amd", "chip", "semiconductor", "cpu", "export", "china", "taiwan"],
+  // Software / cloud / AI — correlates to tech layoffs, AI regulation, not supply chain
+  MSFT:  ["microsoft", "openai", "ai", "cloud", "antitrust", "layoff", "tech layoff"],
+  META:  ["meta", "facebook", "social", "antitrust", "layoff", "tech layoff", "eu"],
+  AMZN:  ["amazon", "aws", "cloud", "antitrust", "retail", "layoff", "tech layoff"],
+  GOOGL: ["google", "alphabet", "search", "ai", "antitrust", "eu", "layoff"],
+  GOOG:  ["google", "alphabet", "search", "ai", "antitrust", "eu", "layoff"],
+  NFLX:  ["streaming", "media", "antitrust", "layoff", "tech layoff"],
+  // EV / energy
   TSLA:  ["tesla", "ev", "electric", "musk", "greenland", "trump", "energy"],
-  META:  ["meta", "facebook", "social", "antitrust", "tech", "eu", "layoff"],
-  AMZN:  ["amazon", "aws", "cloud", "antitrust", "retail", "tech", "layoff"],
-  GOOGL: ["google", "alphabet", "search", "ai", "antitrust", "eu", "tech"],
-  GOOG:  ["google", "alphabet", "search", "ai", "antitrust", "eu", "tech"],
-  LMT:   ["iran", "taiwan", "war", "military", "defense", "nato", "greenland", "house", "republican", "senate"],
-  BA:    ["iran", "taiwan", "war", "military", "defense", "boeing", "house", "republican"],
-  PLTR:  ["iran", "taiwan", "war", "military", "defense", "ai", "government", "house"],
-  JPM:   ["fed", "rate", "interest", "inflation", "economy", "bank", "republican", "democrat", "election"],
-  GS:    ["fed", "rate", "interest", "economy", "bank", "republican", "democrat", "election"],
-  V:     ["fed", "rate", "economy", "election", "republican", "democrat"],
   XOM:   ["iran", "oil", "energy", "greenland", "opec", "war", "hormuz"],
-  NFLX:  ["streaming", "media", "tech", "antitrust", "layoff"],
+  // Defense
+  LMT:   ["iran", "war", "military", "defense", "nato", "greenland", "house", "republican", "senate", "invade"],
+  BA:    ["iran", "war", "military", "defense", "house", "republican", "invade"],
+  PLTR:  ["iran", "war", "military", "defense", "ai", "government", "house", "invade"],
+  // Finance / macro
+  JPM:   ["fed", "rate", "interest", "inflation", "economy", "bank", "republican", "democrat", "election", "house"],
+  GS:    ["fed", "rate", "interest", "economy", "bank", "republican", "democrat", "election"],
+  V:     ["fed", "rate", "economy", "election", "republican", "democrat", "house"],
+  // Crypto / fintech
   COIN:  ["crypto", "bitcoin", "regulation", "sec", "republican"],
   PYPL:  ["fed", "rate", "economy", "payment", "regulation"],
-  UBER:  ["regulation", "antitrust", "tech", "layoff", "economy"],
+  UBER:  ["regulation", "antitrust", "layoff", "economy"],
 };
 
 function scoreMarketForStock(market: RiskMarket, symbol: string): number {
@@ -1713,7 +1719,7 @@ function MarketCard({
 }) {
   const bearish = market.correlation < 0;
   return (
-    <div className="flex flex-1 flex-col rounded-[10px] bg-[#f8f8f8] p-3">
+    <div className="flex flex-col rounded-[10px] bg-[#f8f8f8] p-3">
       <div className="flex items-start gap-2.5">
         <span className="flex size-7 shrink-0 items-center justify-center rounded-[7px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
           <RiskIcon icon={market.icon} bare />
@@ -1723,7 +1729,7 @@ function MarketCard({
         </p>
         <ArcGauge pct={market.probability} bearish={bearish} />
       </div>
-      <div className="mt-auto pt-2 flex gap-1.5">
+      <div className="mt-3 flex gap-1.5">
         <button
           type="button"
           className="flex-1 rounded-[6px] bg-[#dcfce7] py-1.5 text-[11px] font-semibold text-[#16a34a] transition-colors hover:bg-[#bbf7d0]"
@@ -1766,15 +1772,14 @@ function RiskMarketsCard({
       <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#7B849A]">
         Correlated prediction markets · {assetSymbol}
       </p>
-      <div className="flex flex-1 flex-col gap-2">
+      <div className="flex flex-col gap-2">
         {markets.map((market, i) => (
-          <div key={market.id} className="flex flex-1">
-            <MarketCard
-              market={market}
-              recommended={i === 0}
-              onHedge={() => onSelectHedge(market.id)}
-            />
-          </div>
+          <MarketCard
+            key={market.id}
+            market={market}
+            recommended={i === 0}
+            onHedge={() => onSelectHedge(market.id)}
+          />
         ))}
       </div>
       <button
@@ -2320,15 +2325,13 @@ export default function DashboardPage() {
 
   const selectedAsset = patchedAssets.find((asset) => asset.symbol === selectedSymbol) ?? patchedAssets[2];
 
-  const visibleRiskMarkets = React.useMemo(() => {
-    if (!patchedMarkets.length) return [];
-    const scored = patchedMarkets
+  // Compute inline (no memo) so switching stocks always gets a fresh sort
+  const visibleRiskMarkets = patchedMarkets.length === 0 ? [] :
+    patchedMarkets
       .map((m) => ({ m, score: scoreMarketForStock(m, selectedSymbol) }))
-      .sort((a, b) => b.score - a.score);
-    // If top results have score > 0, prefer those; otherwise fall back to first 3
-    const top = scored.filter((s) => s.score > 0).slice(0, 3);
-    return (top.length > 0 ? top : scored.slice(0, 3)).map((s) => s.m);
-  }, [patchedMarkets, selectedSymbol]);
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map((s) => s.m);
 
   const activeMarket =
     patchedMarkets.find((market) => market.id === activeMarketId) ??
