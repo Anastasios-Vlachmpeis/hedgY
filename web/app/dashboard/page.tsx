@@ -16,7 +16,6 @@ import {
   SearchCheck,
   ShieldCheck,
   Sparkles,
-  Star,
 } from "lucide-react";
 import {
   CartesianGrid,
@@ -29,7 +28,6 @@ import {
   YAxis,
 } from "recharts";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { STOCKS_DB } from "@/lib/stocks";
@@ -1419,19 +1417,32 @@ function AssetSwitcher({
   onSelect: (symbol: string) => void;
   assetList: Asset[];
 }) {
-  const currentIndex = assetList.findIndex((a) => a.symbol === selectedSymbol);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const check = () => setCanScrollLeft(el.scrollLeft > 4);
+    el.addEventListener("scroll", check, { passive: true });
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => { el.removeEventListener("scroll", check); ro.disconnect(); };
+  }, []);
+
   return (
-    <div className="mt-6 flex items-center gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {currentIndex > 0 && (
+    <div className="relative mt-6 flex items-center gap-3">
+      {canScrollLeft && (
         <button
           type="button"
-          aria-label="Previous asset"
-          onClick={() => onSelect(assetList[currentIndex - 1].symbol)}
+          aria-label="Scroll left"
+          onClick={() => scrollRef.current?.scrollBy({ left: -220, behavior: "smooth" })}
           className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-[#ececec] bg-white text-[#a3a3a3] transition-colors hover:border-[#d0d0d0] hover:text-[#0a0a0a]"
         >
           <ArrowRight className="size-4 rotate-180" strokeWidth={1.9} />
         </button>
       )}
+      <div ref={scrollRef} className="flex flex-1 items-center gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {assetList.map((asset) => {
         const selected = asset.symbol === selectedSymbol;
         return (
@@ -1466,6 +1477,7 @@ function AssetSwitcher({
         <Plus className="size-4" strokeWidth={2} />
         Add asset
       </button>
+      </div>
     </div>
   );
 }
@@ -1495,7 +1507,6 @@ function ChartTooltip({
 
 function AssetChartCard({ asset }: { asset: Asset }) {
   const [activeFrame, setActiveFrame] = React.useState("1Y");
-  const [watched, setWatched] = React.useState(false);
 
   return (
     <Card className="overflow-hidden rounded-[20px] border border-[#ececec] bg-white shadow-none">
@@ -1519,26 +1530,16 @@ function AssetChartCard({ asset }: { asset: Asset }) {
             <span className="text-[12px] text-[#a3a3a3]">{asset.sector}</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 rounded-[11px] border-[var(--border-soft)] bg-white px-3 text-[12px] font-semibold hover:bg-[var(--muted-surface)]"
+        <div className="ml-auto flex items-center">
+          <a
+            href={`https://www.tradingview.com/chart/?symbol=${asset.exchange}:${asset.symbol}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-9 items-center gap-1.5 rounded-[11px] border border-[#ececec] bg-white px-3 text-[12px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#f5f5f5]"
           >
             View asset
             <ExternalLink className="size-3.5" strokeWidth={1.9} />
-          </Button>
-          <button
-            type="button"
-            aria-label="Watch asset"
-            onClick={() => setWatched((value) => !value)}
-            className={cn(
-              "flex size-9 items-center justify-center rounded-[11px] border border-[#ececec] transition-colors",
-              watched ? "bg-[#f0f0f0] text-[#0a0a0a]" : "bg-white text-[#a3a3a3] hover:bg-[#f5f5f5]",
-            )}
-          >
-            <Star className="size-4" fill={watched ? "currentColor" : "none"} strokeWidth={1.9} />
-          </button>
+          </a>
         </div>
       </CardHeader>
 
@@ -1630,28 +1631,27 @@ function AssetChartCard({ asset }: { asset: Asset }) {
   );
 }
 
-/* ── Arc probability gauge — explicit arc endpoint, no dasharray tricks ── */
+/* ── Arc probability gauge — explicit arc endpoint, large-arc always 0 ── */
 function ArcGauge({ pct, bearish }: { pct: number; bearish?: boolean }) {
   const color = bearish ? "#dc2626" : "#16a34a";
   // Semicircle: center (26,22) r=19 → left (7,22) top (26,3) right (45,22)
   const cx = 26, cy = 22, r = 19;
   const trackD = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
-  // Fill from left endpoint sweeping clockwise by pct/100 of 180°
-  const theta = Math.PI * (1 - pct / 100); // π→0 as pct 0→100
+  // Clockwise sweep from left endpoint; large-arc is always 0 (arc ≤ 180°)
+  const theta = Math.PI * (1 - pct / 100);
   const ex = (cx + r * Math.cos(theta)).toFixed(2);
   const ey = (cy - r * Math.sin(theta)).toFixed(2);
-  const large = pct > 50 ? 1 : 0;
   const fillD = pct === 0 ? null
     : pct >= 100 ? trackD
-    : `M ${cx - r} ${cy} A ${r} ${r} 0 ${large} 1 ${ex} ${ey}`;
+    : `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${ex} ${ey}`;
   return (
     <div style={{ flexShrink: 0, width: 52, display: "flex", flexDirection: "column", alignItems: "center" }}>
       <svg width={52} height={24} viewBox="0 0 52 24" style={{ display: "block", overflow: "visible" }}>
         <path d={trackD} fill="none" stroke="#ececec" strokeWidth={5} strokeLinecap="round" />
         {fillD && <path d={fillD} fill="none" stroke={color} strokeWidth={5} strokeLinecap="round" />}
       </svg>
-      <span style={{ fontSize: 9, fontWeight: 700, lineHeight: 1, color: "#0a0a0a", marginTop: 3 }}>{pct}%</span>
-      <span style={{ fontSize: 6, lineHeight: 1, color: "#a3a3a3", marginTop: 2 }}>chance</span>
+      <span style={{ fontSize: 11, fontWeight: 700, lineHeight: 1, color: "#0a0a0a", marginTop: 4 }}>{pct}%</span>
+      <span style={{ fontSize: 7, lineHeight: 1, color: "#a3a3a3", marginTop: 2 }}>chance</span>
     </div>
   );
 }
@@ -1810,6 +1810,7 @@ function RecommendedHedgeCard({
         >
           {applied ? <CheckCircle2 className="size-3.5 text-[#16a34a]" /> : null}
           {applied ? "Hedge applied" : "Apply hedge"}
+          {!applied && <ArrowRight className="size-3.5" strokeWidth={2} />}
         </button>
       </div>
     </div>
@@ -2375,12 +2376,12 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-4">
           <PositionCard asset={selectedAsset} />
+          <ProjectedOutcomesCard market={activeMarket} />
           <RecommendedHedgeCard
             market={activeMarket}
             applied={appliedMarketId === activeMarket.id}
             onApply={() => setAppliedMarketId(activeMarket.id)}
           />
-          <ProjectedOutcomesCard market={activeMarket} />
           <SummaryCard
             market={activeMarket}
             asset={selectedAsset}

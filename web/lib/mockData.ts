@@ -218,12 +218,12 @@ export interface SectorWeight {
 }
 
 export const sectorWeights: SectorWeight[] = [
-  { sector: "Defense", pct: 24, color: "#9580ff" },
-  { sector: "Tech", pct: 22, color: "#7c3aed" },
-  { sector: "Pharma", pct: 18, color: "#b3a6ff" },
-  { sector: "Energy", pct: 14, color: "#cdbcff" },
-  { sector: "Shipping", pct: 12, color: "#a3a3a3" },
-  { sector: "Financials", pct: 10, color: "#c9c9d4" },
+  { sector: "Defense", pct: 24, color: "#0a0a0a" },
+  { sector: "Tech", pct: 22, color: "#404040" },
+  { sector: "Pharma", pct: 18, color: "#737373" },
+  { sector: "Energy", pct: 14, color: "#a3a3a3" },
+  { sector: "Shipping", pct: 12, color: "#c4c4c4" },
+  { sector: "Financials", pct: 10, color: "#dedede" },
 ];
 
 /* ---------- Hedge suggestions (curated) ---------- */
@@ -547,8 +547,8 @@ export const featuredMarket: FeaturedMarket = {
   volume: 64_000_000,
   live: true,
   outcomes: [
-    { label: "Republicans", pct: 43, color: "#9580ff" },
-    { label: "Democrats", pct: 38, color: "#181925" },
+    { label: "Republicans", pct: 43, color: "#0a0a0a" },
+    { label: "Democrats", pct: 38, color: "#737373" },
     { label: "Split", pct: 19, color: "#a3a3a3" },
   ],
   series: FEATURED_SERIES.map(([rep, dem, split], i) => ({
@@ -807,8 +807,8 @@ export interface PlatformBreakdown {
 }
 
 export const platformBreakdown: PlatformBreakdown[] = [
-  { platform: "Alpaca", kind: "Stocks & Options", value: 85_310, pnl: 1_050.2, pnlPct: 1.25, color: "#9580ff" },
-  { platform: "Polymarket", kind: "Prediction Markets", value: 1_230, pnl: 234, pnlPct: 23.5, color: "#181925" },
+  { platform: "Alpaca", kind: "Stocks & Options", value: 85_310, pnl: 1_050.2, pnlPct: 1.25, color: "#0a0a0a" },
+  { platform: "Polymarket", kind: "Prediction Markets", value: 1_230, pnl: 234, pnlPct: 23.5, color: "#555555" },
   { platform: "Cash", kind: "Available Balance", value: 42_000.32, pnl: 0, pnlPct: 0, color: "#a3a3a3" },
 ];
 

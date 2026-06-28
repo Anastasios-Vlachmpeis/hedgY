@@ -130,7 +130,7 @@ function UserAvatar({ size = 10 }: { size?: number }) {
       style={{
         width: size * 4,
         height: size * 4,
-        background: "radial-gradient(circle at 30% 25%, #9580ff, transparent 72%), linear-gradient(140deg, #9580ff, #4F8DFF)",
+        background: "radial-gradient(circle at 30% 25%, #555555, transparent 72%), linear-gradient(140deg, #2a2a2a, #555555)",
         flexShrink: 0,
       }}
     />
@@ -369,8 +369,8 @@ function Topbar({ collapsed }: { collapsed: boolean }) {
   return (
     <header
       className={cn(
-        "fixed right-0 top-0 z-40 flex h-[72px] items-center border-b border-[var(--border-soft)] bg-white/86 px-8 backdrop-blur transition-[left] duration-200",
-        collapsed ? "left-16" : "left-[200px]",
+        "fixed right-4 top-3 z-40 flex h-[56px] items-center rounded-[16px] border border-[#e8e8e8] bg-white/95 px-5 shadow-[0_2px_16px_rgba(0,0,0,0.07)] backdrop-blur-[10px] transition-[left] duration-200",
+        collapsed ? "left-[72px]" : "left-[208px]",
       )}
     >
       <SearchCommand />
@@ -403,7 +403,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
       <Topbar collapsed={collapsed} />
       <main
         className={cn(
-          "min-h-screen pt-[72px] transition-[padding-left] duration-200",
+          "min-h-screen pt-[76px] transition-[padding-left] duration-200",
           collapsed ? "pl-16" : "pl-[200px]",
         )}
       >
