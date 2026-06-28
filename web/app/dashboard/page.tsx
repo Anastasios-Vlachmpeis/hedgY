@@ -2266,8 +2266,14 @@ export default function DashboardPage() {
           sparkDown: [],
         }));
         setLiveBrowseMarkets(liveMarkets);
-        // Initialize active market from first live result
-        setActiveMarketId((prev) => prev || liveMarkets[0]?.id || "");
+        // Initialize active market: top-correlated for the default selected stock
+        setActiveMarketId((prev) => {
+          if (prev) return prev;
+          const top = [...liveMarkets]
+            .map((m) => ({ m, score: scoreMarketForStock(m, "LMT") }))
+            .sort((a, b) => b.score - a.score)[0]?.m;
+          return top?.id ?? liveMarkets[0]?.id ?? "";
+        });
         setCompareIds((prev) => prev.length ? prev : liveMarkets.slice(1, 3).map((m) => m.id));
       })
       .catch(() => {});
@@ -2365,7 +2371,7 @@ export default function DashboardPage() {
         pnlPct: "+0.00%",
         volatility: "—",
       },
-      recommendedMarketId: liveBrowseMarkets[0]?.id ?? "",
+      recommendedMarketId: [...liveBrowseMarkets].sort((a, b) => scoreMarketForStock(b, symbol) - scoreMarketForStock(a, symbol))[0]?.id ?? liveBrowseMarkets[0]?.id ?? "",
     };
 
     const recId = newAsset.recommendedMarketId;
@@ -2385,8 +2391,11 @@ export default function DashboardPage() {
       addAssetBySymbol(symbol);
       return;
     }
+    const topMarket = [...patchedMarkets]
+      .map((m) => ({ m, score: scoreMarketForStock(m, nextAsset.symbol) }))
+      .sort((a, b) => b.score - a.score)[0]?.m ?? patchedMarkets[0];
     setSelectedSymbol(nextAsset.symbol);
-    setActiveMarketId(patchedMarkets[0]?.id ?? "");
+    setActiveMarketId(topMarket?.id ?? "");
     setCompareIds([]);
     setAppliedMarketId(null);
   }, [patchedAssets, patchedMarkets, addAssetBySymbol]);
