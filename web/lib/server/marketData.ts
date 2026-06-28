@@ -636,11 +636,38 @@ interface LivePosition {
   qty: number;
   avg_entry: number;
   label: string | null;
+  group_id: string | null;
   price: number;
   market_value: number;
   cost: number;
   unrealized_pnl: number;
   unrealized_pnl_pct: number;
+}
+
+function mapSinglePosition(p: LivePosition): Position {
+  if (p.kind === "stock") {
+    return {
+      id: `pos-${p.id}`,
+      title: p.symbol ?? "—",
+      type: "Equity",
+      detail: `${p.qty.toFixed(4)} shares @ ${usd(p.avg_entry)} avg`,
+      value: p.market_value,
+      cost: p.cost,
+      pnl: p.unrealized_pnl,
+      pnlPct: p.unrealized_pnl_pct,
+    };
+  }
+  const cents = Math.round(p.avg_entry * 100);
+  return {
+    id: `pos-${p.id}`,
+    title: p.label ?? "Prediction",
+    type: "Prediction",
+    detail: `${p.side} · ${cents}¢ · ${Math.round(p.qty).toLocaleString()} contracts`,
+    value: p.market_value,
+    cost: p.cost,
+    pnl: p.unrealized_pnl,
+    pnlPct: p.unrealized_pnl_pct,
+  };
 }
 
 export async function getAccount(): Promise<Portfolio> {
@@ -666,31 +693,49 @@ export async function getPositions(): Promise<Position[]> {
     const res = await fetch(`${MARKETS_API}/positions`, { cache: "no-store" });
     if (!res.ok) throw new Error(`positions ${res.status}`);
     const live: LivePosition[] = await res.json();
-    return live.map((p): Position => {
-      if (p.kind === "stock") {
-        return {
-          id: `pos-${p.id}`,
-          title: p.symbol ?? "—",
-          type: "Equity",
-          detail: `${p.qty.toFixed(4)} shares @ ${usd(p.avg_entry)} avg`,
-          value: p.market_value,
-          cost: p.cost,
-          pnl: p.unrealized_pnl,
-          pnlPct: p.unrealized_pnl_pct,
-        };
+
+    // Legs sharing a group_id are a combined (equity + hedge) position; render
+    // them as one "Combined" row. Everything else maps 1:1.
+    const groups = new Map<string, LivePosition[]>();
+    const singles: LivePosition[] = [];
+    for (const p of live) {
+      if (p.group_id) {
+        const arr = groups.get(p.group_id);
+        if (arr) arr.push(p);
+        else groups.set(p.group_id, [p]);
+      } else {
+        singles.push(p);
       }
-      const cents = Math.round(p.avg_entry * 100);
-      return {
-        id: `pos-${p.id}`,
-        title: p.label ?? "Prediction",
-        type: "Prediction",
-        detail: `${p.side} · ${cents}¢ · ${Math.round(p.qty).toLocaleString()} contracts`,
-        value: p.market_value,
-        cost: p.cost,
-        pnl: p.unrealized_pnl,
-        pnlPct: p.unrealized_pnl_pct,
-      };
-    });
+    }
+
+    const out: Position[] = [];
+    for (const [gid, legs] of groups) {
+      const stock = legs.find((l) => l.kind === "stock");
+      const pred = legs.find((l) => l.kind === "prediction");
+      if (stock && pred) {
+        const value = legs.reduce((s, l) => s + l.market_value, 0);
+        const cost = legs.reduce((s, l) => s + l.cost, 0);
+        const pnl = legs.reduce((s, l) => s + l.unrealized_pnl, 0);
+        const hedgeLabel = `${pred.side} — ${pred.label ?? "prediction"}`;
+        out.push({
+          id: `grp-${gid}`,
+          title: `${stock.symbol} hedge`,
+          type: "Combined",
+          detail: `${stock.symbol} + ${hedgeLabel}`,
+          value,
+          cost,
+          pnl,
+          pnlPct: cost > 0 ? (pnl / cost) * 100 : 0,
+          equityLeg: { label: stock.symbol ?? "Equity", value: stock.market_value },
+          hedgeLeg: { label: hedgeLabel, value: pred.market_value },
+        });
+      } else {
+        // Degenerate group (one leg sold off) — render the survivors singly.
+        legs.forEach((l) => out.push(mapSinglePosition(l)));
+      }
+    }
+    singles.forEach((p) => out.push(mapSinglePosition(p)));
+    return out;
   } catch {
     return positionsFallback;
   }

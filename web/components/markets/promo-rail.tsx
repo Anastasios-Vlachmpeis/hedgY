@@ -3,7 +3,7 @@ import { ArrowRight, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { pct } from "@/lib/format";
-import { TradeButton } from "@/components/trade/trade-modal";
+import { OrderTicketButton } from "@/components/trade/order-ticket";
 import type { Stock } from "@/lib/mockData";
 
 /**
@@ -55,15 +55,12 @@ function PromoRail({ stocks }: { stocks: Stock[] }) {
                       {pct(stock.changePct)}
                     </p>
                   </div>
-                  <TradeButton
-                    kind="stock"
+                  <OrderTicketButton
                     tone="buy"
-                    label={stock.name}
-                    symbol={stock.symbol}
-                    price={stock.price}
+                    ticket={{ kind: "stock", symbol: stock.symbol, price: stock.price }}
                   >
-                    Buy
-                  </TradeButton>
+                    Trade
+                  </OrderTicketButton>
                 </div>
               </li>
             );

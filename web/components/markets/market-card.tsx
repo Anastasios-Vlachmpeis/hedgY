@@ -6,9 +6,10 @@ import { ArrowUp, ArrowDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { points, usdCompact } from "@/lib/format";
 import { ActionButton } from "@/components/ui/action-button";
-import { TradeButton } from "@/components/trade/trade-modal";
+import { OrderTicket, type OrderTicketData } from "@/components/trade/order-ticket";
+import { HedgeTicket, type HedgeTicketData } from "@/components/trade/hedge-ticket";
 import { MarketDetailModal, venueMeta } from "@/components/markets/market-detail-modal";
-import { yesCents, noCents, type MarketEvent, type MarketOutcomeRow } from "@/lib/mockData";
+import { yesCents, type MarketEvent, type MarketOutcomeRow } from "@/lib/mockData";
 
 function LiveBadge() {
   return (
@@ -120,6 +121,8 @@ function OutcomeRow({ outcome, threshold }: { outcome: MarketOutcomeRow; thresho
 
 function MarketCard({ event, index = 0 }: { event: MarketEvent; index?: number }) {
   const [detail, setDetail] = React.useState(false);
+  const [bet, setBet] = React.useState(false);
+  const [hedge, setHedge] = React.useState(false);
   const crossVenue = (event.members?.length ?? 0) > 1;
 
   const cardClass =
@@ -128,6 +131,21 @@ function MarketCard({ event, index = 0 }: { event: MarketEvent; index?: number }
 
   if (event.kind === "binary") {
     const p = event.yesProbability!;
+    const predTicket: OrderTicketData = {
+      kind: "prediction",
+      marketId: event.id,
+      question: event.title,
+      yes: p,
+      venues: event.members,
+      defaultSide: "YES",
+    };
+    const hedgeTicket: HedgeTicketData = {
+      marketId: event.id,
+      question: event.title,
+      yes: p,
+      venues: event.members,
+    };
+    const stop = (e: React.MouseEvent) => e.stopPropagation();
     return (
       <>
         <div
@@ -157,33 +175,33 @@ function MarketCard({ event, index = 0 }: { event: MarketEvent; index?: number }
             }
           />
           <ProbBar p={p} />
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <TradeButton
-              kind="prediction"
-              tone="yes"
-              className="w-full"
-              label={event.title}
-              marketId={event.id}
-              side="YES"
-              price={p}
+          <div className="mt-3 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                stop(e);
+                setBet(true);
+              }}
+              className="w-full rounded-[9px] bg-[#9580ff] py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#7c3aed]"
             >
-              Yes <span className="font-num tabular-nums opacity-80">{yesCents(p)}¢</span>
-            </TradeButton>
-            <TradeButton
-              kind="prediction"
-              tone="no"
-              className="w-full"
-              label={event.title}
-              marketId={event.id}
-              side="NO"
-              price={1 - p}
+              Place bet
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                stop(e);
+                setHedge(true);
+              }}
+              className="w-full rounded-[9px] border border-[#dad9fc] bg-[#f3f1ff] py-2 text-[13px] font-semibold text-[#9580ff] transition-colors hover:bg-[#e9e6ff]"
             >
-              No <span className="font-num tabular-nums opacity-80">{noCents(p)}¢</span>
-            </TradeButton>
+              Hedge
+            </button>
           </div>
           <CardFooter event={event} crossVenue={crossVenue} />
         </div>
         <MarketDetailModal event={detail ? event : null} onClose={() => setDetail(false)} />
+        <OrderTicket ticket={bet ? predTicket : null} onClose={() => setBet(false)} />
+        <HedgeTicket ticket={hedge ? hedgeTicket : null} onClose={() => setHedge(false)} />
       </>
     );
   }

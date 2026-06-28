@@ -1,14 +1,12 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {
   Anchor,
   ArrowRight,
   Building2,
   CheckCircle2,
   Cpu,
-  ExternalLink,
   FileText,
   Gauge,
   Landmark,
@@ -32,6 +30,8 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { STOCKS_DB } from "@/lib/stocks";
+import { OrderTicket, type OrderTicketData } from "@/components/trade/order-ticket";
+import { HedgeTicket } from "@/components/trade/hedge-ticket";
 
 type ChartPoint = {
   t: string;
@@ -1567,16 +1567,7 @@ function ChartTooltip({
 
 function AssetChartCard({ asset }: { asset: Asset }) {
   const [activeFrame, setActiveFrame] = React.useState("1Y");
-  const [placed, setPlaced] = React.useState(false);
-  const placedTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const placeOrder = React.useCallback(() => {
-    setPlaced(true);
-    if (placedTimer.current) clearTimeout(placedTimer.current);
-    placedTimer.current = setTimeout(() => setPlaced(false), 2600);
-  }, []);
-  React.useEffect(() => () => {
-    if (placedTimer.current) clearTimeout(placedTimer.current);
-  }, []);
+  const [ticket, setTicket] = React.useState<OrderTicketData | null>(null);
 
   const visibleData = sliceByFrame(asset.chart, activeFrame);
   const firstClose = visibleData[0]?.price;
@@ -1610,21 +1601,13 @@ function AssetChartCard({ asset }: { asset: Asset }) {
         <div className="ml-auto flex items-center">
           <button
             type="button"
-            onClick={placeOrder}
+            onClick={() => setTicket({ kind: "stock", symbol: asset.symbol, price: asset.price })}
             className="flex h-9 items-center gap-1.5 rounded-[11px] bg-[#050505] px-4 text-[12px] font-semibold text-white transition-transform hover:-translate-y-0.5 active:translate-y-px"
           >
-            Buy {asset.symbol}
+            Trade {asset.symbol}
           </button>
         </div>
-        {placed && (
-          <div className="pointer-events-none fixed bottom-6 right-6 z-[90] flex items-center gap-2.5 rounded-2xl bg-[#050505] px-4 py-3 text-white shadow-[0_8px_30px_rgba(0,0,0,0.25)] ring-1 ring-white/10">
-            <CheckCircle2 className="size-5 text-[#16a34a]" />
-            <div className="leading-tight">
-              <p className="text-[14px] font-semibold">Order placed</p>
-              <p className="text-[12px] text-[#a3a3a3]">Bought {asset.symbol} · mock fill</p>
-            </div>
-          </div>
-        )}
+        <OrderTicket ticket={ticket} onClose={() => setTicket(null)} />
       </CardHeader>
 
       <CardContent className="p-5">
@@ -1750,6 +1733,21 @@ function MarketCard({
   onHedge: () => void;
 }) {
   const bearish = market.correlation < 0;
+  const [ticket, setTicket] = React.useState<OrderTicketData | null>(null);
+  const venues = (market.quoteRows ?? []).map((q) => ({
+    venue: q.venue.toLowerCase(),
+    yes: q.yes,
+    no: q.no,
+  }));
+  const placeBet = (side: "YES" | "NO") =>
+    setTicket({
+      kind: "prediction",
+      marketId: market.id,
+      question: market.title,
+      yes: market.yes,
+      venues: venues.length ? venues : undefined,
+      defaultSide: side,
+    });
   return (
     <div className="flex flex-col rounded-[10px] bg-[#f8f8f8] p-3">
       <div className="flex items-start gap-2.5">
@@ -1764,12 +1762,14 @@ function MarketCard({
       <div className="mt-3 flex gap-1.5">
         <button
           type="button"
+          onClick={() => placeBet("YES")}
           className="flex-1 rounded-[6px] bg-[#dcfce7] py-1.5 text-[11px] font-semibold text-[#16a34a] transition-colors hover:bg-[#bbf7d0]"
         >
           Yes {market.yes}¢
         </button>
         <button
           type="button"
+          onClick={() => placeBet("NO")}
           className="flex-1 rounded-[6px] bg-[#fee2e2] py-1.5 text-[11px] font-semibold text-[#dc2626] transition-colors hover:bg-[#fecaca]"
         >
           No {market.no}¢
@@ -1782,6 +1782,7 @@ function MarketCard({
       >
         Hedge →
       </button>
+      <OrderTicket ticket={ticket} onClose={() => setTicket(null)} />
     </div>
   );
 }
@@ -1854,14 +1855,22 @@ function PositionCard({ asset }: { asset: Asset }) {
 
 function RecommendedHedgeCard({
   market,
+  assetSymbol,
   applied,
   onApply,
 }: {
   market: RiskMarket;
+  assetSymbol: string;
   applied: boolean;
   onApply: () => void;
 }) {
   const protectedProbability = market.hedgeSide === "NO" ? market.no : market.yes;
+  const [open, setOpen] = React.useState(false);
+  const venues = (market.quoteRows ?? []).map((q) => ({
+    venue: q.venue.toLowerCase(),
+    yes: q.yes,
+    no: q.no,
+  }));
 
   return (
     <div className="flex flex-col rounded-[18px] border border-[#ececec] bg-white p-5">
@@ -1883,12 +1892,12 @@ function RecommendedHedgeCard({
       <div className="mt-auto pt-5">
         <button
           type="button"
-          onClick={onApply}
+          onClick={() => setOpen(true)}
           className={cn(
             "flex h-9 w-full items-center justify-center gap-2 rounded-[9px] border text-[12px] font-semibold transition-colors",
             applied
               ? "border-[#ececec] bg-white text-[#737373]"
-              : "border-[#ececec] bg-white text-[#0a0a0a] hover:bg-[#f5f5f5]",
+              : "border-[#0a0a0a] bg-[#0a0a0a] text-white hover:opacity-90",
           )}
         >
           {applied ? <CheckCircle2 className="size-3.5 text-[#16a34a]" /> : null}
@@ -1896,6 +1905,22 @@ function RecommendedHedgeCard({
           {!applied && <ArrowRight className="size-3.5" strokeWidth={2} />}
         </button>
       </div>
+      <HedgeTicket
+        ticket={
+          open
+            ? {
+                marketId: market.id,
+                question: market.title,
+                yes: market.yes,
+                defaultSide: market.hedgeSide,
+                equitySymbol: assetSymbol,
+                venues: venues.length ? venues : undefined,
+              }
+            : null
+        }
+        onClose={() => setOpen(false)}
+        onPlaced={onApply}
+      />
     </div>
   );
 }
@@ -2036,7 +2061,7 @@ function MarketBrowserModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20 p-6 backdrop-blur-[2px]">
-      <div className="relative grid max-h-[88vh] w-full max-w-[1100px] grid-cols-[1fr_340px] overflow-hidden rounded-[22px] border border-[#ececec] bg-white shadow-[0_24px_80px_rgba(0,0,0,0.12)]">
+      <div className="relative grid h-[88vh] w-full max-w-[1100px] grid-cols-[1fr_340px] overflow-hidden rounded-[22px] border border-[#ececec] bg-white shadow-[0_24px_80px_rgba(0,0,0,0.12)]">
 
         {/* Close button — top right */}
         <button
@@ -2123,20 +2148,13 @@ function MarketBrowserModal({
         </div>
 
         {/* Right — market detail */}
-        <aside className="flex flex-col bg-[#fafafa] p-5">
+        <aside className="flex flex-col overflow-y-auto bg-[#fafafa] p-5">
           {active ? (
             <>
               <div className="flex items-center justify-between">
                 <span className="rounded-full border border-[#ececec] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#737373]">
                   {active.venue}
                 </span>
-                <Link
-                  href="/markets"
-                  className="flex items-center gap-1 text-[11px] font-semibold text-[#737373] hover:text-[#0a0a0a]"
-                >
-                  Markets page
-                  <ExternalLink className="size-3" />
-                </Link>
               </div>
 
               <h3 className="mt-4 text-[16px] font-semibold leading-snug tracking-[-0.01em] text-[#0a0a0a]">
@@ -2547,6 +2565,7 @@ export default function DashboardPage() {
               <ProjectedOutcomesCard market={activeMarket} />
               <RecommendedHedgeCard
                 market={activeMarket}
+                assetSymbol={selectedAsset.symbol}
                 applied={appliedMarketId === activeMarket.id}
                 onApply={() => setAppliedMarketId(activeMarket.id)}
               />

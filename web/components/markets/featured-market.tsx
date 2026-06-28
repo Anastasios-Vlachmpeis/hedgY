@@ -13,7 +13,7 @@ import {
 
 import { usdCompact } from "@/lib/format";
 import type { FeaturedMarket } from "@/lib/mockData";
-import { TradeModal, type TradeParams } from "@/components/trade/trade-modal";
+import { OrderTicket, type OrderTicketData } from "@/components/trade/order-ticket";
 
 /**
  * Hero market card. Left column is a live leaderboard of outcomes ranked by
@@ -21,7 +21,7 @@ import { TradeModal, type TradeParams } from "@/components/trade/trade-modal";
  * Clicking an outcome opens the trade modal (buys its side at live odds).
  */
 function FeaturedMarketCard({ market }: { market: FeaturedMarket }) {
-  const [trade, setTrade] = React.useState<TradeParams | null>(null);
+  const [trade, setTrade] = React.useState<OrderTicketData | null>(null);
   return (
     <section className="glass overflow-hidden rounded-[18px]">
       <div className="flex flex-col gap-5 p-5 lg:flex-row">
@@ -54,10 +54,10 @@ function FeaturedMarketCard({ market }: { market: FeaturedMarket }) {
                   outcome.marketId &&
                   setTrade({
                     kind: "prediction",
-                    label: outcome.label,
-                    price: outcome.pct / 100,
                     marketId: outcome.marketId,
-                    side: outcome.side ?? "YES",
+                    question: outcome.label,
+                    yes: outcome.pct / 100,
+                    defaultSide: outcome.side ?? "YES",
                   })
                 }
                 className="group flex w-full items-center gap-2.5 rounded-[10px] border border-[#f0f0f0] px-3 py-2.5 text-[14px] transition-all hover:border-[#9580ff] hover:bg-[#f7f5ff] disabled:cursor-default disabled:hover:border-[#f0f0f0] disabled:hover:bg-transparent"
@@ -130,7 +130,7 @@ function FeaturedMarketCard({ market }: { market: FeaturedMarket }) {
         </div>
       </div>
 
-      <TradeModal params={trade} onClose={() => setTrade(null)} />
+      <OrderTicket ticket={trade} onClose={() => setTrade(null)} />
     </section>
   );
 }

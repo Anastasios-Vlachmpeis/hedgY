@@ -157,15 +157,49 @@ class OrderRequest(BaseModel):
     action: Literal["buy", "sell"] = "buy"
     notionalUsd: float = Field(gt=0, le=10_000_000)
     symbol: str | None = None      # stocks
+    order_type: Literal["market", "limit"] = "market"  # stocks
+    limit_price: float | None = None                   # stocks (limit only)
     market_id: str | None = None   # predictions (unified market id)
     side: Literal["YES", "NO"] | None = None  # predictions
+    venue: str | None = None       # predictions: bet at this venue's price (kalshi|polymarket)
 
 
-def _prediction_price(market_id: str, side: str) -> tuple[float | None, str | None]:
-    """(live side price, question) for a unified market id, from the live store."""
+class CombinedEquityLeg(BaseModel):
+    symbol: str
+    notionalUsd: float = Field(gt=0, le=10_000_000)
+    action: Literal["buy", "sell"] = "buy"
+    order_type: Literal["market", "limit"] = "market"
+    limit_price: float | None = None
+
+
+class CombinedHedgeLeg(BaseModel):
+    market_id: str
+    side: Literal["YES", "NO"]
+    notionalUsd: float = Field(gt=0, le=10_000_000)
+    venue: str | None = None
+
+
+class CombinedOrderRequest(BaseModel):
+    """An equity exposure paired with a prediction-market hedge, placed as one
+    grouped position (both legs share a group_id in the ledger)."""
+
+    equity: CombinedEquityLeg
+    hedge: CombinedHedgeLeg
+
+
+def _prediction_price(market_id: str, side: str, venue: str | None = None) -> tuple[float | None, str | None]:
+    """(live side price, question) for a unified market id, from the live store.
+
+    When `venue` is given, price at THAT venue's member market; otherwise use the
+    best price across venues.
+    """
     detail = store.get_unified_detail(market_id)
     if detail is None:
         return None, None
+    if venue:
+        member = next((m for m in detail.member_markets if m.venue == venue), None)
+        if member is not None:
+            return (member.yes_price if side == "YES" else member.no_price), detail.canonical_question
     quote = detail.best_yes if side == "YES" else detail.best_no
     return (quote.price if quote else None), detail.canonical_question
 
@@ -219,10 +253,15 @@ def create_order(req: OrderRequest) -> dict:
     if req.kind == "stock":
         if not req.symbol:
             raise HTTPException(status_code=422, detail="stock order requires 'symbol'")
-        price = stock_price(req.symbol)
-        if price is None:
-            raise HTTPException(status_code=503, detail=f"no live price for {req.symbol}")
-        order_id = place_alpaca_order(req.symbol, req.notionalUsd, req.action)
+        if req.order_type == "limit":
+            if not req.limit_price or req.limit_price <= 0:
+                raise HTTPException(status_code=422, detail="limit order requires a positive 'limit_price'")
+            price = req.limit_price  # ledger fills at the limit price
+        else:
+            price = stock_price(req.symbol)
+            if price is None:
+                raise HTTPException(status_code=503, detail=f"no live price for {req.symbol}")
+        order_id = place_alpaca_order(req.symbol, req.notionalUsd, req.action, req.order_type, req.limit_price)
         try:
             result = account_service.place_order(
                 kind="stock", action=req.action, notional=req.notionalUsd, price=price,
@@ -236,7 +275,7 @@ def create_order(req: OrderRequest) -> dict:
     # prediction
     if not req.market_id or req.side not in ("YES", "NO"):
         raise HTTPException(status_code=422, detail="prediction order requires 'market_id' and side YES|NO")
-    price, question = _prediction_price(req.market_id, req.side)
+    price, question = _prediction_price(req.market_id, req.side, req.venue)
     if price is None:
         raise HTTPException(status_code=503, detail="no live price for that market/side")
     try:
@@ -248,6 +287,55 @@ def create_order(req: OrderRequest) -> dict:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     account_service.record_equity(account_service.account(_mark)["equity"], force=True)
     return result
+
+
+@app.post("/orders/combined")
+def create_combined_order(req: CombinedOrderRequest) -> dict:
+    """Place an equity leg and a prediction hedge as one grouped position."""
+    import uuid
+
+    group_id = f"grp-{uuid.uuid4().hex[:12]}"
+    eq, hg = req.equity, req.hedge
+
+    # ── price both legs up front ───────────────────────────────────────────
+    if eq.order_type == "limit":
+        if not eq.limit_price or eq.limit_price <= 0:
+            raise HTTPException(status_code=422, detail="limit order requires a positive 'limit_price'")
+        eq_price = eq.limit_price
+    else:
+        eq_price = stock_price(eq.symbol)
+        if eq_price is None:
+            raise HTTPException(status_code=503, detail=f"no live price for {eq.symbol}")
+
+    hg_price, question = _prediction_price(hg.market_id, hg.side, hg.venue)
+    if hg_price is None:
+        raise HTTPException(status_code=503, detail="no live price for that market/side")
+
+    # ── pre-check funds so we never half-fill a combined position ──────────
+    needed = (eq.notionalUsd if eq.action == "buy" else 0.0) + hg.notionalUsd
+    buying_power = account_service.account(_mark)["buying_power"]
+    if needed > buying_power + 1e-9:
+        raise HTTPException(
+            status_code=400,
+            detail=f"insufficient funds: need ${needed:,.2f}, have ${buying_power:,.2f}",
+        )
+
+    # ── place both legs under the shared group_id ─────────────────────────
+    order_id = place_alpaca_order(eq.symbol, eq.notionalUsd, eq.action, eq.order_type, eq.limit_price)
+    try:
+        equity_res = account_service.place_order(
+            kind="stock", action=eq.action, notional=eq.notionalUsd, price=eq_price,
+            symbol=eq.symbol.upper(), label=eq.symbol.upper(), alpaca_order_id=order_id, group_id=group_id,
+        )
+        hedge_res = account_service.place_order(
+            kind="prediction", action="buy", notional=hg.notionalUsd, price=hg_price,
+            market_id=hg.market_id, side=hg.side, label=question, group_id=group_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    account_service.record_equity(account_service.account(_mark)["equity"], force=True)
+    return {"group_id": group_id, "equity": equity_res, "hedge": hedge_res}
 
 
 @app.get("/")

@@ -35,6 +35,7 @@ def _row_to_position(row: sqlite3.Row) -> dict:
         "qty": row["qty"],
         "avg_entry": row["avg_entry"],
         "label": row["label"],
+        "group_id": row["group_id"],
         "opened_at": row["opened_at"],
     }
 
@@ -72,6 +73,7 @@ class AccountService:
                     qty REAL NOT NULL,
                     avg_entry REAL NOT NULL,
                     label TEXT,
+                    group_id TEXT,
                     opened_at REAL NOT NULL
                 );
                 CREATE TABLE IF NOT EXISTS trades (
@@ -87,6 +89,7 @@ class AccountService:
                     realized_pnl REAL NOT NULL DEFAULT 0,
                     alpaca_order_id TEXT,
                     label TEXT,
+                    group_id TEXT,
                     ts REAL NOT NULL
                 );
                 CREATE TABLE IF NOT EXISTS equity_log (
@@ -97,6 +100,11 @@ class AccountService:
                 """
             )
             conn.execute("INSERT OR IGNORE INTO account (id, cash, total_deposited) VALUES (1, 0, 0)")
+            # migrate older databases that predate combined-position grouping
+            for table in ("positions", "trades"):
+                cols = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+                if "group_id" not in cols:
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN group_id TEXT")
             conn.commit()
         finally:
             conn.close()
@@ -143,15 +151,25 @@ class AccountService:
 
     # ---- positions --------------------------------------------------------
     def _find_position(
-        self, conn: sqlite3.Connection, *, kind: str, symbol: str | None, market_id: str | None, side: str | None
+        self,
+        conn: sqlite3.Connection,
+        *,
+        kind: str,
+        symbol: str | None,
+        market_id: str | None,
+        side: str | None,
+        group_id: str | None,
     ) -> sqlite3.Row | None:
+        # `IS` (not `=`) so group_id NULL matches standalone positions while a
+        # combined leg only merges with another leg of the same group.
         if kind == "stock":
             return conn.execute(
-                "SELECT * FROM positions WHERE kind = 'stock' AND symbol = ?", (symbol,)
+                "SELECT * FROM positions WHERE kind = 'stock' AND symbol = ? AND group_id IS ?",
+                (symbol, group_id),
             ).fetchone()
         return conn.execute(
-            "SELECT * FROM positions WHERE kind = 'prediction' AND market_id = ? AND side = ?",
-            (market_id, side),
+            "SELECT * FROM positions WHERE kind = 'prediction' AND market_id = ? AND side = ? AND group_id IS ?",
+            (market_id, side, group_id),
         ).fetchone()
 
     def positions(self) -> list[dict]:
@@ -175,6 +193,7 @@ class AccountService:
         side: str | None = None,
         label: str | None = None,
         alpaca_order_id: str | None = None,
+        group_id: str | None = None,
     ) -> dict:
         """Apply a fill to the ledger. `price` is the (already-fetched) fill price.
 
@@ -198,15 +217,15 @@ class AccountService:
         conn = self._connect()
         try:
             if action == "buy":
-                trade = self._apply_buy(conn, kind, notional, price, symbol, market_id, side, label, alpaca_order_id)
+                trade = self._apply_buy(conn, kind, notional, price, symbol, market_id, side, label, alpaca_order_id, group_id)
             else:
-                trade = self._apply_sell(conn, kind, notional, price, symbol, market_id, side, label, alpaca_order_id)
+                trade = self._apply_sell(conn, kind, notional, price, symbol, market_id, side, label, alpaca_order_id, group_id)
             conn.commit()
             return {"trade": trade, "account": self._summary(conn)}
         finally:
             conn.close()
 
-    def _apply_buy(self, conn, kind, notional, price, symbol, market_id, side, label, alpaca_order_id) -> dict:
+    def _apply_buy(self, conn, kind, notional, price, symbol, market_id, side, label, alpaca_order_id, group_id) -> dict:
         cash = self._account_row(conn)["cash"]
         if notional > cash + EPS:
             raise ValueError(f"insufficient funds: need ${notional:,.2f}, have ${cash:,.2f}")
@@ -214,12 +233,12 @@ class AccountService:
         qty = notional / price
         conn.execute("UPDATE account SET cash = cash - ? WHERE id = 1", (notional,))
 
-        existing = self._find_position(conn, kind=kind, symbol=symbol, market_id=market_id, side=side)
+        existing = self._find_position(conn, kind=kind, symbol=symbol, market_id=market_id, side=side, group_id=group_id)
         if existing is None:
             conn.execute(
-                "INSERT INTO positions (kind, symbol, market_id, side, qty, avg_entry, label, opened_at) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                (kind, symbol, market_id, side, qty, price, label, time.time()),
+                "INSERT INTO positions (kind, symbol, market_id, side, qty, avg_entry, label, group_id, opened_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (kind, symbol, market_id, side, qty, price, label, group_id, time.time()),
             )
         else:
             new_qty = existing["qty"] + qty
@@ -229,10 +248,10 @@ class AccountService:
                 "UPDATE positions SET qty = ?, avg_entry = ?, label = COALESCE(?, label) WHERE id = ?",
                 (new_qty, new_avg, label, existing["id"]),
             )
-        return self._record_trade(conn, kind, "buy", symbol, market_id, side, qty, price, notional, 0.0, alpaca_order_id, label)
+        return self._record_trade(conn, kind, "buy", symbol, market_id, side, qty, price, notional, 0.0, alpaca_order_id, label, group_id)
 
-    def _apply_sell(self, conn, kind, notional, price, symbol, market_id, side, label, alpaca_order_id) -> dict:
-        pos = self._find_position(conn, kind=kind, symbol=symbol, market_id=market_id, side=side)
+    def _apply_sell(self, conn, kind, notional, price, symbol, market_id, side, label, alpaca_order_id, group_id) -> dict:
+        pos = self._find_position(conn, kind=kind, symbol=symbol, market_id=market_id, side=side, group_id=group_id)
         if pos is None or pos["qty"] <= EPS:
             raise ValueError("no position to sell")
 
@@ -248,14 +267,14 @@ class AccountService:
             conn.execute("UPDATE positions SET qty = ? WHERE id = ?", (remaining, pos["id"]))
         return self._record_trade(
             conn, kind, "sell", symbol, market_id, side, qty_to_sell, price, proceeds, realized, alpaca_order_id,
-            label or pos["label"],
+            label or pos["label"], pos["group_id"],
         )
 
-    def _record_trade(self, conn, kind, action, symbol, market_id, side, qty, price, notional, realized, alpaca_order_id, label) -> dict:
+    def _record_trade(self, conn, kind, action, symbol, market_id, side, qty, price, notional, realized, alpaca_order_id, label, group_id=None) -> dict:
         cur = conn.execute(
             "INSERT INTO trades (kind, action, symbol, market_id, side, qty, price, notional, realized_pnl, "
-            "alpaca_order_id, label, ts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (kind, action, symbol, market_id, side, qty, price, notional, realized, alpaca_order_id, label, time.time()),
+            "alpaca_order_id, label, group_id, ts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (kind, action, symbol, market_id, side, qty, price, notional, realized, alpaca_order_id, label, group_id, time.time()),
         )
         return {
             "id": cur.lastrowid,
@@ -270,6 +289,7 @@ class AccountService:
             "realized_pnl": realized,
             "alpaca_order_id": alpaca_order_id,
             "label": label,
+            "group_id": group_id,
         }
 
     def trades(self, limit: int = 100) -> list[dict]:
@@ -400,10 +420,20 @@ def stock_price(symbol: str) -> float | None:
         return None
 
 
-def place_alpaca_order(symbol: str, notional: float, side: str) -> str | None:
-    """Fire a real Alpaca paper market order; return its id (best-effort)."""
+def place_alpaca_order(
+    symbol: str, notional: float, side: str, order_type: str = "market", limit_price: float | None = None
+) -> str | None:
+    """Fire a real Alpaca paper order (market or limit); return its id (best-effort)."""
     if not settings.alpaca_key_id:
         return None
+    if order_type == "limit" and limit_price:
+        # Alpaca limit orders are qty-based (notional is market-only).
+        payload = {
+            "symbol": symbol, "qty": round(notional / limit_price, 4), "side": side,
+            "type": "limit", "limit_price": round(limit_price, 2), "time_in_force": "day",
+        }
+    else:
+        payload = {"symbol": symbol, "notional": round(notional, 2), "side": side, "type": "market", "time_in_force": "day"}
     try:
         r = httpx.post(
             f"{settings.alpaca_trading_url}/v2/orders",
@@ -412,7 +442,7 @@ def place_alpaca_order(symbol: str, notional: float, side: str) -> str | None:
                 "APCA-API-SECRET-KEY": settings.alpaca_secret_key,
                 "Content-Type": "application/json",
             },
-            json={"symbol": symbol, "notional": round(notional, 2), "side": side, "type": "market", "time_in_force": "day"},
+            json=payload,
             timeout=settings.http_timeout_seconds,
         )
         if r.status_code >= 400:

@@ -104,7 +104,7 @@ export function HeroLanding() {
 /* ── nav ─────────────────────────────────────────────────────────────────── */
 
 const NAV_LINKS = [
-  { label: "Markets", href: "/markets" },
+  { label: "Dashboard", href: "/dashboard" },
   { label: "Platform", href: "/signup" },
 ];
 

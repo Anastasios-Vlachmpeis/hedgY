@@ -6,8 +6,9 @@ import { X, ArrowUpRight, Layers } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { usdCompact } from "@/lib/format";
-import { TradeButton } from "@/components/trade/trade-modal";
-import { yesCents, noCents, type MarketEvent, type VenueQuote } from "@/lib/mockData";
+import { OrderTicket, type OrderTicketData } from "@/components/trade/order-ticket";
+import { HedgeTicket, type HedgeTicketData } from "@/components/trade/hedge-ticket";
+import { yesCents, type MarketEvent, type VenueQuote } from "@/lib/mockData";
 
 const VENUE: Record<string, { name: string; color: string }> = {
   kalshi: { name: "Kalshi", color: "#12b886" },
@@ -85,9 +86,26 @@ function DetailBody({ event, onClose }: { event: MarketEvent; onClose: () => voi
     return () => window.removeEventListener("keydown", h);
   }, [onClose]);
 
+  const [bet, setBet] = React.useState(false);
+  const [hedge, setHedge] = React.useState(false);
+
   const members = event.members ?? [];
   const yes = event.yesProbability ?? 0;
-  const no = event.noProbability ?? 1 - yes;
+
+  const predTicket: OrderTicketData = {
+    kind: "prediction",
+    marketId: event.id,
+    question: event.title,
+    yes,
+    venues: members.length ? members : undefined,
+    defaultSide: "YES",
+  };
+  const hedgeTicket: HedgeTicketData = {
+    marketId: event.id,
+    question: event.title,
+    yes,
+    venues: members.length ? members : undefined,
+  };
 
   // cross-venue edge: spread between the best and worst YES across venues
   const yesPrices = members.map((m) => m.yes).filter((v) => v > 0);
@@ -175,34 +193,29 @@ function DetailBody({ event, onClose }: { event: MarketEvent; onClose: () => voi
         </div>
 
         {/* trade */}
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          <TradeButton
-            kind="prediction"
-            tone="yes"
-            className="w-full py-2.5 text-[13px]"
-            label={event.title}
-            marketId={event.id}
-            side="YES"
-            price={yes}
+        <div className="mt-5 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => setBet(true)}
+            className="w-full rounded-[10px] bg-[#9580ff] py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#7c3aed]"
           >
-            Buy Yes <span className="font-num tabular-nums opacity-80">{yesCents(yes)}¢</span>
-          </TradeButton>
-          <TradeButton
-            kind="prediction"
-            tone="no"
-            className="w-full py-2.5 text-[13px]"
-            label={event.title}
-            marketId={event.id}
-            side="NO"
-            price={no}
+            Place bet
+          </button>
+          <button
+            type="button"
+            onClick={() => setHedge(true)}
+            className="w-full rounded-[10px] border border-[#dad9fc] bg-[#f3f1ff] py-2.5 text-[13px] font-semibold text-[#9580ff] transition-colors hover:bg-[#e9e6ff]"
           >
-            Buy No <span className="font-num tabular-nums opacity-80">{noCents(yes)}¢</span>
-          </TradeButton>
+            Hedge with this market
+          </button>
         </div>
         <p className="mt-3 text-center text-[11px] text-[#a3a3a3]">
           Fills at the best available price across venues.
         </p>
       </div>
+
+      <OrderTicket ticket={bet ? predTicket : null} onClose={() => setBet(false)} />
+      <HedgeTicket ticket={hedge ? hedgeTicket : null} onClose={() => setHedge(false)} />
     </div>
   );
 
