@@ -949,16 +949,21 @@ function AssetChartCard({ asset }: { asset: Asset }) {
 
 /* ── Arc probability gauge with embedded label ── */
 function ArcGauge({ pct, bearish }: { pct: number; bearish?: boolean }) {
-  const r = 16, cx = 21, cy = 21;
-  const arc = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
   const color = bearish ? "#ef4444" : "#22c55e";
+  // r=22, cx=26, cy=26 → arc from (4,26) to (48,26), top at (26,4)
+  const arc = "M 4 26 A 22 22 0 0 1 48 26";
   return (
-    <svg viewBox="0 0 42 30" className="w-[54px]">
-      <path d={arc} fill="none" stroke="#ececec" strokeWidth="4" strokeLinecap="round" pathLength={100} />
-      <path d={arc} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" pathLength={100} strokeDasharray={`${pct} 100`} />
-      <text x={cx} y="14" textAnchor="middle" fontSize="11" fontWeight="700" fill="#0a0a0a" fontFamily="inherit">{pct}%</text>
-      <text x={cx} y="27" textAnchor="middle" fontSize="6.5" fill="#a3a3a3" fontFamily="inherit">chance</text>
-    </svg>
+    <div className="relative w-[52px] shrink-0">
+      <svg viewBox="0 0 52 32" className="w-full">
+        <path d={arc} fill="none" stroke="#ececec" strokeWidth="5" strokeLinecap="round" pathLength={100} />
+        <path d={arc} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" pathLength={100} strokeDasharray={`${pct} 100`} />
+      </svg>
+      {/* HTML text overlay — centered inside the arc bowl (top=4, chord=26) */}
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center" style={{ paddingTop: 9 }}>
+        <span className="text-[11px] font-bold leading-none text-[#0a0a0a]">{pct}%</span>
+        <span className="mt-[3px] text-[7px] leading-none text-[#a3a3a3]">chance</span>
+      </div>
+    </div>
   );
 }
 
