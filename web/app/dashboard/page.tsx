@@ -6,18 +6,13 @@ import {
   Anchor,
   Apple,
   ArrowRight,
-  BadgeDollarSign,
-  BriefcaseBusiness,
   Building2,
   CheckCircle2,
   Cpu,
   ExternalLink,
   FileText,
-  Folder,
   Gauge,
-  Info,
   Landmark,
-  Pencil,
   Plus,
   SearchCheck,
   ShieldCheck,
@@ -636,28 +631,6 @@ const riskMarkets: RiskMarket[] = [
 
 const timeframes = ["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "All"];
 
-const featureItems = [
-  {
-    title: "Access global markets",
-    sub: "Stocks, ETFs, Bonds, Options",
-    icon: BriefcaseBusiness,
-  },
-  {
-    title: "Trade real-world events",
-    sub: "Prediction markets on anything",
-    icon: BadgeDollarSign,
-  },
-  {
-    title: "Smart hedge engine",
-    sub: "Optimized ratio. Lower risk",
-    icon: SearchCheck,
-  },
-  {
-    title: "One unified position",
-    sub: "All your views. One dashboard",
-    icon: Folder,
-  },
-];
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("en-US", {
@@ -1073,51 +1046,27 @@ function RiskMarketsCard({
 
 function PositionCard({ asset }: { asset: Asset }) {
   return (
-    <Card className="rounded-[18px] border border-[var(--border-soft)] bg-white shadow-none">
-      <CardContent className="p-5">
-        <div className="text-[14px] font-semibold text-[var(--text-primary)]">Your position (long)</div>
-        <div className="mt-6 flex items-start justify-between">
-          <div>
-            <div className="text-[17px] font-bold text-[var(--text-primary)]">{asset.symbol}</div>
-            <div className="mt-1 text-[13px] font-medium text-[#40506C]">
-              {asset.position.shares} shares
-            </div>
+    <div className="rounded-[18px] border border-[#ececec] bg-white p-5">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">Your position</p>
+      <div className="mt-4 flex items-baseline justify-between">
+        <span className="text-[22px] font-bold tracking-[-0.02em] text-[#0a0a0a]">{asset.symbol}</span>
+        <span className="text-[18px] font-bold tracking-[-0.02em] text-[#0a0a0a]">{formatCurrency(asset.position.notional)}</span>
+      </div>
+      <p className="mt-1 text-[12px] text-[#a3a3a3]">{asset.position.shares} shares · {asset.position.portfolioPct} of portfolio</p>
+      <div className="my-4 border-t border-[#f0f0f0]" />
+      <div className="space-y-3">
+        {[
+          ["Avg. price", formatCurrency(asset.position.avgPrice), "neutral"],
+          ["Unrealized P&L", `${formatSignedCurrency(asset.position.pnl)} (${asset.position.pnlPct})`, asset.position.pnl >= 0 ? "green" : "red"],
+          ["Volatility (1Y)", asset.position.volatility, "neutral"],
+        ].map(([label, value, color]) => (
+          <div key={label} className="flex items-center justify-between">
+            <span className="text-[12px] text-[#737373]">{label}</span>
+            <span className={cn("text-[13px] font-semibold", color === "green" ? "text-[#16a34a]" : color === "red" ? "text-[#dc2626]" : "text-[#0a0a0a]")}>{value}</span>
           </div>
-          <div className="text-right">
-            <div className="text-[20px] font-bold text-[var(--text-primary)]">
-              {formatCurrency(asset.position.notional)}
-            </div>
-            <div className="mt-1 text-[12px] font-semibold text-[#40506C]">
-              ≈ {asset.position.portfolioPct} of portfolio
-            </div>
-          </div>
-        </div>
-        <div className="my-4 border-t border-[var(--border-soft)]" />
-        <div className="space-y-3 text-[12px] font-semibold">
-          <div className="flex items-center justify-between">
-            <span className="text-[var(--text-secondary)]">Avg. price</span>
-            <span className="text-[#1E293B]">{formatCurrency(asset.position.avgPrice)}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-[var(--text-secondary)]">Unrealized P&L</span>
-            <span className="text-[var(--positive)]">
-              {formatSignedCurrency(asset.position.pnl)} ({asset.position.pnlPct})
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-[var(--text-secondary)]">Volatility (1Y)</span>
-            <span className="text-[#1E293B]">{asset.position.volatility}</span>
-          </div>
-        </div>
-        <Button
-          variant="outline"
-          className="mt-4 h-10 w-full rounded-[12px] border-[var(--border-soft)] bg-white text-[13px] font-semibold text-[var(--purple)] hover:border-[#D8D2FF] hover:bg-[#FBFAFF]"
-        >
-          <Pencil className="size-4" strokeWidth={1.9} />
-          Edit position
-        </Button>
-      </CardContent>
-    </Card>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -1133,132 +1082,72 @@ function RecommendedHedgeCard({
   const protectedProbability = market.hedgeSide === "NO" ? market.no : market.yes;
 
   return (
-    <Card className="rounded-[18px] border border-[var(--border-soft)] bg-white shadow-none">
-      <CardContent className="p-5">
-        <div className="flex items-center gap-2 text-[14px] font-semibold text-[var(--text-primary)]">
-          <Sparkles className="size-4 text-[var(--purple)]" fill="#7C5CFF" />
-          Recommended hedge
-        </div>
-
-        <div className="mt-5 grid grid-cols-[86px_1fr] gap-5">
-          <div className="rounded-[14px] bg-[var(--purple-light)] p-4">
-            <div className="text-[11px] font-semibold text-[var(--purple)]">Hedge ratio</div>
-            <div className="mt-2 text-[30px] font-bold tracking-[-0.03em] text-[var(--purple)]">
-              {market.hedgeRatio.toFixed(2)}
-            </div>
+    <div className="rounded-[18px] border border-[#ececec] bg-white p-5">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">Recommended hedge</p>
+      <div className="mt-4 space-y-3">
+        {[
+          ["Hedge ratio", market.hedgeRatio.toFixed(2), "neutral"],
+          ["Hedge side", market.hedgeSide, "neutral"],
+          ["Protection", `~${market.protectionPct}%`, "green"],
+          ["Probability", `${protectedProbability}%`, "neutral"],
+          ["Market", market.title, "neutral"],
+        ].map(([label, value, color]) => (
+          <div key={label} className="flex items-start justify-between gap-4">
+            <span className="text-[12px] text-[#737373]">{label}</span>
+            <span className={cn("text-right text-[13px] font-semibold leading-snug", color === "green" ? "text-[#16a34a]" : "text-[#0a0a0a]")}>{value}</span>
           </div>
-          <div className="pt-1">
-            <div className="text-[11px] font-semibold text-[var(--text-muted)]">
-              {"You're protected if"}
-            </div>
-            <div className="mt-3 flex items-start justify-between gap-3">
-              <div>
-                <div className="text-[14px] font-bold leading-snug text-[var(--text-primary)]">
-                  {market.title}
-                </div>
-                <div className="mt-1 text-[12px] font-bold text-[#4F5C73]">({market.hedgeSide})</div>
-              </div>
-              <div className="text-right text-[11px] font-semibold text-[var(--text-secondary)]">
-                <div className="flex items-center justify-end gap-1 text-[#1E293B]">
-                  {protectedProbability}%
-                  <Info className="size-3 text-[var(--text-muted)]" />
-                </div>
-                probability
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <p className="mt-5 text-[13px] font-medium leading-6 text-[var(--text-secondary)]">
-          This hedge reduces downside by ~{market.protectionPct}% based on historical correlation.
-        </p>
-
-        <Button
-          type="button"
-          onClick={onApply}
-          className={cn(
-            "mt-4 h-11 w-full rounded-[12px] text-[13px] font-semibold shadow-[0_9px_24px_rgba(124,92,255,0.24)]",
-            applied
-              ? "bg-[#050505] text-white hover:bg-[#050505]"
-              : "bg-[var(--purple)] text-white hover:bg-[#6C4DF1]",
-          )}
-        >
-          {applied ? <CheckCircle2 className="size-4" /> : <Zap className="size-4" fill="currentColor" />}
-          {applied ? "Hedge applied" : "Apply hedge"}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-function MiniLine({
-  data,
-  color,
-  direction,
-}: {
-  data: Array<{ t: string; v: number }>;
-  color: string;
-  direction: "up" | "down";
-}) {
-  return (
-    <div className="h-[56px] w-[150px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <RechartsLineChart data={data} margin={{ top: 4, right: 2, bottom: 2, left: 2 }}>
-          <Line
-            type="monotone"
-            dataKey="v"
-            stroke={color}
-            strokeWidth={2}
-            dot={false}
-            isAnimationActive={false}
-          />
-          <YAxis hide domain={direction === "up" ? ["dataMin - 3", "dataMax + 3"] : ["dataMin - 3", "dataMax + 3"]} />
-        </RechartsLineChart>
-      </ResponsiveContainer>
+        ))}
+      </div>
+      <div className="my-4 border-t border-[#f0f0f0]" />
+      <button
+        type="button"
+        onClick={onApply}
+        className={cn(
+          "flex h-9 w-full items-center justify-center gap-2 rounded-[9px] text-[12px] font-semibold transition-opacity hover:opacity-80",
+          applied ? "bg-[#f0f0f0] text-[#0a0a0a]" : "bg-[#0a0a0a] text-white",
+        )}
+      >
+        {applied ? <CheckCircle2 className="size-3.5" /> : <Zap className="size-3.5" fill="currentColor" />}
+        {applied ? "Hedge applied" : "Apply hedge"}
+      </button>
     </div>
   );
 }
 
 function ProjectedOutcomesCard({ market }: { market: RiskMarket }) {
   return (
-    <Card className="rounded-[18px] border border-[var(--border-soft)] bg-white shadow-none">
-      <CardContent className="p-5">
-        <div className="text-[14px] font-semibold text-[var(--text-primary)]">Projected outcomes</div>
-        <div className="mt-5 space-y-4">
-          <div className="grid grid-cols-[1fr_auto] items-center gap-4">
-            <div>
-              <div className="text-[12px] font-semibold text-[var(--text-secondary)]">
-                If event happens ({market.hedgeSide === "YES" ? "hedge pays" : "Fed cuts"})
-              </div>
-              <div className="mt-3 flex items-baseline gap-6">
-                <span className="text-[17px] font-bold text-[var(--positive)]">
-                  {formatSignedCurrency(market.outcomeUp).replace(".00", "")}
-                </span>
-                <span className="text-[12px] font-bold text-[var(--positive)]">{market.outcomeUpPct}</span>
-              </div>
-            </div>
-            <MiniLine data={market.sparkUp} color="#6A63FF" direction="up" />
-          </div>
-          <div className="border-t border-[var(--border-soft)]" />
-          <div className="grid grid-cols-[1fr_auto] items-center gap-4">
-            <div>
-              <div className="text-[12px] font-semibold text-[var(--text-secondary)]">
-                If event does not happen
-              </div>
-              <div className="mt-3 flex items-baseline gap-6">
-                <span className="text-[17px] font-bold text-[var(--negative)]">
-                  {formatSignedCurrency(market.outcomeDown).replace(".00", "")}
-                </span>
-                <span className="text-[12px] font-bold text-[var(--negative)]">
-                  {market.outcomeDownPct}
-                </span>
-              </div>
-            </div>
-            <MiniLine data={market.sparkDown} color="#EC4899" direction="down" />
-          </div>
+    <div className="rounded-[18px] border border-[#ececec] bg-white p-5">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">Projected outcomes</p>
+      <div className="mt-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] text-[#737373]">Event happens</span>
+          <span className="text-[13px] font-semibold text-[#16a34a]">
+            {formatSignedCurrency(market.outcomeUp).replace(".00", "")}
+            <span className="ml-1.5 text-[12px]">{market.outcomeUpPct}</span>
+          </span>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] text-[#737373]">Event doesn&apos;t happen</span>
+          <span className="text-[13px] font-semibold text-[#dc2626]">
+            {formatSignedCurrency(market.outcomeDown).replace(".00", "")}
+            <span className="ml-1.5 text-[12px]">{market.outcomeDownPct}</span>
+          </span>
+        </div>
+        <div className="my-1 border-t border-[#f0f0f0]" />
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] text-[#737373]">Hedge side</span>
+          <span className="text-[13px] font-semibold text-[#0a0a0a]">{market.hedgeSide}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] text-[#737373]">Correlation</span>
+          <span className="text-[13px] font-semibold text-[#0a0a0a]">{market.correlation > 0 ? "+" : ""}{market.correlation.toFixed(2)}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] text-[#737373]">Protection</span>
+          <span className="text-[13px] font-semibold text-[#16a34a]">~{market.protectionPct}%</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1276,68 +1165,43 @@ function SummaryCard({
   const potentialReturn = (Math.max(market.outcomeUp, 0) / netCost) * 100 + 5.7;
 
   return (
-    <Card className="rounded-[18px] border border-[var(--border-soft)] bg-white shadow-none">
-      <CardContent className="p-5">
-        <div className="text-[14px] font-semibold text-[var(--text-primary)]">Summary</div>
-        <div className="mt-6">
-          <div className="text-[12px] font-semibold text-[var(--text-secondary)]">Net cost</div>
-          <div className="mt-2 text-[20px] font-bold text-[var(--text-primary)]">
-            {asset.symbol === "LMT" && market.id === "fed-rate-cut-july"
-              ? "$29,380.00"
-              : formatCurrency(netCost)}
-          </div>
+    <div className="rounded-[18px] border border-[#ececec] bg-white p-5">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">Summary</p>
+      <div className="mt-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] text-[#737373]">Net cost</span>
+          <span className="text-[13px] font-semibold text-[#0a0a0a]">
+            {asset.symbol === "LMT" && market.id === "fed-rate-cut-july" ? "$29,380" : formatCurrency(netCost)}
+          </span>
         </div>
-        <div className="my-5 border-t border-[var(--border-soft)]" />
-        <div>
-          <div className="text-[12px] font-semibold text-[var(--text-secondary)]">Potential return</div>
-          <div className="mt-2 text-[20px] font-bold text-[var(--positive)]">
-            {asset.symbol === "LMT" && market.id === "fed-rate-cut-july"
-              ? "+14.2%"
-              : `+${potentialReturn.toFixed(1)}%`}
-          </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] text-[#737373]">Potential return</span>
+          <span className="text-[13px] font-semibold text-[#16a34a]">
+            {asset.symbol === "LMT" && market.id === "fed-rate-cut-july" ? "+14.2%" : `+${potentialReturn.toFixed(1)}%`}
+          </span>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onOpenAnalysis}
-          className="mt-6 h-11 w-full rounded-[12px] border-[var(--border-soft)] bg-white text-[13px] font-semibold text-[var(--purple)] hover:border-[#D8D2FF] hover:bg-[#FBFAFF]"
-        >
-          View full analysis
-          <ArrowRight className="size-4" strokeWidth={2} />
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-function FeatureStrip() {
-  return (
-    <div className="grid grid-cols-4 gap-0 rounded-[18px] border border-[var(--border-soft)] bg-white px-5 py-4">
-      {featureItems.map((item, index) => {
-        const Icon = item.icon;
-        return (
-          <div
-            key={item.title}
-            className={cn(
-              "flex items-center gap-3 px-4",
-              index !== 0 && "border-l border-[var(--border-soft)]",
-            )}
-          >
-            <span className="flex size-10 items-center justify-center rounded-[12px] bg-[var(--purple-light)] text-[var(--purple)]">
-              <Icon className="size-[18px]" strokeWidth={1.9} />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-[12px] font-bold text-[var(--text-primary)]">{item.title}</span>
-              <span className="mt-1 block truncate text-[12px] font-medium text-[var(--text-secondary)]">
-                {item.sub}
-              </span>
-            </span>
-          </div>
-        );
-      })}
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] text-[#737373]">Hedge ratio</span>
+          <span className="text-[13px] font-semibold text-[#0a0a0a]">{market.hedgeRatio.toFixed(2)}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] text-[#737373]">Volume</span>
+          <span className="text-[13px] font-semibold text-[#0a0a0a]">{market.volume}</span>
+        </div>
+      </div>
+      <div className="my-4 border-t border-[#f0f0f0]" />
+      <button
+        type="button"
+        onClick={onOpenAnalysis}
+        className="flex h-9 w-full items-center justify-center gap-1.5 rounded-[9px] border border-[#ececec] bg-white text-[12px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#f5f5f5]"
+      >
+        View full analysis
+        <ArrowRight className="size-3.5" strokeWidth={2} />
+      </button>
     </div>
   );
 }
+
 
 function MarketBrowserModal({
   open,
@@ -1779,7 +1643,6 @@ export default function DashboardPage() {
           />
         </div>
 
-        <FeatureStrip />
       </div>
 
       <MarketBrowserModal
