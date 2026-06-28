@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Area, AreaChart, ResponsiveContainer, YAxis } from "recharts";
-import { ArrowDownToLine, ArrowUpFromLine, ChevronRight, Layers, Wallet, Coins, Hash } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, ChevronRight, Layers, Wallet, Coins, Hash, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { usd, signedUsd, pct } from "@/lib/format";
@@ -96,6 +96,12 @@ function TransferModal({
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  React.useEffect(() => {
+    const h = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [onClose]);
+
   async function submit() {
     if (amount <= 0) return;
     setLoading(true);
@@ -121,7 +127,16 @@ function TransferModal({
   }
 
   return (
-    <Modal open onClose={onClose}>
+    <div
+      className="scrim-in fixed inset-0 z-[100] flex items-end justify-center bg-[#0F172A]/35 p-0 backdrop-blur-[3px] sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+    >
+      <div
+        className="modal-in w-full max-w-md rounded-t-[22px] border border-[#E7EAF0] bg-white p-6 shadow-[0_30px_90px_-30px_rgba(15,23,42,0.45)] sm:rounded-[22px]"
+        onClick={(e) => e.stopPropagation()}
+      >
       <div className="mb-1 flex items-start justify-between">
         <div>
           <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[#0a0a0a]">
@@ -180,7 +195,8 @@ function TransferModal({
           </div>
         </>
       )}
-    </Modal>
+      </div>
+    </div>
   );
 }
 
@@ -196,8 +212,7 @@ function AccountHeader({
   breakdown?: PlatformBreakdown[];
   onSelectType?: (key: FilterKey) => void;
 }) {
-  const [valueOpen, setValueOpen] = React.useState(false);
-  const [pnlOpen, setPnlOpen] = React.useState(false);
+  const [breakdownOpen, setBreakdownOpen] = React.useState(false);
   const [transfer, setTransfer] = React.useState<null | "deposit" | "withdraw">(null);
 
   const up = portfolio.dayChange >= 0;
@@ -297,6 +312,9 @@ function AccountHeader({
         breakdown={breakdown}
         onSelectType={onSelectType}
       />
+      {transfer && (
+        <TransferModal mode={transfer} cash={portfolio.cash} onClose={() => setTransfer(null)} />
+      )}
     </>
   );
 }
