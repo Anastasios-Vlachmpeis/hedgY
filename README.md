@@ -1,117 +1,190 @@
-# Prediction Market Aggregator (backend)
+# hedgY
 
-Read-only FastAPI service that pulls **live** markets from **Kalshi** and
-**Polymarket**, normalizes them into one schema, groups duplicates across
-venues, computes the best price per group, and serves it over a clean API.
+**Trade the world's markets, and its outcomes.**
 
-> ⚠️ **Suggestion-only.** This service never executes trades. No auth, no order
-> management, no custody, no settlement, no database — by design.
+### [Live demo: parishack-web.vercel.app](https://parishack-web.vercel.app/)
 
-## How it works
+hedgY turns a worldview into a hedged, multi-instrument position. You pick a thesis (long defense, long biotech, long a shipping name), and hedgY automatically assembles the matching hedge against the one event that could blow it up: an election, an FDA decision, a blockade in the Strait of Hormuz. The equity leg and the prediction-market hedge are sized, scored, and placed as a single position, in one click.
 
-```
-                 ┌──────────────┐     ┌──────────────┐
-   every 60s ───▶│  connectors  │────▶│  matching    │────▶ in-memory store ──▶ API
-   (asyncio)     │ kalshi /     │     │ cluster() +  │      (atomic snapshot)
-                 │ polymarket   │     │ best price   │
-                 └──────────────┘     └──────────────┘
-```
+Stocks and crypto live on one venue. Real-world outcomes live on another. Nobody assembles the hedged position across both. That gap is the product.
 
-- **connectors/** — each venue normalizes its raw payload into `CanonicalMarket`.
-  Errors in one venue are caught and logged so the other still serves.
-- **matching.py** — `cluster(markets) -> list[UnifiedMarket]` groups duplicate
-  questions (fuzzy title similarity) and computes the cheapest price to take each
-  side across venues. Inverted YES/NO framing is normalized before comparison.
-  The matcher sits behind a `Matcher` protocol so an embedding + LLM-verify
-  implementation can drop in later without touching callers.
-- **store.py** — in-memory snapshot, swapped atomically by the background poller.
-- **taxonomy.py** — cheap deterministic `category`/`country`/`theme` inference;
-  the clean seam where a later LLM tagging pass plugs in.
+---
 
-## Run
+## Why this exists
+
+Retail investors already take directional bets every day. What they cannot do is hedge the tail risk that actually drives the outcome, because the instrument that prices that risk sits on a prediction market they have never opened, on a separate account, with separate funding, separate odds, and no tooling to size the offset correctly.
+
+hedgY closes that gap. It aggregates prediction markets across venues, matches them to your equity exposure, computes the hedge ratio, and executes both legs together. The aggregation is the table stakes. The structuring and auto-hedging is the moat.
+
+---
+
+## What's built
+
+This is a working full-stack product, not a mockup. The numbers on the dashboard are real marks against real market data.
+
+- **Cross-venue prediction aggregation.** Markets from Kalshi and Polymarket are normalized into a single canonical schema, deduplicated with a clustering matcher, and surfaced with the best available YES/NO price per side. No API keys required for the read-only feed.
+- **Automatic hedge structuring.** A keyword-driven classifier maps an equity thesis to a prediction-market hedge using a library of templates (defense and elections, pharma and the FDA, shipping and Hormuz, rate-sensitives and the Fed, crypto proxies and legislation).
+- **A paper trading wallet.** Every account starts with a $1000 ledger backed by SQLite. You can deposit, withdraw, buy stocks, buy prediction sides, and watch a real profit-and-loss curve build over time.
+- **Combined hedges.** An equity leg and a prediction hedge are placed as one grouped position sharing a `group_id`, then tracked, marked, and closed together.
+- **Position closing.** Liquidate a single leg by ledger id or an entire combined hedge by group, always at the live mark.
+- **Live pricing.** Stock and crypto prices come from Alpaca, with a server-sent-events stream powering live charts on the dashboard.
+- **A trading surface.** A full Next.js app with a marketing landing page, a dashboard hub, a hedge builder, a live portfolio view, per-asset trade tickets, and a Cmd+K command palette.
+
+---
+
+## Architecture
+
+Two services that talk over HTTP.
+
+### Backend (Python, FastAPI)
+
+Lives in `app/`. An always-on process that polls Kalshi and Polymarket on an interval, clusters the results into a unified market list held in an in-memory store, and serves the paper-trading account out of SQLite. Stocks route to Alpaca paper orders; the ledger is always the source of truth. Prediction fills happen in-app against live aggregator odds, so there is no real-money custody anywhere.
+
+Run it:
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-uvicorn app.main:app --reload
+.venv/bin/pip install -r requirements.txt
+.venv/bin/uvicorn app.main:app --reload
 ```
 
-The server primes its cache on startup (one fetch from both venues), then
-refreshes every 60s in the background.
+Interactive API docs are at `http://127.0.0.1:8000/docs`.
 
-## API
+### Frontend (Next.js 16, React 19)
 
-| Method & path        | Description                                              |
-|----------------------|----------------------------------------------------------|
-| `GET /markets`       | List `UnifiedMarket`s. Filters: `category`, `country`, `theme`. |
-| `GET /markets/{id}`  | One `UnifiedMarket` + its per-venue member markets.      |
-| `GET /health`        | `ok` + per-venue counts and last refresh time.           |
+Lives in `web/`. App Router, TypeScript, Tailwind v4, shadcn-style primitives, Recharts for payoff and portfolio visuals, Lightweight Charts for price history. Server-side API routes under `web/app/api/*` proxy the Python backend and call Alpaca directly for prices, bars, and the live stream.
 
-### curl examples
+Run it:
 
 ```bash
-# Merged markets from both venues
-curl -s http://127.0.0.1:8000/markets | python3 -m json.tool | head -40
-
-# Filter by inferred category
-curl -s "http://127.0.0.1:8000/markets?category=Sports" | python3 -m json.tool
-
-# Health + per-venue counts
-curl -s http://127.0.0.1:8000/health | python3 -m json.tool
-
-# Drill into one unified market (id from the /markets list, e.g. "u:kalshi:KX...")
-curl -s "http://127.0.0.1:8000/markets/u:kalshi:SOME-TICKER" | python3 -m json.tool
+cd web
+npm install
+npm run dev
 ```
 
-Interactive docs at `http://127.0.0.1:8000/docs`.
+### Both at once
+
+From the repo root:
+
+```bash
+npm run dev   # starts backend on :8000 and frontend on :3000
+```
+
+---
+
+## API reference
+
+All endpoints are served by the FastAPI app in `app/main.py`.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/` | Service metadata and endpoint listing |
+| `GET` | `/health` | Health, per-venue market counts, last refresh |
+| `GET` | `/markets` | Unified cross-venue markets (filters: `category`, `country`, `theme`) |
+| `GET` | `/markets/{unified_id}` | One unified market plus its per-venue members |
+| `GET` | `/suggestions` | Live hedge suggestions for a given `notional` |
+| `GET` | `/account` | Paper account: cash, equity, buying power, P&L |
+| `GET` | `/account/history` | Equity curve points |
+| `POST` | `/account/deposit` | Credit cash |
+| `POST` | `/account/withdraw` | Debit cash |
+| `POST` | `/account/reset` | Clear positions, trades, and equity log |
+| `GET` | `/positions` | Open positions marked to live prices |
+| `POST` | `/positions/close` | Close one position by `id` or a hedge by `group_id` |
+| `GET` | `/trades` | Trade history |
+| `POST` | `/orders` | Place a single-leg stock or prediction order |
+| `POST` | `/orders/combined` | Place an equity leg and a prediction hedge as one grouped position |
+
+The Next.js layer mirrors these under `/api/*` and adds Alpaca-backed routes: `/api/prices`, `/api/bars`, `/api/search`, `/api/risk-markets`, and the `/api/stream` SSE feed.
+
+---
 
 ## Configuration
 
-All optional, via environment variables (defaults shown):
+Copy the example files and fill in your keys.
 
-| Env var                     | Default | Meaning                              |
-|-----------------------------|---------|--------------------------------------|
-| `REFRESH_INTERVAL_SECONDS`  | `60`    | Background refresh cadence (min 5)   |
-| `FETCH_LIMIT`               | `150`   | Top-N markets (by volume) per venue  |
-| `KALSHI_EVENT_PAGES`        | `10`    | Max Kalshi event pages (200/page) scanned before the volume sort |
-| `HTTP_TIMEOUT_SECONDS`      | `10.0`  | Per-request timeout per venue        |
-| `MATCH_THRESHOLD`           | `0.85`  | difflib ratio cutoff for clustering  |
-| `KALSHI_BASE_URL`           | …       | Override Kalshi endpoint             |
-| `POLYMARKET_BASE_URL`       | …       | Override Polymarket endpoint         |
+```bash
+cp web/.env.example web/.env.local
+```
 
-Out-of-range env values are clamped to safe bounds at startup (a typo like
-`REFRESH_INTERVAL_SECONDS=0` cannot create a venue-hammering tight loop).
+The prediction-market aggregator runs with zero configuration. Keys are only needed for live stock data and paper stock orders.
 
-## Notable implementation decisions
+**Backend** (`app/config.py`, loaded from a root `.env`):
 
-A few choices worth calling out (all serve the "return real merged data" goal):
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `APCA_API_KEY_ID` | `""` | Alpaca paper key for stock data and orders |
+| `APCA_API_SECRET_KEY` | `""` | Alpaca paper secret |
+| `ALPACA_TRADING_URL` | `https://paper-api.alpaca.markets` | Alpaca paper trading API |
+| `ALPACA_DATA_URL` | `https://data.alpaca.markets` | Alpaca market data API |
+| `ACCOUNT_DB_PATH` | `app/account.db` | SQLite ledger location |
+| `DEFAULT_DEPOSIT` | `1000.0` | Starting wallet balance |
+| `REFRESH_INTERVAL_SECONDS` | `60` | Market poller cadence |
+| `MATCH_THRESHOLD` | `0.85` | Cross-venue clustering cutoff |
 
-- **Kalshi reads `/events?with_nested_markets=true`, not `/markets`.** The
-  `/markets` feed, sorted by volume, surfaces multivariate "parlay" combos whose
-  titles are junk for matching (`"yes LA,yes Over 4.5 runs,…"`). The events feed
-  gives the real human question, a native `category`, and the per-outcome label —
-  which is what makes cross-venue matching actually work.
-- **Matching = difflib + a discriminating-token guard.** Pure `difflib > 0.85`
-  over-merges templated markets ("Will USA win the World Cup?" vs "Will Brazil
-  win…") because the shared boilerplate dominates the character ratio. We keep
-  difflib as the core and additionally require that the *rare* tokens which differ
-  between two questions (entity names, numbers, year) are absent — i.e. only the
-  template differs. This is still simple and deterministic, and stays behind the
-  same `cluster()` seam for the future embedding + LLM matcher.
-- **Inverted YES/NO framing** ("no recession" vs "recession") is normalized by a
-  negation-parity flip before prices are compared.
-- **Unified ids are stable across refreshes** (derived from the smallest member
-  id, not the volatile highest-volume anchor), so `/markets/{id}` links keep working.
+**Frontend** (`web/.env.example`):
 
-## Data model
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `MARKETS_API_URL` | `http://localhost:8000` | Backend base URL (server-side only) |
+| `APCA_API_KEY_ID` | | Alpaca key for live prices and charts |
+| `APCA_API_SECRET_KEY` | | Alpaca secret |
 
-`CanonicalMarket` (per venue) → grouped into `UnifiedMarket` (cross-venue) with
-`best_yes` / `best_no` price quotes. `yes_price + no_price == 1.0`; "best" means
-the **lowest price to take that side** across members.
+---
 
-## What's intentionally NOT here
+## Deployment
 
-No order routing, OMS, ledger, wallet/custody, settlement, auth, or DB
-migrations. This first pass is a clean read-only aggregation core.
+The backend and frontend deploy separately because they have different runtime needs.
+
+The backend keeps an in-memory store warm and runs a background poller, so it needs an always-on process rather than a serverless function. It ships as a Docker image (`Dockerfile`) and runs on Railway (`railway.json`). A `Procfile` is included for buildpack-based hosts.
+
+```bash
+railway up --detach --service <your-service>
+```
+
+Set the backend environment variables from the table above on Railway. `PORT` is injected automatically and the container's `CMD` expands it at boot.
+
+The frontend is a standard Next.js app and deploys to Vercel. It is live at [parishack-web.vercel.app](https://parishack-web.vercel.app/).
+
+```bash
+cd web
+vercel --prod
+```
+
+Set `MARKETS_API_URL` to the public Railway backend URL, plus the Alpaca keys for live pricing.
+
+A note on the SQLite ledger: by default the container's database is ephemeral and resets on redeploy. The deploy ships a seeded snapshot of `app/account.db` so the live backend boots with positions already in place. For an account that survives redeploys and keeps new trades, attach a Railway persistent volume and point `ACCOUNT_DB_PATH` at it.
+
+---
+
+## Repository layout
+
+```
+app/                  FastAPI backend (routes, ledger, pricing, connectors)
+  main.py             API routes and the market poller
+  account.py          SQLite paper-trading ledger and Alpaca pricing
+  connectors/         Kalshi and Polymarket connectors
+  config.py           Environment-driven settings
+structuring/          Hedge templates and the suggestion engine
+web/                  Next.js frontend
+  app/                App Router pages and the /api proxy layer
+  components/         Dashboard, trade, markets, and UI components
+  lib/                Hedge math, server fetchers, brand constants
+Dockerfile            Backend container
+railway.json          Railway deploy config
+```
+
+---
+
+## Tests
+
+Backend ledger logic is covered by unit tests that need no network.
+
+```bash
+python3 -m pytest app/tests/test_account.py
+```
+
+---
+
+## The bet
+
+Prediction markets are about to absorb a category of risk that has never had a retail-facing hedge. The first product that lets a normal investor express a view and walk away holding the hedged version of it, automatically, wins the relationship before the rest of the market notices the category exists. hedgY is that product.
