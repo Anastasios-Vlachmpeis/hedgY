@@ -14,6 +14,7 @@ import {
   LineChart,
   Search,
   Settings,
+  ShieldCheck,
   Wallet,
   X,
 } from "lucide-react";
@@ -37,6 +38,7 @@ const themeVars = {
 
 const mainNav = [
   { label: "Home", href: "/dashboard", icon: Home, exact: true },
+  { label: "Hedge", href: "/dashboard/hedge", icon: ShieldCheck },
   { label: "Portfolio", href: "/dashboard/portfolio", icon: BriefcaseBusiness },
 ];
 
