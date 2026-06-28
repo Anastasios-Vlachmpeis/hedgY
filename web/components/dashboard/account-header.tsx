@@ -12,6 +12,10 @@ export interface EquityPoint {
   value: number;
 }
 
+function cashShare(cash: number, totalValue: number): number {
+  return totalValue > 0 ? (cash / totalValue) * 100 : 0;
+}
+
 /* ── Generic slide-up modal backdrop ── */
 function Modal({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
   React.useEffect(() => {
@@ -62,23 +66,72 @@ function PlatformRow({ p, totalValue }: { p: PlatformBreakdown; totalValue: numb
   );
 }
 
+/* ── Stacked allocation bar ── */
+function AllocationBar({ breakdown, totalValue }: { breakdown: PlatformBreakdown[]; totalValue: number }) {
+  if (!breakdown.length || totalValue <= 0) return null;
+  return (
+    <div className="flex h-2 overflow-hidden rounded-full bg-[#f0f0f0]">
+      {breakdown.map((p) => {
+        const share = (p.value / totalValue) * 100;
+        if (share <= 0) return null;
+        return (
+          <div
+            key={p.platform}
+            className="h-full transition-all duration-700"
+            style={{ width: `${share}%`, backgroundColor: p.color }}
+            title={`${p.platform} · ${share.toFixed(1)}%`}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 /* ── Portfolio value breakdown modal ── */
-function ValueBreakdownModal({ open, onClose, totalValue, breakdown }: { open: boolean; onClose: () => void; totalValue: number; breakdown: PlatformBreakdown[] }) {
+function ValueBreakdownModal({
+  open,
+  onClose,
+  totalValue,
+  cash,
+  breakdown,
+}: {
+  open: boolean;
+  onClose: () => void;
+  totalValue: number;
+  cash: number;
+  breakdown: PlatformBreakdown[];
+}) {
+  const cashPct = cashShare(cash, totalValue);
   return (
     <Modal open={open} onClose={onClose}>
       <div className="mb-5 flex items-start justify-between">
         <div>
           <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[#0a0a0a]">Portfolio breakdown</h2>
-          <p className="mt-0.5 text-[12px] text-[#a3a3a3]">Value by position type</p>
+          <p className="mt-0.5 text-[12px] text-[#a3a3a3]">Value by position type and cash</p>
         </div>
         <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-full bg-[#f5f5f5] text-[#737373] transition-colors hover:bg-[#ececec] hover:text-[#0a0a0a]">
           <X className="size-3.5" />
         </button>
       </div>
       {breakdown.length ? (
-        <div>{breakdown.map((p) => <PlatformRow key={p.platform} p={p} totalValue={totalValue} />)}</div>
+        <>
+          <AllocationBar breakdown={breakdown} totalValue={totalValue} />
+          {cash > 0 && (
+            <p className="mt-3 text-[13px] tabular-nums text-[#737373]">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-[#a3a3a3]" />
+                Cash:{" "}
+                <span className="font-semibold text-[#0a0a0a]">{usd(cash, 0)}</span>
+                {" · "}
+                <span className="font-semibold text-[#0a0a0a]">{cashPct.toFixed(1)}%</span>
+                {" of portfolio"}
+              </span>
+            </p>
+          )}
+          <div className="mt-4">{breakdown.map((p) => <PlatformRow key={p.platform} p={p} totalValue={totalValue} />)}</div>
+        </>
       ) : (
-        <p className="py-6 text-center text-[13px] text-[#a3a3a3]">No open positions yet.</p>
+        <p className="py-6 text-center text-[13px] text-[#a3a3a3]">No open positions or cash yet.</p>
       )}
       <div className="mt-4 flex items-center justify-between border-t border-[#f0f0f0] pt-4">
         <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">Total</span>
@@ -176,6 +229,18 @@ function AccountHeader({
             <span className="font-normal text-[#a3a3a3]">unrealized</span>
           </div>
 
+          {breakdown.length > 0 && (
+            <div className="mt-4">
+              <AllocationBar breakdown={breakdown} totalValue={portfolio.totalValue} />
+            </div>
+          )}
+
+          {portfolio.cash > 0 && (
+            <p className="mt-2 text-[12px] tabular-nums text-[#737373]">
+              Cash: <span className="font-semibold text-[#0a0a0a]">{usd(portfolio.cash, 0)}</span>
+            </p>
+          )}
+
           <div className="mt-auto flex gap-2 pt-5">
             <button type="button" className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-[#ececec] bg-white py-2.5 text-[13px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#f5f5f5]">
               <ArrowDownToLine className="size-4" /> Deposit
@@ -232,7 +297,7 @@ function AccountHeader({
         </section>
       </div>
 
-      <ValueBreakdownModal open={valueOpen} onClose={() => setValueOpen(false)} totalValue={portfolio.totalValue} breakdown={breakdown} />
+      <ValueBreakdownModal open={valueOpen} onClose={() => setValueOpen(false)} totalValue={portfolio.totalValue} cash={portfolio.cash} breakdown={breakdown} />
       <PnlBreakdownModal open={pnlOpen} onClose={() => setPnlOpen(false)} breakdown={breakdown} />
     </>
   );

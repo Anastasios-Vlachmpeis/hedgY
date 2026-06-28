@@ -114,6 +114,7 @@ export async function getPortfolio(): Promise<Portfolio> {
       dayChange,
       dayChangePct: lastEquity ? (dayChange / lastEquity) * 100 : 0,
       buyingPower: Number(a.buying_power),
+      cash: Number(a.cash),
       positionsCount: Array.isArray(positions) ? positions.length : 0,
       currency: a.currency ?? "USD",
     };
@@ -680,6 +681,7 @@ export async function getAccount(): Promise<Portfolio> {
       dayChange: a.pnl,
       dayChangePct: a.pnl_pct,
       buyingPower: a.buying_power,
+      cash: a.cash,
       positionsCount: a.positions_count,
       currency: a.currency,
     };

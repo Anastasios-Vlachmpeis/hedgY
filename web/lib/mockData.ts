@@ -20,6 +20,7 @@ export interface Portfolio {
   dayChange: number; // absolute, in currency
   dayChangePct: number; // percent, e.g. 1.01
   buyingPower: number;
+  cash: number;
   positionsCount: number;
   currency: string;
 }
@@ -39,6 +40,7 @@ export const portfolio: Portfolio = {
   dayChange: 1284.2,
   dayChangePct: 1.01,
   buyingPower: 42300.0,
+  cash: 42000.32,
   positionsCount: 14,
   currency: "USD",
 };

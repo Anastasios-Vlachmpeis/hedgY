@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { STOCKS_DB } from "@/lib/stocks";
 import { OrderTicket, type OrderTicketData } from "@/components/trade/order-ticket";
 import { HedgeTicket } from "@/components/trade/hedge-ticket";
+import { AssetLogo } from "@/components/ui/asset-logo";
 
 type ChartPoint = {
   t: string;
@@ -194,33 +195,62 @@ const assets: Asset[] = [
     recommendedMarketId: "ai-chip-export-controls",
   },
   {
-    symbol: "LMT",
-    name: "Lockheed Martin",
-    exchange: "NYSE",
-    sector: "Defense & Aerospace",
-    price: 507.4,
-    accent: "#7C5CFF",
+    symbol: "TSLA",
+    name: "Tesla Inc.",
+    exchange: "NASDAQ",
+    sector: "Automotive & Energy",
+    price: 248.5,
+    accent: "#CC0000",
     chart: chart([
-      452, 438, 444, 426, 432, 449, 471, 463, 488, 515, 543, 575, 548, 558, 537, 582, 564,
-      596, 576, 612, 588, 571, 552, 561, 536, 449, 468, 472, 486, 439, 461, 481, 471, 507.4,
+      198, 205, 201, 214, 222, 218, 231, 241, 236, 252, 261, 254, 268, 276, 271, 284, 292,
+      287, 301, 296, 288, 279, 271, 264, 256, 248, 241, 235, 242, 249, 255, 251, 246, 248.5,
     ]),
     metrics: {
-      marketCap: "$118.4B",
-      pe: "17.6x",
-      range52w: "418.88 - 618.95",
-      dividendYield: "2.54%",
-      beta: "0.78",
+      marketCap: "$1.02T",
+      pe: "88.4x",
+      range52w: "182.00 - 488.54",
+      dividendYield: "0.00%",
+      beta: "2.31",
     },
     position: {
-      shares: 100,
-      notional: 50740,
-      portfolioPct: "10.00%",
-      avgPrice: 507.4,
-      pnl: 238,
-      pnlPct: "+0.47%",
-      volatility: "23.8%",
+      shares: 60,
+      notional: 14910,
+      portfolioPct: "2.94%",
+      avgPrice: 241.2,
+      pnl: 438,
+      pnlPct: "+3.02%",
+      volatility: "61.4%",
     },
     recommendedMarketId: "fed-rate-cut-july",
+  },
+  {
+    symbol: "PLTR",
+    name: "Palantir Technologies",
+    exchange: "NASDAQ",
+    sector: "Software & Defense",
+    price: 86.4,
+    accent: "#101010",
+    chart: chart([
+      62, 64, 63, 67, 69, 68, 72, 74, 73, 77, 79, 76, 81, 84, 82, 86, 88, 91, 89, 93, 95,
+      92, 88, 85, 82, 79, 81, 84, 87, 85, 88, 90, 87, 86.4,
+    ]),
+    metrics: {
+      marketCap: "$268.4B",
+      pe: "147.2x",
+      range52w: "60.00 - 130.00",
+      dividendYield: "0.00%",
+      beta: "1.85",
+    },
+    position: {
+      shares: 200,
+      notional: 17280,
+      portfolioPct: "3.41%",
+      avgPrice: 82.15,
+      pnl: 850,
+      pnlPct: "+5.17%",
+      volatility: "48.2%",
+    },
+    recommendedMarketId: "defense-budget-900",
   },
   {
     symbol: "MSFT",
@@ -287,7 +317,7 @@ const riskMarkets: RiskMarket[] = [
     id: "fed-rate-cut-july",
     title: "Fed rate cut in July",
     category: "Macro",
-    assetSymbols: ["LMT", "MSFT", "AAPL"],
+    assetSymbols: ["TSLA", "MSFT", "AAPL"],
     icon: "macro",
     probability: 38,
     yes: 38,
@@ -315,7 +345,7 @@ const riskMarkets: RiskMarket[] = [
     id: "defense-budget-900",
     title: "US defense budget exceeds $900B",
     category: "Defense policy",
-    assetSymbols: ["LMT"],
+    assetSymbols: ["PLTR"],
     icon: "landmark",
     probability: 55,
     yes: 55,
@@ -343,7 +373,7 @@ const riskMarkets: RiskMarket[] = [
     id: "republicans-2026",
     title: "Republicans win 2026 midterms",
     category: "Politics",
-    assetSymbols: ["LMT"],
+    assetSymbols: ["PLTR"],
     icon: "shield",
     probability: 43,
     yes: 43,
@@ -371,7 +401,7 @@ const riskMarkets: RiskMarket[] = [
     id: "hormuz-blockade-2026",
     title: "Strait of Hormuz blockade 2026",
     category: "Geopolitics",
-    assetSymbols: ["LMT"],
+    assetSymbols: ["PLTR"],
     icon: "anchor",
     probability: 17,
     yes: 17,
@@ -1376,65 +1406,6 @@ function Badge({ children, className }: { children: React.ReactNode; className?:
   );
 }
 
-const SI_ICONS: Record<string, string> = {
-  AAPL: "apple",        NVDA: "nvidia",       MSFT: "microsoft",
-  AMD:  "amd",          TSLA: "tesla",        AMZN: "amazon",
-  META: "meta",         GOOGL:"google",       GOOG: "google",
-  PLTR: "palantir",     NFLX: "netflix",      ADBE: "adobe",
-  CRM:  "salesforce",   ORCL: "oracle",       V:    "visa",
-  INTC: "intel",        QCOM: "qualcomm",     AVGO: "broadcom",
-  ASML: "asml",         MU:   "micron",       AMAT: "appliedmaterials",
-  GS:   "goldmansachs", WMT:  "walmart",      UNH:  "unitedhealth",
-  JNJ:  "johnson",      PFE:  "pfizer",       JPM:  "jpmorgan",
-};
-
-const LETTER_BG: Record<string, string> = {
-  LMT: "#1B3A6B", XOM: "#C0131A", BA: "#1E4D8C",
-  MS:  "#003087", TSM: "#C0131A", KLAC: "#0033A0",
-};
-
-function AssetLogo({ symbol }: { symbol: string }) {
-  const [err, setErr] = React.useState(false);
-
-  // MSFT: inline 4-colour Windows squares (never fails)
-  if (symbol === "MSFT") {
-    return (
-      <span className="grid size-9 shrink-0 grid-cols-2 gap-[3px] rounded-full bg-white p-[9px] shadow-[0_0_0_1.5px_#ececec]">
-        <span className="rounded-[1px] bg-[#F25022]" />
-        <span className="rounded-[1px] bg-[#7FBA00]" />
-        <span className="rounded-[1px] bg-[#00A4EF]" />
-        <span className="rounded-[1px] bg-[#FFB900]" />
-      </span>
-    );
-  }
-
-  const siName = SI_ICONS[symbol];
-  if (siName && !err) {
-    return (
-      <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_0_0_1.5px_#ececec]">
-        <img
-          src={`https://cdn.simpleicons.org/${siName}`}
-          alt={symbol}
-          width={22}
-          height={22}
-          style={{ objectFit: "contain" }}
-          onError={() => setErr(true)}
-        />
-      </span>
-    );
-  }
-
-  const bg = LETTER_BG[symbol] ?? "#0a0a0a";
-  return (
-    <span
-      className="flex size-9 shrink-0 items-center justify-center rounded-full text-[10px] font-bold tracking-tight text-white"
-      style={{ background: bg }}
-    >
-      {symbol.slice(0, 2)}
-    </span>
-  );
-}
-
 function RiskIcon({ icon, bare = false }: { icon: RiskMarket["icon"]; bare?: boolean }) {
   const icons = {
     landmark: Landmark,
@@ -1982,13 +1953,13 @@ function SummaryCard({
         <div className="flex items-center justify-between">
           <span className="text-[12px] text-[#737373]">Net cost</span>
           <span className="text-[13px] font-semibold text-[#0a0a0a]">
-            {asset.symbol === "LMT" && market.id === "fed-rate-cut-july" ? "$29,380" : formatCurrency(netCost)}
+            {asset.symbol === "TSLA" && market.id === "fed-rate-cut-july" ? "$29,380" : formatCurrency(netCost)}
           </span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-[12px] text-[#737373]">Potential return</span>
           <span className="text-[13px] font-semibold text-[#16a34a]">
-            {asset.symbol === "LMT" && market.id === "fed-rate-cut-july" ? "+14.2%" : `+${potentialReturn.toFixed(1)}%`}
+            {asset.symbol === "TSLA" && market.id === "fed-rate-cut-july" ? "+14.2%" : `+${potentialReturn.toFixed(1)}%`}
           </span>
         </div>
         <div className="flex items-center justify-between">
@@ -2285,7 +2256,7 @@ const METRICS_DB: Record<string, { marketCap: string; pe: string; range52w: stri
 };
 
 export default function DashboardPage() {
-  const [selectedSymbol, setSelectedSymbol] = React.useState("LMT");
+  const [selectedSymbol, setSelectedSymbol] = React.useState("TSLA");
   const [activeMarketId, setActiveMarketId] = React.useState("");
   const [compareIds, setCompareIds] = React.useState<string[]>([]);
   const [browseOpen, setBrowseOpen] = React.useState(false);
@@ -2355,7 +2326,7 @@ export default function DashboardPage() {
         setActiveMarketId((prev) => {
           if (prev) return prev;
           const top = [...liveMarkets]
-            .map((m) => ({ m, score: scoreMarketForStock(m, "LMT") }))
+            .map((m) => ({ m, score: scoreMarketForStock(m, "TSLA") }))
             .sort((a, b) => b.score - a.score)[0]?.m;
           return top?.id ?? liveMarkets[0]?.id ?? "";
         });

@@ -6,14 +6,14 @@ import { PositionsActivity } from "@/components/dashboard/positions-activity";
 import { ClosePositionModal } from "@/components/dashboard/close-position-modal";
 import { type Activity, type PlatformBreakdown, type Portfolio, type Position } from "@/lib/mockData";
 
-// Real value/P&L breakdown grouped by position type (no fabricated platforms).
-function buildBreakdown(positions: Position[]): PlatformBreakdown[] {
+// Real value/P&L breakdown grouped by position type, plus remaining cash.
+function buildBreakdown(positions: Position[], cash: number): PlatformBreakdown[] {
   const groups: { key: Position["type"]; platform: string; kind: string; color: string }[] = [
     { key: "Combined", platform: "Combined hedges", kind: "Equity + prediction", color: "#9580ff" },
     { key: "Equity", platform: "Equities", kind: "Stocks · Alpaca", color: "#4F8DFF" },
     { key: "Prediction", platform: "Prediction markets", kind: "Kalshi · Polymarket", color: "#16a34a" },
   ];
-  return groups
+  const rows = groups
     .map((g) => {
       const items = positions.filter((p) => p.type === g.key);
       const value = items.reduce((s, p) => s + p.value, 0);
@@ -29,6 +29,19 @@ function buildBreakdown(positions: Position[]): PlatformBreakdown[] {
       };
     })
     .filter((g) => g.value !== 0 || g.pnl !== 0);
+
+  if (cash > 0) {
+    rows.push({
+      platform: "Cash",
+      kind: "Available balance",
+      value: cash,
+      pnl: 0,
+      pnlPct: 0,
+      color: "#a3a3a3",
+    });
+  }
+
+  return rows;
 }
 
 // Backend /positions item (stocks via Alpaca, predictions via Kalshi+Polymarket).
@@ -169,6 +182,7 @@ async function loadPortfolio(): Promise<Extract<State, { status: "ready" }>> {
       dayChange: acc.pnl,
       dayChangePct: acc.pnl_pct,
       buyingPower: acc.buying_power,
+      cash: acc.cash ?? 0,
       positionsCount: acc.positions_count,
       currency: acc.currency ?? "USD",
     },
@@ -265,7 +279,7 @@ export default function PortfolioPage() {
       <AccountHeader
         portfolio={state.portfolio}
         series={state.series}
-        breakdown={buildBreakdown(state.positions)}
+        breakdown={buildBreakdown(state.positions, state.portfolio.cash)}
       />
       <PositionsActivity
         positions={state.positions}
