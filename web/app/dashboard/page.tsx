@@ -17,7 +17,6 @@ import {
   ShieldCheck,
   Sparkles,
   Star,
-  Zap,
 } from "lucide-react";
 import {
   CartesianGrid,
@@ -665,6 +664,19 @@ const LETTER_BG: Record<string, string> = {
 
 function AssetLogo({ symbol }: { symbol: string }) {
   const [err, setErr] = React.useState(false);
+
+  // MSFT: inline 4-colour Windows squares (never fails)
+  if (symbol === "MSFT") {
+    return (
+      <span className="grid size-9 shrink-0 grid-cols-2 gap-[3px] rounded-full bg-white p-[9px] shadow-[0_0_0_1.5px_#ececec]">
+        <span className="rounded-[1px] bg-[#F25022]" />
+        <span className="rounded-[1px] bg-[#7FBA00]" />
+        <span className="rounded-[1px] bg-[#00A4EF]" />
+        <span className="rounded-[1px] bg-[#FFB900]" />
+      </span>
+    );
+  }
+
   const siName = SI_ICONS[symbol];
   if (siName && !err) {
     return (
@@ -680,6 +692,7 @@ function AssetLogo({ symbol }: { symbol: string }) {
       </span>
     );
   }
+
   const bg = LETTER_BG[symbol] ?? "#0a0a0a";
   return (
     <span
@@ -727,7 +740,7 @@ function AssetSwitcher({
           type="button"
           aria-label="Previous asset"
           onClick={() => onSelect(assetList[currentIndex - 1].symbol)}
-          className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-[var(--border-soft)] bg-white text-[#64748B] transition-colors hover:border-[#D8DDF0] hover:text-[var(--text-primary)]"
+          className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-[#ececec] bg-white text-[#a3a3a3] transition-colors hover:border-[#d0d0d0] hover:text-[#0a0a0a]"
         >
           <ArrowRight className="size-4 rotate-180" strokeWidth={1.9} />
         </button>
@@ -742,21 +755,16 @@ function AssetSwitcher({
             className={cn(
               "flex h-[66px] min-w-[190px] items-center gap-3 rounded-[15px] border bg-white px-5 text-left transition-all duration-150",
               selected
-                ? "border-[var(--purple)] bg-[#FBFAFF] shadow-[0_0_0_4px_rgba(124,92,255,0.08)]"
-                : "border-[var(--border-soft)] hover:-translate-y-0.5 hover:border-[#D6D8FF]",
+                ? "border-[#d0d0d0] bg-[#f8f8f8] shadow-[0_0_0_3px_rgba(0,0,0,0.04)]"
+                : "border-[#ececec] hover:-translate-y-0.5 hover:border-[#d0d0d0]",
             )}
           >
             <AssetLogo symbol={asset.symbol} />
             <span>
-              <span className="block text-[14px] font-bold text-[var(--text-primary)]">
+              <span className="block text-[14px] font-bold text-[#0a0a0a]">
                 {asset.symbol}
               </span>
-              <span
-                className={cn(
-                  "mt-0.5 block text-[12px] font-medium",
-                  selected ? "text-[var(--purple)]" : "text-[var(--text-secondary)]",
-                )}
-              >
+              <span className="mt-0.5 block text-[12px] font-medium text-[#a3a3a3]">
                 {asset.name}
               </span>
             </span>
@@ -766,7 +774,7 @@ function AssetSwitcher({
       <button
         type="button"
         onClick={() => window.dispatchEvent(new Event("verso:focus-search"))}
-        className="flex h-[58px] min-w-[150px] items-center justify-center gap-2 rounded-[13px] border border-[var(--border-soft)] bg-white px-4 text-[13px] font-semibold text-[var(--text-primary)] transition-colors hover:border-[#D6D8FF] hover:bg-[#FBFAFF]"
+        className="flex h-[58px] min-w-[150px] items-center justify-center gap-2 rounded-[13px] border border-[#ececec] bg-white px-4 text-[13px] font-semibold text-[#0a0a0a] transition-colors hover:border-[#d0d0d0] hover:bg-[#f8f8f8]"
       >
         <Plus className="size-4" strokeWidth={2} />
         Add asset
@@ -803,19 +811,25 @@ function AssetChartCard({ asset }: { asset: Asset }) {
   const [watched, setWatched] = React.useState(false);
 
   return (
-    <Card className="overflow-hidden rounded-[20px] border border-[var(--border-soft)] bg-white shadow-none">
-      <CardHeader className="border-b border-[var(--border-soft)] px-5 py-5">
+    <Card className="overflow-hidden rounded-[20px] border border-[#ececec] bg-white shadow-none">
+      <CardHeader className="border-b border-[#ececec] px-5 py-5">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[#0a0a0a]">
               {asset.name.replace(" Inc.", "")}
             </h2>
-            <span className="text-[12px] font-semibold text-[#66718A]">
+            <span className="text-[12px] font-semibold text-[#a3a3a3]">
               {asset.symbol} · {asset.exchange}
             </span>
           </div>
-          <div className="mt-2 text-[13px] font-medium text-[var(--text-secondary)]">
-            {asset.sector}
+          <div className="mt-2 flex items-baseline gap-3">
+            <span className="text-[28px] font-bold tracking-[-0.02em] text-[#0a0a0a]">
+              {formatCurrency(asset.price)}
+            </span>
+            <span className={cn("text-[13px] font-semibold", asset.position.pnl >= 0 ? "text-[#16a34a]" : "text-[#dc2626]")}>
+              {asset.position.pnlPct}
+            </span>
+            <span className="text-[12px] text-[#a3a3a3]">{asset.sector}</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -907,7 +921,7 @@ function AssetChartCard({ asset }: { asset: Asset }) {
         </div>
 
         <div className="mt-5 border-t border-[#f0f0f0] pt-4">
-          <div className="grid grid-cols-5 gap-x-3 gap-y-1">
+          <div className="flex justify-between gap-2">
             {[
               ["Market cap", asset.metrics.marketCap],
               ["P/E ratio", asset.metrics.pe],
@@ -915,9 +929,9 @@ function AssetChartCard({ asset }: { asset: Asset }) {
               ["Div. yield", asset.metrics.dividendYield],
               ["Beta (1Y)", asset.metrics.beta],
             ].map(([label, value]) => (
-              <div key={label}>
+              <div key={label} className="min-w-0">
                 <div className="text-[10px] text-[#a3a3a3]">{label}</div>
-                <div className="mt-0.5 text-[12px] font-semibold text-[#0a0a0a]">{value}</div>
+                <div className="mt-0.5 text-[11px] font-semibold text-[#0a0a0a]">{value}</div>
               </div>
             ))}
           </div>
@@ -934,19 +948,16 @@ function ArcGauge({ pct, bearish }: { pct: number; bearish?: boolean }) {
   // Arc: center (26,26) r=22 → top at (26,4), chord endpoints at (4,26) and (48,26)
   const arc = "M 4 26 A 22 22 0 0 1 48 26";
   return (
-    <div className="shrink-0">
-      <svg
-        viewBox="0 0 52 34"
-        width={52}
-        height={34}
-        style={{ display: "block" }}
-      >
+    <div style={{ position: "relative", width: 52, height: 34, flexShrink: 0 }}>
+      <svg viewBox="0 0 52 34" width={52} height={34} style={{ display: "block", position: "absolute", top: 0, left: 0 }}>
         <path d={arc} fill="none" stroke="#ececec" strokeWidth="5" strokeLinecap="round" pathLength={100} />
         <path d={arc} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" pathLength={100} strokeDasharray={`${pct} 100`} />
-        {/* dominantBaseline="central" makes y the vertical center of the glyph */}
-        <text x="26" y="16" textAnchor="middle" dominantBaseline="central" fontSize="11" fontWeight="700" fill="#0a0a0a">{pct}%</text>
-        <text x="26" y="30" textAnchor="middle" dominantBaseline="central" fontSize="7" fill="#a3a3a3">chance</text>
       </svg>
+      {/* Overlay: arc bowl = y 4–26 in 34px container; pad 8px to land text in bowl center */}
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 8 }}>
+        <span style={{ fontSize: 9, fontWeight: 700, lineHeight: 1, color: "#0a0a0a" }}>{pct}%</span>
+        <span style={{ fontSize: 6, lineHeight: 1, color: "#a3a3a3", marginTop: 2 }}>chance</span>
+      </div>
     </div>
   );
 }
@@ -1076,7 +1087,7 @@ function RecommendedHedgeCard({
   const protectedProbability = market.hedgeSide === "NO" ? market.no : market.yes;
 
   return (
-    <div className="rounded-[18px] border border-[#ececec] bg-white p-5">
+    <div className="flex flex-col rounded-[18px] border border-[#ececec] bg-white p-5">
       <p className="text-[13px] font-semibold text-[#0a0a0a]">Recommended hedge</p>
       <div className="mt-4 space-y-3">
         {[
@@ -1092,18 +1103,21 @@ function RecommendedHedgeCard({
           </div>
         ))}
       </div>
-      <div className="my-4 border-t border-[#f0f0f0]" />
-      <button
-        type="button"
-        onClick={onApply}
-        className={cn(
-          "flex h-9 w-full items-center justify-center gap-2 rounded-[9px] text-[12px] font-semibold transition-opacity hover:opacity-80",
-          applied ? "bg-[#e5e5e5] text-[#737373]" : "bg-[#f0f0f0] text-[#0a0a0a] hover:bg-[#e5e5e5]",
-        )}
-      >
-        {applied ? <CheckCircle2 className="size-3.5" /> : <Zap className="size-3.5" fill="currentColor" />}
-        {applied ? "Hedge applied" : "Apply hedge"}
-      </button>
+      <div className="mt-auto pt-5">
+        <button
+          type="button"
+          onClick={onApply}
+          className={cn(
+            "flex h-9 w-full items-center justify-center gap-2 rounded-[9px] border text-[12px] font-semibold transition-colors",
+            applied
+              ? "border-[#ececec] bg-white text-[#737373]"
+              : "border-[#ececec] bg-white text-[#0a0a0a] hover:bg-[#f5f5f5]",
+          )}
+        >
+          {applied ? <CheckCircle2 className="size-3.5 text-[#16a34a]" /> : null}
+          {applied ? "Hedge applied" : "Apply hedge"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -1159,7 +1173,7 @@ function SummaryCard({
   const potentialReturn = (Math.max(market.outcomeUp, 0) / netCost) * 100 + 5.7;
 
   return (
-    <div className="rounded-[18px] border border-[#ececec] bg-white p-5">
+    <div className="flex flex-col rounded-[18px] border border-[#ececec] bg-white p-5">
       <p className="text-[13px] font-semibold text-[#0a0a0a]">Summary</p>
       <div className="mt-4 space-y-3">
         <div className="flex items-center justify-between">
@@ -1183,15 +1197,16 @@ function SummaryCard({
           <span className="text-[13px] font-semibold text-[#0a0a0a]">{market.volume}</span>
         </div>
       </div>
-      <div className="my-4 border-t border-[#f0f0f0]" />
-      <button
-        type="button"
-        onClick={onOpenAnalysis}
-        className="flex h-9 w-full items-center justify-center gap-1.5 rounded-[9px] border border-[#ececec] bg-white text-[12px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#f5f5f5]"
-      >
-        View full analysis
-        <ArrowRight className="size-3.5" strokeWidth={2} />
-      </button>
+      <div className="mt-auto pt-5">
+        <button
+          type="button"
+          onClick={onOpenAnalysis}
+          className="flex h-9 w-full items-center justify-center gap-1.5 rounded-[9px] border border-[#ececec] bg-white text-[12px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#f5f5f5]"
+        >
+          View full analysis
+          <ArrowRight className="size-3.5" strokeWidth={2} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -1242,190 +1257,171 @@ function MarketBrowserModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#0F172A]/18 p-6 backdrop-blur-[2px]">
-      <div className="ml-[220px] flex h-full items-center justify-center">
-        <div className="grid max-h-[86vh] w-full max-w-[1120px] grid-cols-[1fr_360px] overflow-hidden rounded-[22px] border border-[var(--border-soft)] bg-white shadow-[0_28px_80px_rgba(15,23,42,0.18)]">
-          <div className="min-w-0 border-r border-[var(--border-soft)]">
-            <div className="flex items-center justify-between border-b border-[var(--border-soft)] px-5 py-4">
-              <div>
-                <h2 className="text-[17px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
-                  Browse all risk markets
-                </h2>
-                <p className="mt-1 text-[12px] font-medium text-[var(--text-secondary)]">
-                  Compare Kalshi and Polymarket quotes before applying a hedge.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex size-9 items-center justify-center rounded-full border border-[var(--border-soft)] text-[#64748B] hover:bg-[var(--muted-surface)]"
-              >
-                ×
-              </button>
-            </div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20 p-6 backdrop-blur-[2px]">
+      <div className="relative grid max-h-[88vh] w-full max-w-[1100px] grid-cols-[1fr_340px] overflow-hidden rounded-[22px] border border-[#ececec] bg-white shadow-[0_24px_80px_rgba(0,0,0,0.12)]">
 
-            <div className="flex items-center gap-3 border-b border-[var(--border-soft)] px-5 py-3">
-              <div className="relative flex-1">
-                <SearchCheck className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-muted)]" />
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search prediction markets..."
-                  className="h-10 w-full rounded-[12px] border border-[var(--border-soft)] bg-[var(--muted-surface)]/70 pl-10 pr-3 text-[13px] font-medium outline-none focus:border-[#D8D2FF] focus:bg-white focus:ring-4 focus:ring-[#7C5CFF]/10"
-                />
-              </div>
-              <div className="flex gap-1 rounded-[12px] bg-[var(--muted-surface)] p-1">
-                {["All", "Kalshi", "Polymarket"].map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => setVenue(item)}
-                    className={cn(
-                      "h-8 rounded-[9px] px-3 text-[12px] font-bold transition-colors",
-                      venue === item ? "bg-white text-[var(--purple)] shadow-sm" : "text-[#64748B]",
-                    )}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </div>
+        {/* Close button — top right */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 z-10 flex size-8 items-center justify-center rounded-full bg-[#f5f5f5] text-[#737373] transition-colors hover:bg-[#ececec] hover:text-[#0a0a0a]"
+        >
+          <Plus className="size-4 rotate-45" strokeWidth={2} />
+        </button>
 
-            <div className="max-h-[calc(86vh-154px)] overflow-y-auto p-4">
-              <div className="grid gap-2">
-                {filtered.map((market) => (
-                  <button
-                    key={market.id}
-                    type="button"
-                    onClick={() => onSelect(market.id)}
-                    className={cn(
-                      "grid grid-cols-[32px_1fr_62px_92px] items-center gap-3 rounded-[14px] border px-3 py-3 text-left transition-colors",
-                      activeMarketId === market.id
-                        ? "border-[#D8D2FF] bg-[#FBFAFF]"
-                        : "border-[var(--border-soft)] bg-white hover:border-[#D8D2FF]",
-                    )}
-                  >
-                    <RiskIcon icon={market.icon} />
-                    <span className="min-w-0">
-                      <span className="block truncate text-[13px] font-bold text-[var(--text-primary)]">
-                        {market.title}
-                      </span>
-                      <span className="mt-1 block truncate text-[11px] font-semibold text-[var(--text-secondary)]">
-                        {market.category} · {market.venue} · {market.volume} vol
-                      </span>
-                    </span>
-                    <span
-                      className={cn(
-                        "text-right text-[15px] font-bold",
-                        market.probability >= 50 ? "text-[var(--positive)]" : "text-[var(--negative)]",
-                      )}
-                    >
-                      {market.probability}%
-                    </span>
-                    <span
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onToggleCompare(market.id);
-                      }}
-                      className={cn(
-                        "rounded-full border px-3 py-1.5 text-center text-[11px] font-bold",
-                        compareIds.includes(market.id)
-                          ? "border-[#D8D2FF] bg-[var(--purple-light)] text-[var(--purple)]"
-                          : "border-[var(--border-soft)] text-[var(--text-secondary)]",
-                      )}
-                    >
-                      Compare
-                    </span>
-                  </button>
-                ))}
-              </div>
+        {/* Left — market list */}
+        <div className="flex min-w-0 flex-col border-r border-[#ececec]">
+          <div className="border-b border-[#ececec] px-5 py-4 pr-14">
+            <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[#0a0a0a]">
+              Browse risk markets
+            </h2>
+            <p className="mt-0.5 text-[12px] text-[#a3a3a3]">
+              Select a market to use as a hedge for your position.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 border-b border-[#ececec] px-5 py-3">
+            <div className="relative flex-1">
+              <SearchCheck className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#a3a3a3]" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search prediction markets..."
+                className="h-9 w-full rounded-[10px] border border-[#ececec] bg-[#f8f8f8] pl-10 pr-3 text-[13px] outline-none focus:border-[#d0d0d0] focus:bg-white"
+              />
+            </div>
+            <div className="flex gap-1 rounded-[10px] bg-[#f5f5f5] p-1">
+              {["All", "Kalshi", "Polymarket"].map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setVenue(item)}
+                  className={cn(
+                    "h-7 rounded-[7px] px-3 text-[11px] font-semibold transition-colors",
+                    venue === item ? "bg-white text-[#0a0a0a] shadow-sm" : "text-[#737373]",
+                  )}
+                >
+                  {item}
+                </button>
+              ))}
             </div>
           </div>
 
-          <aside className="bg-[#FBFCFF] p-5">
-            <div className="flex items-center justify-between">
-              <Badge className="border-[#D8D2FF] bg-white text-[var(--purple)]">
-                {active?.venue ?? "Kalshi / Polymarket"}
-              </Badge>
-              <Link
-                href="/markets"
-                className="flex items-center gap-1 text-[12px] font-bold text-[var(--purple)]"
-              >
-                Markets page
-                <ExternalLink className="size-3.5" />
-              </Link>
-            </div>
-
-            {active ? (
-              <>
-                <h3 className="mt-5 text-[18px] font-semibold leading-snug tracking-[-0.01em] text-[var(--text-primary)]">
-                  {active.title}
-                </h3>
-                <div className="mt-4 grid grid-cols-3 gap-2">
-                  <div className="rounded-[13px] border border-[var(--border-soft)] bg-white p-3">
-                    <div className="text-[11px] font-semibold text-[var(--text-muted)]">Yes</div>
-                    <div className="mt-1 text-[18px] font-bold text-[var(--positive)]">
-                      {active.yes}¢
-                    </div>
-                  </div>
-                  <div className="rounded-[13px] border border-[var(--border-soft)] bg-white p-3">
-                    <div className="text-[11px] font-semibold text-[var(--text-muted)]">No</div>
-                    <div className="mt-1 text-[18px] font-bold text-[var(--negative)]">
-                      {active.no}¢
-                    </div>
-                  </div>
-                  <div className="rounded-[13px] border border-[var(--border-soft)] bg-white p-3">
-                    <div className="text-[11px] font-semibold text-[var(--text-muted)]">Hedge</div>
-                    <div className="mt-1 text-[18px] font-bold text-[var(--purple)]">
-                      {active.hedgeRatio.toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-[15px] border border-[var(--border-soft)] bg-white p-4">
-                  <div className="mb-3 text-[12px] font-bold text-[var(--text-primary)]">
-                    Venue quotes
-                  </div>
-                  <div className="space-y-2">
-                    {active.quoteRows.map((row) => (
-                      <div
-                        key={row.venue}
-                        className="grid grid-cols-[1fr_44px_44px_58px] items-center gap-2 rounded-[10px] bg-[var(--muted-surface)] px-3 py-2 text-[11px] font-semibold"
-                      >
-                        <span className="text-[var(--text-primary)]">{row.venue}</span>
-                        <span className="text-[var(--positive)]">{row.yes}¢</span>
-                        <span className="text-[var(--negative)]">{row.no}¢</span>
-                        <span className="text-right text-[var(--text-secondary)]">{row.volume}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-[15px] border border-[#E6E1FF] bg-white p-4">
-                  <div className="flex items-center gap-2 text-[12px] font-bold text-[var(--text-primary)]">
-                    <Sparkles className="size-4 text-[var(--purple)]" />
-                    Recommended action
-                  </div>
-                  <p className="mt-3 text-[13px] font-medium leading-6 text-[var(--text-secondary)]">
-                    Buy {active.hedgeSide} with a {active.hedgeRatio.toFixed(2)} hedge ratio to
-                    reduce modeled downside by ~{active.protectionPct}%.
-                  </p>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      onSelect(active.id);
-                      onClose();
-                    }}
-                    className="mt-4 h-10 w-full rounded-[12px] bg-[var(--purple)] text-[13px] font-semibold hover:bg-[#6C4DF1]"
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="grid gap-1.5">
+              {filtered.map((market) => (
+                <button
+                  key={market.id}
+                  type="button"
+                  onClick={() => onSelect(market.id)}
+                  className={cn(
+                    "grid grid-cols-[28px_1fr_56px] items-center gap-3 rounded-[12px] border px-3 py-3 text-left transition-colors",
+                    activeMarketId === market.id
+                      ? "border-[#d0d0d0] bg-[#f8f8f8]"
+                      : "border-[#ececec] bg-white hover:bg-[#fafafa]",
+                  )}
+                >
+                  <RiskIcon icon={market.icon} />
+                  <span className="min-w-0">
+                    <span className="block truncate text-[12px] font-semibold text-[#0a0a0a]">
+                      {market.title}
+                    </span>
+                    <span className="mt-0.5 block truncate text-[11px] text-[#a3a3a3]">
+                      {market.category} · {market.venue} · {market.volume} vol
+                    </span>
+                  </span>
+                  <span
+                    className={cn(
+                      "text-right text-[13px] font-bold",
+                      market.probability >= 50 ? "text-[#16a34a]" : "text-[#dc2626]",
+                    )}
                   >
-                    Use this hedge
-                    <ArrowRight className="size-4" />
-                  </Button>
-                </div>
-              </>
-            ) : null}
-          </aside>
+                    {market.probability}%
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
+
+        {/* Right — market detail */}
+        <aside className="flex flex-col bg-[#fafafa] p-5">
+          {active ? (
+            <>
+              <div className="flex items-center justify-between">
+                <span className="rounded-full border border-[#ececec] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#737373]">
+                  {active.venue}
+                </span>
+                <Link
+                  href="/markets"
+                  className="flex items-center gap-1 text-[11px] font-semibold text-[#737373] hover:text-[#0a0a0a]"
+                >
+                  Markets page
+                  <ExternalLink className="size-3" />
+                </Link>
+              </div>
+
+              <h3 className="mt-4 text-[16px] font-semibold leading-snug tracking-[-0.01em] text-[#0a0a0a]">
+                {active.title}
+              </h3>
+
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {[
+                  { label: "Yes", value: `${active.yes}¢`, color: "#16a34a" },
+                  { label: "No", value: `${active.no}¢`, color: "#dc2626" },
+                  { label: "Hedge ratio", value: active.hedgeRatio.toFixed(2), color: "#0a0a0a" },
+                ].map(({ label, value, color }) => (
+                  <div key={label} className="rounded-[12px] border border-[#ececec] bg-white p-3">
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#a3a3a3]">{label}</div>
+                    <div className="mt-1 text-[17px] font-bold" style={{ color }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 rounded-[14px] border border-[#ececec] bg-white p-4">
+                <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">
+                  Venue quotes
+                </div>
+                <div className="space-y-1.5">
+                  {active.quoteRows.map((row) => (
+                    <div
+                      key={row.venue}
+                      className="grid grid-cols-[1fr_40px_40px_52px] items-center gap-2 rounded-[8px] bg-[#f8f8f8] px-3 py-2 text-[11px] font-semibold"
+                    >
+                      <span className="text-[#0a0a0a]">{row.venue}</span>
+                      <span className="text-[#16a34a]">{row.yes}¢</span>
+                      <span className="text-[#dc2626]">{row.no}¢</span>
+                      <span className="text-right text-[#a3a3a3]">{row.volume}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-[14px] border border-[#ececec] bg-white p-4">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">
+                  Recommended action
+                </div>
+                <p className="mt-2 text-[13px] font-medium leading-[1.6] text-[#737373]">
+                  Buy {active.hedgeSide} with a {active.hedgeRatio.toFixed(2)} hedge ratio to
+                  reduce modeled downside by ~{active.protectionPct}%.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => { onSelect(active.id); onClose(); }}
+                className="mt-auto flex h-10 w-full items-center justify-center gap-2 rounded-[12px] bg-[#0a0a0a] text-[13px] font-semibold text-white transition-opacity hover:opacity-80"
+              >
+                Use this hedge
+                <ArrowRight className="size-4" strokeWidth={2} />
+              </button>
+            </>
+          ) : (
+            <div className="flex flex-1 items-center justify-center text-[13px] text-[#a3a3a3]">
+              Select a market to see details
+            </div>
+          )}
+        </aside>
       </div>
     </div>
   );

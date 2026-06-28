@@ -159,22 +159,35 @@ function VersoMark() {
   );
 }
 
-function Sidebar() {
+function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 flex w-[220px] flex-col border-r border-[var(--border-soft)] bg-white/88 px-5 py-6 backdrop-blur">
-      <Link href="/dashboard" className="mb-9 flex items-center gap-3">
+    <aside
+      className={cn(
+        "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[var(--border-soft)] bg-white/88 py-6 backdrop-blur transition-[width] duration-200",
+        collapsed ? "w-16 items-center px-0" : "w-[220px] px-5",
+      )}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        className={cn("mb-9 flex items-center", collapsed ? "justify-center" : "gap-3")}
+      >
         <VersoMark />
-        <span className="text-[25px] font-semibold tracking-[-0.04em] text-[#050505]">verso</span>
-      </Link>
+        {!collapsed && (
+          <span className="text-[25px] font-semibold tracking-[-0.04em] text-[#050505]">verso</span>
+        )}
+      </button>
 
-      <nav className="flex flex-1 flex-col gap-6">
+      <nav className={cn("flex flex-1 flex-col gap-6", collapsed && "w-full px-2")}>
         {navGroups.map((group) => (
           <div key={group.label}>
-            <div className="mb-2.5 text-[11px] font-semibold tracking-[0.03em] text-[#74809A]">
-              {group.label}
-            </div>
+            {!collapsed && (
+              <div className="mb-2.5 text-[11px] font-semibold tracking-[0.03em] text-[#74809A]">
+                {group.label}
+              </div>
+            )}
             <div className="flex flex-col gap-1">
               {group.items.map((item) => {
                 const Icon = item.icon;
@@ -184,18 +197,25 @@ function Sidebar() {
                   <Link
                     key={item.label}
                     href={item.href}
+                    title={collapsed ? item.label : undefined}
                     className={cn(
-                      "group relative flex h-10 items-center gap-3 rounded-[11px] px-3 text-[14px] font-medium transition-colors duration-150",
+                      "group relative flex h-10 items-center rounded-[11px] text-[14px] transition-colors duration-150",
+                      collapsed ? "justify-center px-2" : "gap-3 px-3 font-medium",
                       selected
-                        ? "bg-[var(--purple-light)] text-[var(--purple)]"
+                        ? collapsed
+                          ? "bg-[#f0f0f0] text-[#0a0a0a]"
+                          : "bg-[var(--purple-light)] text-[var(--purple)]"
                         : "text-[#5F6B85] hover:bg-[var(--muted-surface)] hover:text-[var(--text-primary)]",
                     )}
                   >
-                    <Icon className="size-[17px]" strokeWidth={1.9} />
-                    <span>{item.label}</span>
-                    {selected ? (
+                    <Icon
+                      className="size-[17px]"
+                      strokeWidth={selected && collapsed ? 2.6 : 1.9}
+                    />
+                    {!collapsed && <span>{item.label}</span>}
+                    {!collapsed && selected && (
                       <span className="absolute right-3 size-1.5 rounded-full bg-[var(--purple)]" />
-                    ) : null}
+                    )}
                   </Link>
                 );
               })}
@@ -204,38 +224,39 @@ function Sidebar() {
         ))}
       </nav>
 
-      <div className="mt-6">
-        <button
-          type="button"
-          className="group relative w-full overflow-hidden rounded-[17px] border border-[var(--border-soft)] bg-white p-4 text-left transition-colors hover:border-[#D8DDF0]"
-        >
-          <div className="relative z-10 flex items-start justify-between">
-            <div>
-              <div className="text-[13px] font-semibold text-[var(--text-primary)]">
-                Invite friends
+      {!collapsed && (
+        <div className="mt-6">
+          <button
+            type="button"
+            className="group relative w-full overflow-hidden rounded-[17px] border border-[var(--border-soft)] bg-white p-4 text-left transition-colors hover:border-[#D8DDF0]"
+          >
+            <div className="relative z-10 flex items-start justify-between">
+              <div>
+                <div className="text-[13px] font-semibold text-[var(--text-primary)]">
+                  Invite friends
+                </div>
+                <div className="mt-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                  Earn trading credits
+                </div>
               </div>
-              <div className="mt-1 text-[11px] font-medium text-[var(--text-secondary)]">
-                Earn trading credits
-              </div>
+              <ExternalLink className="mt-0.5 size-3.5 text-[var(--text-secondary)] transition-transform group-hover:translate-x-0.5" />
             </div>
-            <ExternalLink className="mt-0.5 size-3.5 text-[var(--text-secondary)] transition-transform group-hover:translate-x-0.5" />
-          </div>
-          <div className="mt-8 h-12 rounded-[13px] bg-[linear-gradient(115deg,rgba(79,141,255,0.18),rgba(124,92,255,0.18)_45%,rgba(236,72,153,0.18))]">
-            <div className="h-full w-full rounded-[13px] bg-[repeating-linear-gradient(160deg,rgba(124,92,255,0.18)_0_1px,transparent_1px_6px)] opacity-80" />
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className="mt-4 flex h-11 w-full items-center justify-between rounded-[12px] px-3 text-[13px] font-medium text-[#65708A] transition-colors hover:bg-[var(--muted-surface)]"
-        >
-          <span className="flex items-center gap-3">
-            <Sun className="size-[18px]" strokeWidth={1.7} />
-            Light mode
-          </span>
-          <ChevronDown className="size-4 -rotate-90" strokeWidth={1.8} />
-        </button>
-      </div>
+            <div className="mt-8 h-12 rounded-[13px] bg-[linear-gradient(115deg,rgba(79,141,255,0.18),rgba(124,92,255,0.18)_45%,rgba(236,72,153,0.18))]">
+              <div className="h-full w-full rounded-[13px] bg-[repeating-linear-gradient(160deg,rgba(124,92,255,0.18)_0_1px,transparent_1px_6px)] opacity-80" />
+            </div>
+          </button>
+          <button
+            type="button"
+            className="mt-4 flex h-11 w-full items-center justify-between rounded-[12px] px-3 text-[13px] font-medium text-[#65708A] transition-colors hover:bg-[var(--muted-surface)]"
+          >
+            <span className="flex items-center gap-3">
+              <Sun className="size-[18px]" strokeWidth={1.7} />
+              Light mode
+            </span>
+            <ChevronDown className="size-4 -rotate-90" strokeWidth={1.8} />
+          </button>
+        </div>
+      )}
     </aside>
   );
 }
@@ -371,9 +392,14 @@ function SearchCommand() {
   );
 }
 
-function Topbar() {
+function Topbar({ collapsed }: { collapsed: boolean }) {
   return (
-    <header className="fixed left-[220px] right-0 top-0 z-40 flex h-[72px] items-center border-b border-[var(--border-soft)] bg-white/86 px-8 backdrop-blur">
+    <header
+      className={cn(
+        "fixed right-0 top-0 z-40 flex h-[72px] items-center border-b border-[var(--border-soft)] bg-white/86 px-8 backdrop-blur transition-[left] duration-200",
+        collapsed ? "left-16" : "left-[220px]",
+      )}
+    >
       <SearchCommand />
 
       <div className="ml-auto flex items-center gap-5">
@@ -408,14 +434,22 @@ function Topbar() {
 }
 
 function AppShell({ children }: { children: React.ReactNode }) {
+  const [collapsed, setCollapsed] = React.useState(true);
   return (
     <div
       style={themeVars}
       className="min-h-screen bg-[var(--app-bg)] text-[var(--text-primary)] [font-family:Inter,system-ui,sans-serif]"
     >
-      <Sidebar />
-      <Topbar />
-      <main className="min-h-screen pl-[220px] pt-[72px]">{children}</main>
+      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
+      <Topbar collapsed={collapsed} />
+      <main
+        className={cn(
+          "min-h-screen pt-[72px] transition-[padding-left] duration-200",
+          collapsed ? "pl-16" : "pl-[220px]",
+        )}
+      >
+        {children}
+      </main>
     </div>
   );
 }
