@@ -174,7 +174,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
   return (
     <aside
       className={cn(
-        "fixed bottom-3 left-3 top-3 z-50 flex flex-col rounded-[20px] border border-[#e8e8e8] bg-white py-4 shadow-[0_2px_20px_rgba(0,0,0,0.07)] transition-[width] duration-200",
+        "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[#e8e8e8] bg-white py-4 transition-[width] duration-200",
         collapsed ? "w-[60px] items-center px-0" : "w-[200px] px-4",
       )}
     >
@@ -369,22 +369,25 @@ function Topbar({ collapsed }: { collapsed: boolean }) {
   return (
     <header
       className={cn(
-        "fixed right-4 top-3 z-40 flex h-[56px] items-center rounded-[16px] border border-[#e8e8e8] bg-white/95 px-5 shadow-[0_2px_16px_rgba(0,0,0,0.07)] backdrop-blur-[10px] transition-[left] duration-200",
-        collapsed ? "left-[83px]" : "left-[223px]",
+        "fixed right-0 top-0 z-40 flex h-[60px] items-center border-b border-[#e8e8e8] bg-white transition-[left] duration-200",
+        collapsed ? "left-[60px]" : "left-[200px]",
       )}
     >
-      <SearchCommand />
-
-      <div className="ml-auto flex items-center">
+      <div className="mx-auto flex w-full max-w-[1540px] items-center gap-4 px-8">
+        <div className="flex-1">
+          <SearchCommand />
+        </div>
         <Link
           href="/dashboard/portfolio"
-          className="hidden text-left transition-opacity hover:opacity-75 sm:block"
+          className="flex shrink-0 items-center gap-3 rounded-[12px] border border-[#ececec] px-4 py-2 text-left transition-colors hover:bg-[#f8f8f8]"
         >
-          <div className="text-[13px] font-semibold text-[var(--text-primary)]">Portfolio</div>
-          <div className="mt-0.5 flex items-center gap-1.5 text-[12px] font-medium text-[#53607A]">
-            <Wallet className="size-3.5" strokeWidth={1.8} />
-            $128,430.00
-            <ChevronDown className="size-3.5" strokeWidth={1.8} />
+          <Wallet className="size-4 text-[#a3a3a3]" strokeWidth={1.8} />
+          <div>
+            <div className="text-[11px] font-medium text-[#a3a3a3]">Portfolio</div>
+            <div className="flex items-center gap-1 text-[13px] font-semibold text-[#0a0a0a]">
+              $128,430.00
+              <ChevronDown className="size-3 text-[#a3a3a3]" strokeWidth={1.8} />
+            </div>
           </div>
         </Link>
       </div>
@@ -403,8 +406,8 @@ function AppShell({ children }: { children: React.ReactNode }) {
       <Topbar collapsed={collapsed} />
       <main
         className={cn(
-          "min-h-screen pt-[76px] transition-[padding-left] duration-200",
-          collapsed ? "pl-[83px]" : "pl-[223px]",
+          "min-h-screen pt-[60px] transition-[padding-left] duration-200",
+          collapsed ? "pl-[60px]" : "pl-[200px]",
         )}
       >
         {children}

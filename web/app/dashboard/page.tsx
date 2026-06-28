@@ -1306,15 +1306,8 @@ const formatCurrency = (value: number) =>
 const formatSignedCurrency = (value: number) =>
   `${value >= 0 ? "+" : "-"}${formatCurrency(Math.abs(value))}`;
 
-function defaultCompareIds(symbol: string, recommendedMarketId?: string) {
-  return riskMarkets
-    .filter(
-      (market) =>
-        market.assetSymbols.includes(symbol) &&
-        (!recommendedMarketId || market.id !== recommendedMarketId),
-    )
-    .slice(0, 2)
-    .map((market) => market.id);
+function defaultCompareIds(_symbol: string, _recommendedMarketId?: string) {
+  return [];
 }
 
 function Badge({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -2161,11 +2154,8 @@ const METRICS_DB: Record<string, { marketCap: string; pe: string; range52w: stri
 
 export default function DashboardPage() {
   const [selectedSymbol, setSelectedSymbol] = React.useState("LMT");
-  const [activeMarketId, setActiveMarketId] = React.useState("fed-rate-cut-july");
-  const [compareIds, setCompareIds] = React.useState<string[]>([
-    "defense-budget-900",
-    "republicans-2026",
-  ]);
+  const [activeMarketId, setActiveMarketId] = React.useState("");
+  const [compareIds, setCompareIds] = React.useState<string[]>([]);
   const [browseOpen, setBrowseOpen] = React.useState(false);
   const [appliedMarketId, setAppliedMarketId] = React.useState<string | null>(null);
 
@@ -2174,15 +2164,17 @@ export default function DashboardPage() {
 
   // ── Live data patches ──────────────────────────────────────────────────────
   const [livePrices, setLivePrices] = React.useState<Record<string, { price: number; changePct: number; direction: "up" | "down" }>>({});
-  const [liveMarketProbs, setLiveMarketProbs] = React.useState<Record<string, { yes: number; no: number; probability: number; venue: string }>>({});
+  const [liveCharts, setLiveCharts] = React.useState<Record<string, ChartPoint[]>>({});
   const [liveBrowseMarkets, setLiveBrowseMarkets] = React.useState<RiskMarket[]>([]);
 
   React.useEffect(() => {
+    // Live stock prices
     fetch("/api/prices")
       .then((r) => r.json())
       .then(setLivePrices)
       .catch(() => {});
 
+    // Live prediction markets
     fetch("/api/risk-markets")
       .then((r) => r.json())
       .then((markets: Array<{ id: string; yes: number; no: number; probability: number; venue: string; venues: string[]; title: string; category: string }>) => {
@@ -2190,7 +2182,7 @@ export default function DashboardPage() {
           Economics: "building", Politics: "landmark", Technology: "cpu",
           Defense: "shield", Energy: "anchor", Macro: "macro",
         };
-        setLiveBrowseMarkets(markets.map((m) => ({
+        const liveMarkets: RiskMarket[] = markets.map((m) => ({
           id: m.id,
           title: m.title,
           category: m.category ?? "Markets",
@@ -2219,41 +2211,60 @@ export default function DashboardPage() {
           })),
           sparkUp: [],
           sparkDown: [],
-        })));
+        }));
+        setLiveBrowseMarkets(liveMarkets);
+        // Initialize active market from first live result
+        setActiveMarketId((prev) => prev || liveMarkets[0]?.id || "");
+        setCompareIds((prev) => prev.length ? prev : liveMarkets.slice(1, 3).map((m) => m.id));
       })
       .catch(() => {});
+
+    // Live chart bars for all initial assets
+    const initialSymbols = assets.map((a) => a.symbol);
+    initialSymbols.forEach((symbol) => {
+      fetch(`/api/bars?symbol=${symbol}`)
+        .then((r) => r.json())
+        .then((bars: Array<{ date: string; close: number }>) => {
+          if (!Array.isArray(bars) || bars.length < 2) return;
+          const chartData = chart(
+            bars.map((b) => b.close),
+            bars.map((b) => new Date(b.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })),
+          );
+          setLiveCharts((prev) => ({ ...prev, [symbol]: chartData }));
+        })
+        .catch(() => {});
+    });
   }, []);
 
-  // Merge live prices into assets (base + user-added)
+  // Merge live prices + charts into assets (base + user-added)
   const patchedAssets = React.useMemo(() =>
     [...assets, ...extraAssets].map((a) => {
       const live = livePrices[a.symbol];
-      if (!live) return a;
-      return { ...a, price: live.price, position: { ...a.position, avgPrice: live.price, notional: live.price * a.position.shares, pnl: (live.price - a.position.avgPrice) * a.position.shares } };
+      const liveChart = liveCharts[a.symbol];
+      return {
+        ...a,
+        ...(liveChart ? { chart: liveChart } : {}),
+        ...(live ? {
+          price: live.price,
+          position: {
+            ...a.position,
+            notional: live.price * a.position.shares,
+            pnl: (live.price - a.position.avgPrice) * a.position.shares,
+          },
+        } : {}),
+      };
     }),
-  [livePrices, extraAssets]);
+  [livePrices, liveCharts, extraAssets]);
 
-  // Merge live probabilities into riskMarkets
-  const patchedMarkets = React.useMemo(() =>
-    riskMarkets.map((m) => {
-      const live = liveMarketProbs[m.id];
-      if (!live) return m;
-      return { ...m, probability: live.probability, yes: live.yes, no: live.no, venue: live.venue };
-    }),
-  [liveMarketProbs]);
+  // Live prediction markets (replaces hardcoded riskMarkets once loaded)
+  const patchedMarkets = liveBrowseMarkets;
 
   const selectedAsset = patchedAssets.find((asset) => asset.symbol === selectedSymbol) ?? patchedAssets[2];
 
-  const matchedRiskMarkets = patchedMarkets.filter(
-    (market) =>
-      market.assetSymbols.includes(selectedAsset.symbol) &&
-      !(selectedAsset.symbol === "LMT" && market.id === "fed-rate-cut-july"),
-  );
-  const visibleRiskMarkets = (matchedRiskMarkets.length > 0 ? matchedRiskMarkets : patchedMarkets).slice(0, 3);
+  const visibleRiskMarkets = patchedMarkets.slice(0, 3);
 
   const activeMarket =
     patchedMarkets.find((market) => market.id === activeMarketId) ??
-    patchedMarkets.find((market) => market.id === selectedAsset.recommendedMarketId) ??
     patchedMarkets[0];
 
   // Add a brand-new stock from the search bar with live Alpaca price
@@ -2293,7 +2304,7 @@ export default function DashboardPage() {
         pnlPct: "+0.00%",
         volatility: "—",
       },
-      recommendedMarketId: riskMarkets.find((m) => m.assetSymbols.includes(symbol))?.id ?? riskMarkets[0]?.id ?? "fed-rate-cut-july",
+      recommendedMarketId: liveBrowseMarkets[0]?.id ?? "",
     };
 
     const recId = newAsset.recommendedMarketId;
@@ -2305,7 +2316,7 @@ export default function DashboardPage() {
     setActiveMarketId(recId);
     setCompareIds(defaultCompareIds(symbol, recId));
     setAppliedMarketId(null);
-  }, []);
+  }, [liveBrowseMarkets]);
 
   const selectAsset = React.useCallback((symbol: string) => {
     const nextAsset = patchedAssets.find((asset) => asset.symbol === symbol);
@@ -2314,10 +2325,10 @@ export default function DashboardPage() {
       return;
     }
     setSelectedSymbol(nextAsset.symbol);
-    setActiveMarketId(nextAsset.recommendedMarketId);
-    setCompareIds(defaultCompareIds(nextAsset.symbol, nextAsset.recommendedMarketId));
+    setActiveMarketId(patchedMarkets[0]?.id ?? "");
+    setCompareIds([]);
     setAppliedMarketId(null);
-  }, [patchedAssets, addAssetBySymbol]);
+  }, [patchedAssets, patchedMarkets, addAssetBySymbol]);
 
   React.useEffect(() => {
     const onAsset = (event: Event) => {
@@ -2329,11 +2340,6 @@ export default function DashboardPage() {
       const market = patchedMarkets.find((item) => item.id === marketId);
       if (!market) return;
       setActiveMarketId(market.id);
-      if (!market.assetSymbols.includes(selectedSymbol)) {
-        const nextSymbol = market.assetSymbols[0];
-        setSelectedSymbol(nextSymbol);
-        setCompareIds(defaultCompareIds(nextSymbol, market.id));
-      }
       setAppliedMarketId(null);
       setBrowseOpen(true);
     };
@@ -2376,17 +2382,25 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-4">
           <PositionCard asset={selectedAsset} />
-          <ProjectedOutcomesCard market={activeMarket} />
-          <RecommendedHedgeCard
-            market={activeMarket}
-            applied={appliedMarketId === activeMarket.id}
-            onApply={() => setAppliedMarketId(activeMarket.id)}
-          />
-          <SummaryCard
-            market={activeMarket}
-            asset={selectedAsset}
-            onOpenAnalysis={() => setBrowseOpen(true)}
-          />
+          {activeMarket ? (
+            <>
+              <ProjectedOutcomesCard market={activeMarket} />
+              <RecommendedHedgeCard
+                market={activeMarket}
+                applied={appliedMarketId === activeMarket.id}
+                onApply={() => setAppliedMarketId(activeMarket.id)}
+              />
+              <SummaryCard
+                market={activeMarket}
+                asset={selectedAsset}
+                onOpenAnalysis={() => setBrowseOpen(true)}
+              />
+            </>
+          ) : (
+            <div className="col-span-3 flex items-center justify-center rounded-[18px] border border-[#ececec] bg-white py-12 text-[13px] text-[#a3a3a3]">
+              Loading live markets…
+            </div>
+          )}
         </div>
 
       </div>

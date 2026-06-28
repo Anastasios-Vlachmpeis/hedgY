@@ -4,6 +4,12 @@ const DATA = process.env.ALPACA_DATA_URL ?? "https://data.alpaca.markets";
 const KEY = process.env.APCA_API_KEY_ID ?? "";
 const SECRET = process.env.APCA_API_SECRET_KEY ?? "";
 
+function oneYearAgo(): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 1);
+  return d.toISOString().split("T")[0];
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const symbol = searchParams.get("symbol")?.toUpperCase();
@@ -11,7 +17,7 @@ export async function GET(request: Request) {
 
   try {
     const res = await fetch(
-      `${DATA}/v2/stocks/bars?symbols=${symbol}&timeframe=1D&start=2024-07-01&limit=34&adjustment=raw`,
+      `${DATA}/v2/stocks/bars?symbols=${symbol}&timeframe=1D&start=${oneYearAgo()}&limit=260&adjustment=raw`,
       {
         headers: { "APCA-API-KEY-ID": KEY, "APCA-API-SECRET-KEY": SECRET },
         cache: "no-store",
