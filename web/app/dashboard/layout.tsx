@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { STOCKS_DB } from "@/lib/stocks";
 
 const themeVars = {
   "--app-bg": "#F8F9FC",
@@ -54,16 +53,10 @@ type SearchItem = {
   subtitle: string;
   venue: string;
   probability?: string;
+  cls?: "equity" | "crypto";
 };
 
 const searchItems: SearchItem[] = [
-  ...STOCKS_DB.map((s) => ({
-    kind: "asset" as const,
-    id: s.symbol,
-    title: s.symbol,
-    subtitle: `${s.name} · ${s.sector}`,
-    venue: s.exchange,
-  })),
   {
     kind: "market",
     id: "defense-budget-900",
@@ -252,6 +245,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
 function SearchCommand() {
   const [query, setQuery] = React.useState("");
   const [open, setOpen] = React.useState(false);
+  const [assets, setAssets] = React.useState<SearchItem[]>([]);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -274,23 +268,52 @@ function SearchCommand() {
     };
   }, []);
 
+  // Live asset search against the full Alpaca universe (debounced).
+  React.useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setAssets([]);
+      return;
+    }
+    const ctrl = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: ctrl.signal });
+        const rows: { symbol: string; name: string; exchange: string; cls: "equity" | "crypto" }[] = await res.json();
+        setAssets(
+          rows.map((r) => ({
+            kind: "asset" as const,
+            id: r.symbol,
+            title: r.symbol,
+            subtitle: r.name,
+            venue: r.cls === "crypto" ? "Crypto" : r.exchange,
+            cls: r.cls,
+          })),
+        );
+      } catch {
+        /* aborted or offline — keep prior results */
+      }
+    }, 160);
+    return () => {
+      ctrl.abort();
+      window.clearTimeout(timer);
+    };
+  }, [query]);
+
   const results = React.useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return searchItems.slice(0, 7);
-    return searchItems
-      .filter((item) =>
-        `${item.title} ${item.subtitle} ${item.venue}`.toLowerCase().includes(q),
-      )
-      .slice(0, 8);
-  }, [query]);
+    const markets = q
+      ? searchItems.filter((i) => `${i.title} ${i.subtitle} ${i.venue}`.toLowerCase().includes(q))
+      : searchItems.slice(0, 4);
+    return [...assets, ...markets].slice(0, 10);
+  }, [query, assets]);
 
   const choose = (item: SearchItem) => {
     if (item.kind === "asset") {
+      // open the stock inline on the dashboard (it fetches live price + chart)
       window.dispatchEvent(new CustomEvent("verso:select-asset", { detail: { symbol: item.id } }));
     } else {
-      window.dispatchEvent(
-        new CustomEvent("verso:select-market", { detail: { marketId: item.id } }),
-      );
+      window.dispatchEvent(new CustomEvent("verso:select-market", { detail: { marketId: item.id } }));
     }
     setQuery("");
     setOpen(false);

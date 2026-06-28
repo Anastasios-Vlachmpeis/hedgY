@@ -130,7 +130,7 @@ function Nav() {
 
       <div className="flex items-center gap-5">
         <Link
-          href="/login"
+          href="/dashboard"
           className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#52525B] transition-colors hover:text-[#0A0A0A]"
         >
           Log in

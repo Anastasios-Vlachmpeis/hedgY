@@ -16,6 +16,7 @@ import {
   SearchCheck,
   ShieldCheck,
   Sparkles,
+  X,
 } from "lucide-react";
 import {
   CartesianGrid,
@@ -1456,10 +1457,12 @@ function RiskIcon({ icon, bare = false }: { icon: RiskMarket["icon"]; bare?: boo
 function AssetSwitcher({
   selectedSymbol,
   onSelect,
+  onRemove,
   assetList,
 }: {
   selectedSymbol: string;
   onSelect: (symbol: string) => void;
+  onRemove: (symbol: string) => void;
   assetList: Asset[];
 }) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -1491,27 +1494,39 @@ function AssetSwitcher({
       {assetList.map((asset) => {
         const selected = asset.symbol === selectedSymbol;
         return (
-          <button
-            key={asset.symbol}
-            type="button"
-            onClick={() => onSelect(asset.symbol)}
-            className={cn(
-              "flex h-[66px] min-w-[190px] items-center gap-3 rounded-[15px] border bg-white px-5 text-left transition-all duration-150",
-              selected
-                ? "border-[#d0d0d0] shadow-[0_0_0_3px_rgba(0,0,0,0.04)]"
-                : "border-[#ececec] hover:border-[#d0d0d0]",
-            )}
-          >
-            <AssetLogo symbol={asset.symbol} />
-            <span>
-              <span className="block text-[14px] font-bold text-[#0a0a0a]">
-                {asset.symbol}
+          <div key={asset.symbol} className="group relative shrink-0">
+            <button
+              type="button"
+              onClick={() => onSelect(asset.symbol)}
+              className={cn(
+                "flex h-[66px] min-w-[190px] items-center gap-3 rounded-[15px] border bg-white px-5 text-left transition-all duration-150",
+                selected
+                  ? "border-[#d0d0d0] shadow-[0_0_0_3px_rgba(0,0,0,0.04)]"
+                  : "border-[#ececec] hover:border-[#d0d0d0]",
+              )}
+            >
+              <AssetLogo symbol={asset.symbol} />
+              <span>
+                <span className="block text-[14px] font-bold text-[#0a0a0a]">
+                  {asset.symbol}
+                </span>
+                <span className="mt-0.5 block text-[12px] font-medium text-[#a3a3a3]">
+                  {asset.name}
+                </span>
               </span>
-              <span className="mt-0.5 block text-[12px] font-medium text-[#a3a3a3]">
-                {asset.name}
-              </span>
-            </span>
-          </button>
+            </button>
+            <button
+              type="button"
+              aria-label={`Remove ${asset.symbol}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(asset.symbol);
+              }}
+              className="absolute right-1.5 top-1.5 flex size-5 items-center justify-center rounded-full bg-white/90 text-[#a3a3a3] opacity-0 shadow-sm ring-1 ring-[#ececec] transition-opacity hover:text-[#EF4444] group-hover:opacity-100"
+            >
+              <X className="size-3" strokeWidth={2.2} />
+            </button>
+          </div>
         );
       })}
       <button
@@ -1552,6 +1567,16 @@ function ChartTooltip({
 
 function AssetChartCard({ asset }: { asset: Asset }) {
   const [activeFrame, setActiveFrame] = React.useState("1Y");
+  const [placed, setPlaced] = React.useState(false);
+  const placedTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const placeOrder = React.useCallback(() => {
+    setPlaced(true);
+    if (placedTimer.current) clearTimeout(placedTimer.current);
+    placedTimer.current = setTimeout(() => setPlaced(false), 2600);
+  }, []);
+  React.useEffect(() => () => {
+    if (placedTimer.current) clearTimeout(placedTimer.current);
+  }, []);
 
   const visibleData = sliceByFrame(asset.chart, activeFrame);
   const firstClose = visibleData[0]?.price;
@@ -1583,16 +1608,23 @@ function AssetChartCard({ asset }: { asset: Asset }) {
           </div>
         </div>
         <div className="ml-auto flex items-center">
-          <a
-            href={`https://www.tradingview.com/chart/?symbol=${asset.exchange}:${asset.symbol}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex h-9 items-center gap-1.5 rounded-[11px] border border-[#ececec] bg-white px-3 text-[12px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#f5f5f5]"
+          <button
+            type="button"
+            onClick={placeOrder}
+            className="flex h-9 items-center gap-1.5 rounded-[11px] bg-[#050505] px-4 text-[12px] font-semibold text-white transition-transform hover:-translate-y-0.5 active:translate-y-px"
           >
-            View asset
-            <ExternalLink className="size-3.5" strokeWidth={1.9} />
-          </a>
+            Buy {asset.symbol}
+          </button>
         </div>
+        {placed && (
+          <div className="pointer-events-none fixed bottom-6 right-6 z-[90] flex items-center gap-2.5 rounded-2xl bg-[#050505] px-4 py-3 text-white shadow-[0_8px_30px_rgba(0,0,0,0.25)] ring-1 ring-white/10">
+            <CheckCircle2 className="size-5 text-[#16a34a]" />
+            <div className="leading-tight">
+              <p className="text-[14px] font-semibold">Order placed</p>
+              <p className="text-[12px] text-[#a3a3a3]">Bought {asset.symbol} · mock fill</p>
+            </div>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="p-5">
@@ -2217,8 +2249,9 @@ export default function DashboardPage() {
   const [browseOpen, setBrowseOpen] = React.useState(false);
   const [appliedMarketId, setAppliedMarketId] = React.useState<string | null>(null);
 
-  // ── User-added stocks ─────────────────────────────────────────────────────
+  // ── User-added / removed stocks ───────────────────────────────────────────
   const [extraAssets, setExtraAssets] = React.useState<Asset[]>([]);
+  const [removedSymbols, setRemovedSymbols] = React.useState<string[]>([]);
 
   // ── Live data patches ──────────────────────────────────────────────────────
   const [livePrices, setLivePrices] = React.useState<Record<string, { price: number; changePct: number; direction: "up" | "down" }>>({});
@@ -2389,6 +2422,7 @@ export default function DashboardPage() {
   }, [liveBrowseMarkets]);
 
   const selectAsset = React.useCallback((symbol: string) => {
+    setRemovedSymbols((prev) => prev.filter((s) => s !== symbol)); // re-selecting un-hides
     const nextAsset = patchedAssets.find((asset) => asset.symbol === symbol);
     if (!nextAsset) {
       addAssetBySymbol(symbol);
@@ -2402,6 +2436,16 @@ export default function DashboardPage() {
     setCompareIds([]);
     setAppliedMarketId(null);
   }, [patchedAssets, patchedMarkets, addAssetBySymbol]);
+
+  const removeAsset = React.useCallback((symbol: string) => {
+    setRemovedSymbols((prev) => (prev.includes(symbol) ? prev : [...prev, symbol]));
+    setExtraAssets((prev) => prev.filter((a) => a.symbol !== symbol));
+    setSelectedSymbol((current) => {
+      if (current !== symbol) return current;
+      const next = patchedAssets.find((a) => a.symbol !== symbol && !removedSymbols.includes(a.symbol));
+      return next?.symbol ?? current;
+    });
+  }, [patchedAssets, removedSymbols]);
 
   React.useEffect(() => {
     const onAsset = (event: Event) => {
@@ -2440,7 +2484,12 @@ export default function DashboardPage() {
     <>
       <div className="mx-auto flex max-w-[1540px] flex-col gap-5 px-8 py-6">
         <HeaderIntro />
-        <AssetSwitcher selectedSymbol={selectedSymbol} onSelect={selectAsset} assetList={patchedAssets} />
+        <AssetSwitcher
+          selectedSymbol={selectedSymbol}
+          onSelect={selectAsset}
+          onRemove={removeAsset}
+          assetList={patchedAssets.filter((a) => !removedSymbols.includes(a.symbol))}
+        />
 
         <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
           <AssetChartCard asset={selectedAsset} />
