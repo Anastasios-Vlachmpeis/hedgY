@@ -1055,7 +1055,7 @@ function RiskMarketsCard({
 function PositionCard({ asset }: { asset: Asset }) {
   return (
     <div className="rounded-[18px] border border-[#ececec] bg-white p-5">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">Your position</p>
+      <p className="text-[13px] font-semibold text-[#0a0a0a]">Your position</p>
       <div className="mt-4 flex items-baseline justify-between">
         <span className="text-[22px] font-bold tracking-[-0.02em] text-[#0a0a0a]">{asset.symbol}</span>
         <span className="text-[18px] font-bold tracking-[-0.02em] text-[#0a0a0a]">{formatCurrency(asset.position.notional)}</span>
@@ -1091,7 +1091,7 @@ function RecommendedHedgeCard({
 
   return (
     <div className="rounded-[18px] border border-[#ececec] bg-white p-5">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">Recommended hedge</p>
+      <p className="text-[13px] font-semibold text-[#0a0a0a]">Recommended hedge</p>
       <div className="mt-4 space-y-3">
         {[
           ["Hedge ratio", market.hedgeRatio.toFixed(2), "neutral"],
@@ -1125,7 +1125,7 @@ function RecommendedHedgeCard({
 function ProjectedOutcomesCard({ market }: { market: RiskMarket }) {
   return (
     <div className="rounded-[18px] border border-[#ececec] bg-white p-5">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">Projected outcomes</p>
+      <p className="text-[13px] font-semibold text-[#0a0a0a]">Projected outcomes</p>
       <div className="mt-4 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-[12px] text-[#737373]">Event happens</span>
@@ -1174,7 +1174,7 @@ function SummaryCard({
 
   return (
     <div className="rounded-[18px] border border-[#ececec] bg-white p-5">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.07em] text-[#a3a3a3]">Summary</p>
+      <p className="text-[13px] font-semibold text-[#0a0a0a]">Summary</p>
       <div className="mt-4 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-[12px] text-[#737373]">Net cost</span>
@@ -1636,7 +1636,7 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.05fr_1.1fr_1.1fr_0.7fr]">
+        <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-4">
           <PositionCard asset={selectedAsset} />
           <RecommendedHedgeCard
             market={activeMarket}
