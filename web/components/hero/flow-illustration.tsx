@@ -43,7 +43,7 @@ export function FlowIllustration() {
       <svg
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="xMidYMid slice"
-        className="h-full w-full"
+        className="absolute inset-0 h-full w-full"
         aria-hidden
       >
         <defs>
@@ -84,7 +84,7 @@ export function FlowIllustration() {
       </svg>
 
       {/* central sphere */}
-      <div className="verso-breathe absolute left-1/2 top-1/2 flex size-[184px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-[#ECEAFF] bg-[radial-gradient(circle_at_50%_36%,#ffffff_0%,#f4f1ff_72%,#efeaff_100%)] text-center shadow-[0_24px_70px_-24px_rgba(124,92,255,0.42),0_0_0_10px_rgba(255,255,255,0.55)]">
+      <div className="verso-breathe relative z-10 flex size-[184px] flex-col items-center justify-center rounded-full border border-[#ECEAFF] bg-[radial-gradient(circle_at_50%_36%,#ffffff_0%,#f4f1ff_72%,#efeaff_100%)] text-center shadow-[0_24px_70px_-24px_rgba(124,92,255,0.42),0_0_0_10px_rgba(255,255,255,0.55)]">
         <VersoMark className="h-[18px] w-auto" />
         <div className="mt-2 text-[15px] font-semibold tracking-[-0.01em] text-[#0F172A]">
           Smart hedge

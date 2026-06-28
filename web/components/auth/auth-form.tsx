@@ -2,11 +2,16 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 
 type Mode = "signin" | "signup";
+
+// MVP demo credentials: sign in with these to reach the dashboard.
+const DEMO_EMAIL = "1234@gmail.com";
+const DEMO_PASSWORD = "1234";
 
 // Accent palette (purple, matches the pastel showcase panel).
 const TEAL = "#8B7CFF";
@@ -37,16 +42,31 @@ const COPY: Record<
 
 export function AuthForm({ mode }: { mode: Mode }) {
   const copy = COPY[mode];
+  const router = useRouter();
   const [loading, setLoading] = React.useState(false);
   const [done, setDone] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError(null);
+
+    const data = new FormData(e.currentTarget);
+    const email = String(data.get("email") ?? "").trim().toLowerCase();
+    const password = String(data.get("password") ?? "");
+
+    // Sign-in is gated on the demo credentials; sign-up is open so neither CTA
+    // is a dead end. Either way, a successful submit lands on the dashboard.
+    if (mode === "signin" && (email !== DEMO_EMAIL || password !== DEMO_PASSWORD)) {
+      setError("Invalid email or password.");
+      return;
+    }
+
     setLoading(true);
     setTimeout(() => {
-      setLoading(false);
       setDone(true);
-    }, 900);
+      router.push("/dashboard");
+    }, 700);
   }
 
   return (
@@ -126,6 +146,12 @@ export function AuthForm({ mode }: { mode: Mode }) {
             required
           />
         </div>
+
+        {error && (
+          <p role="alert" className="text-[13px] font-medium text-[#dc2626]">
+            {error}
+          </p>
+        )}
 
         <button
           type="submit"

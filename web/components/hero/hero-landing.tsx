@@ -39,11 +39,7 @@ export function HeroLanding() {
 
         {/* hero copy */}
         <section className="flex flex-col items-center pt-6 text-center">
-          <span className="rounded-full bg-[#F1EEFF] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7C5CFF]">
-            All markets. One platform.
-          </span>
-
-          <h1 className="mt-7 text-[78px] font-bold leading-[0.98] tracking-[-0.03em]">
+          <h1 className="mt-7 text-[78px] font-semibold leading-[0.98] tracking-[-0.03em]">
             <span className="block text-[#0F172A]">Invest in what happens.</span>
             <span className="block bg-gradient-to-r from-[#5E8CFF] via-[#7C5CFF] to-[#A678FF] bg-clip-text text-transparent">
               Hedge what matters.
