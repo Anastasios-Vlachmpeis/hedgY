@@ -157,6 +157,18 @@ interface UnifiedMarket {
   volume: number;
 }
 
+interface MemberMarketPayload {
+  venue?: unknown;
+  yes_price?: unknown;
+  no_price?: unknown;
+  volume?: unknown;
+  deep_link?: unknown;
+}
+
+interface MarketDetailPayload {
+  member_markets?: MemberMarketPayload[];
+}
+
 // Drop sports + the celebrity 2028-nomination longshots that dominate both venues.
 const DROP = /world cup|fifa|nba|nfl|super bowl|\bvs\b|nomination/i;
 
@@ -173,8 +185,8 @@ async function marketVolume(id: string): Promise<number> {
   try {
     const r = await fetch(`${MARKETS_API}/markets/${id}`, { cache: "no-store" });
     if (!r.ok) return 0;
-    const d = await r.json();
-    return (d.member_markets ?? []).reduce((s: number, m: any) => s + Number(m.volume ?? 0), 0);
+    const d = (await r.json()) as MarketDetailPayload;
+    return (d.member_markets ?? []).reduce((s, m) => s + Number(m.volume ?? 0), 0);
   } catch {
     return 0;
   }
@@ -277,9 +289,9 @@ async function marketMembers(id: string): Promise<VenueQuote[]> {
   try {
     const r = await fetch(`${MARKETS_API}/markets/${encodeURIComponent(id)}`, { cache: "no-store" });
     if (!r.ok) return [];
-    const d = await r.json();
+    const d = (await r.json()) as MarketDetailPayload;
     return (d.member_markets ?? [])
-      .map((m: any): VenueQuote => ({
+      .map((m): VenueQuote => ({
         venue: String(m.venue ?? ""),
         yes: Number(m.yes_price ?? 0),
         no: Number(m.no_price ?? 0),
