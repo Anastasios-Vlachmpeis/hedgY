@@ -223,6 +223,16 @@ export default function PortfolioPage() {
     };
   }, []);
 
+  // Keep values live: re-mark positions every 10s (crypto ticks 24/7; equities
+  // refresh while the market is open). Skip while a close is mid-flight so the
+  // confirmation modal's own refresh isn't clobbered.
+  React.useEffect(() => {
+    const id = setInterval(() => {
+      if (!closeLoading) void refresh();
+    }, 10_000);
+    return () => clearInterval(id);
+  }, [refresh, closeLoading]);
+
   const requestClose = React.useCallback((p: Position) => {
     setCloseError(null);
     setCloseDone(false);

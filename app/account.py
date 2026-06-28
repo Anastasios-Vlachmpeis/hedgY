@@ -408,25 +408,14 @@ _price_cache: dict[str, tuple[float, float | None]] = {}
 def _crypto_price(symbol: str, headers: dict[str, str]) -> float | None:
     """Latest crypto price for a pair like ``BTC/USD`` via the v1beta3 crypto feed.
 
-    Uses the dedicated latest-trades endpoint (then latest-quotes mid as a
-    fallback) — these are keyed by the pair symbol and are the same endpoints
-    proven out in scripts/alpaca-test.ts. The crypto snapshots endpoint returns
-    a different shape than the stock one, which is why the old code silently
-    produced no price for BTC/USD.
+    Marks off the live bid/ask **mid** first: on Alpaca's free crypto feed the
+    last *trade* is sparse and can be stale by minutes (so a position would look
+    frozen), whereas *quotes* update continuously — even on weekends. Falls back
+    to the last trade if a two-sided quote isn't available. Both endpoints are
+    keyed by the pair symbol (proven out in scripts/alpaca-test.ts).
     """
     base = f"{settings.alpaca_data_url}/v1beta3/crypto/us"
     params = {"symbols": symbol}
-
-    r = httpx.get(
-        f"{base}/latest/trades",
-        params=params,
-        headers=headers,
-        timeout=settings.http_timeout_seconds,
-    )
-    r.raise_for_status()
-    trade = (r.json().get("trades") or {}).get(symbol) or {}
-    if trade.get("p"):
-        return float(trade["p"])
 
     r = httpx.get(
         f"{base}/latest/quotes",
@@ -439,6 +428,17 @@ def _crypto_price(symbol: str, headers: dict[str, str]) -> float | None:
     bid, ask = quote.get("bp"), quote.get("ap")
     if bid and ask:
         return (float(bid) + float(ask)) / 2.0
+
+    r = httpx.get(
+        f"{base}/latest/trades",
+        params=params,
+        headers=headers,
+        timeout=settings.http_timeout_seconds,
+    )
+    r.raise_for_status()
+    trade = (r.json().get("trades") or {}).get(symbol) or {}
+    if trade.get("p"):
+        return float(trade["p"])
     return None
 
 
