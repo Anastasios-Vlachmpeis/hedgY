@@ -394,8 +394,22 @@ class AccountService:
 # --------------------------------------------------------------------------- #
 # Live pricing helpers (network/store) — used by routes, injected as `mark`.   #
 # --------------------------------------------------------------------------- #
+# Short-lived price cache. The portfolio marks every position to market on both
+# /account and /positions, so without this each open fired ~2 Alpaca snapshot
+# calls per holding (sequential, hundreds of ms each). A few seconds of staleness
+# is fine for a paper account and makes the portfolio load near-instant.
+_PRICE_TTL_SECONDS = 15.0
+_price_cache: dict[str, tuple[float, float | None]] = {}
+
+
 def stock_price(symbol: str) -> float | None:
-    """Latest Alpaca price for a symbol (trade price, else quote mid)."""
+    """Latest Alpaca price for a symbol (trade price, else quote mid), cached briefly."""
+    now = time.monotonic()
+    cached = _price_cache.get(symbol)
+    if cached is not None and now - cached[0] < _PRICE_TTL_SECONDS:
+        return cached[1]
+
+    price: float | None = None
     try:
         r = httpx.get(
             f"{settings.alpaca_data_url}/v2/stocks/{symbol}/snapshot",
@@ -409,15 +423,21 @@ def stock_price(symbol: str) -> float | None:
         snap = r.json()
         trade = (snap.get("latestTrade") or {}).get("p")
         if trade:
-            return float(trade)
-        quote = snap.get("latestQuote") or {}
-        bid, ask = quote.get("bp"), quote.get("ap")
-        if bid and ask:
-            return (float(bid) + float(ask)) / 2.0
-        bar = snap.get("dailyBar") or {}
-        return float(bar["c"]) if bar.get("c") else None
+            price = float(trade)
+        else:
+            quote = snap.get("latestQuote") or {}
+            bid, ask = quote.get("bp"), quote.get("ap")
+            if bid and ask:
+                price = (float(bid) + float(ask)) / 2.0
+            else:
+                bar = snap.get("dailyBar") or {}
+                price = float(bar["c"]) if bar.get("c") else None
     except Exception:  # noqa: BLE001 — pricing is best-effort
-        return None
+        price = None
+
+    # Cache hits and misses alike so a flaky/slow symbol can't be hammered.
+    _price_cache[symbol] = (now, price)
+    return price
 
 
 def place_alpaca_order(
