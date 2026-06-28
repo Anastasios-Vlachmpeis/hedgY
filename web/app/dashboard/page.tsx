@@ -41,6 +41,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { STOCKS_DB } from "@/lib/stocks";
 
 type ChartPoint = {
   t: string;
@@ -766,15 +767,19 @@ function AssetSwitcher({
   onSelect: (symbol: string) => void;
   assetList: Asset[];
 }) {
+  const currentIndex = assetList.findIndex((a) => a.symbol === selectedSymbol);
   return (
     <div className="mt-6 flex items-center gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <button
-        type="button"
-        aria-label="Previous asset"
-        className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-[var(--border-soft)] bg-white text-[#64748B] transition-colors hover:border-[#D8DDF0] hover:text-[var(--text-primary)]"
-      >
-        <ArrowRight className="size-4 rotate-180" strokeWidth={1.9} />
-      </button>
+      {currentIndex > 0 && (
+        <button
+          type="button"
+          aria-label="Previous asset"
+          onClick={() => onSelect(assetList[currentIndex - 1].symbol)}
+          className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-[var(--border-soft)] bg-white text-[#64748B] transition-colors hover:border-[#D8DDF0] hover:text-[var(--text-primary)]"
+        >
+          <ArrowRight className="size-4 rotate-180" strokeWidth={1.9} />
+        </button>
+      )}
       {assetList.map((asset) => {
         const selected = asset.symbol === selectedSymbol;
         return (
@@ -1683,6 +1688,9 @@ export default function DashboardPage() {
   const [browseOpen, setBrowseOpen] = React.useState(false);
   const [appliedMarketId, setAppliedMarketId] = React.useState<string | null>(null);
 
+  // ── User-added stocks ─────────────────────────────────────────────────────
+  const [extraAssets, setExtraAssets] = React.useState<Asset[]>([]);
+
   // ── Live data patches ──────────────────────────────────────────────────────
   const [livePrices, setLivePrices] = React.useState<Record<string, { price: number; changePct: number; direction: "up" | "down" }>>({});
   const [liveMarketProbs, setLiveMarketProbs] = React.useState<Record<string, { yes: number; no: number; probability: number; venue: string }>>({});
@@ -1703,14 +1711,14 @@ export default function DashboardPage() {
       .catch(() => {});
   }, []);
 
-  // Merge live prices into assets
+  // Merge live prices into assets (base + user-added)
   const patchedAssets = React.useMemo(() =>
-    assets.map((a) => {
+    [...assets, ...extraAssets].map((a) => {
       const live = livePrices[a.symbol];
       if (!live) return a;
       return { ...a, price: live.price, position: { ...a.position, avgPrice: live.price, notional: live.price * a.position.shares, pnl: (live.price - a.position.avgPrice) * a.position.shares } };
     }),
-  [livePrices]);
+  [livePrices, extraAssets]);
 
   // Merge live probabilities into riskMarkets
   const patchedMarkets = React.useMemo(() =>
@@ -1722,26 +1730,71 @@ export default function DashboardPage() {
   [liveMarketProbs]);
 
   const selectedAsset = patchedAssets.find((asset) => asset.symbol === selectedSymbol) ?? patchedAssets[2];
-  const visibleRiskMarkets = patchedMarkets
-    .filter(
-      (market) =>
-        market.assetSymbols.includes(selectedAsset.symbol) &&
-        !(selectedAsset.symbol === "LMT" && market.id === "fed-rate-cut-july"),
-    )
-    .slice(0, 3);
+
+  const matchedRiskMarkets = patchedMarkets.filter(
+    (market) =>
+      market.assetSymbols.includes(selectedAsset.symbol) &&
+      !(selectedAsset.symbol === "LMT" && market.id === "fed-rate-cut-july"),
+  );
+  const visibleRiskMarkets = (matchedRiskMarkets.length > 0 ? matchedRiskMarkets : patchedMarkets).slice(0, 3);
+
   const activeMarket =
     patchedMarkets.find((market) => market.id === activeMarketId) ??
     patchedMarkets.find((market) => market.id === selectedAsset.recommendedMarketId) ??
     patchedMarkets[0];
 
+  // Add a brand-new stock from the search bar with live Alpaca price
+  const addAssetBySymbol = React.useCallback(async (symbol: string) => {
+    const meta = STOCKS_DB.find((s) => s.symbol === symbol);
+    let price = 100;
+    try {
+      const res = await fetch(`/api/prices?symbols=${symbol}`);
+      const prices = await res.json();
+      price = prices[symbol]?.price ?? 100;
+    } catch {}
+
+    const newAsset: Asset = {
+      symbol,
+      name: meta?.name ?? symbol,
+      exchange: meta?.exchange ?? "NASDAQ",
+      sector: meta?.sector ?? "Equities",
+      price,
+      accent: "#7C5CFF",
+      chart: Array.from({ length: 34 }, (_, i) => ({ t: monthLabels[i] ?? "", price })),
+      metrics: { marketCap: "—", pe: "—", range52w: "—", dividendYield: "—", beta: "—" },
+      position: {
+        shares: 100,
+        notional: price * 100,
+        portfolioPct: "—",
+        avgPrice: price,
+        pnl: 0,
+        pnlPct: "+0.00%",
+        volatility: "—",
+      },
+      recommendedMarketId: riskMarkets[0]?.id ?? "fed-rate-cut-july",
+    };
+
+    setExtraAssets((prev) => {
+      if (prev.some((a) => a.symbol === symbol)) return prev;
+      return [...prev, newAsset];
+    });
+    setSelectedSymbol(symbol);
+    setActiveMarketId(riskMarkets[0]?.id ?? "fed-rate-cut-july");
+    setCompareIds(defaultCompareIds(symbol, riskMarkets[0]?.id ?? "fed-rate-cut-july"));
+    setAppliedMarketId(null);
+  }, []);
+
   const selectAsset = React.useCallback((symbol: string) => {
     const nextAsset = patchedAssets.find((asset) => asset.symbol === symbol);
-    if (!nextAsset) return;
+    if (!nextAsset) {
+      addAssetBySymbol(symbol);
+      return;
+    }
     setSelectedSymbol(nextAsset.symbol);
     setActiveMarketId(nextAsset.recommendedMarketId);
     setCompareIds(defaultCompareIds(nextAsset.symbol, nextAsset.recommendedMarketId));
     setAppliedMarketId(null);
-  }, [patchedAssets]);
+  }, [patchedAssets, addAssetBySymbol]);
 
   React.useEffect(() => {
     const onAsset = (event: Event) => {

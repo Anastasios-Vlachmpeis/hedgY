@@ -4,18 +4,26 @@ const DATA = process.env.ALPACA_DATA_URL ?? "https://data.alpaca.markets";
 const KEY = process.env.APCA_API_KEY_ID ?? "";
 const SECRET = process.env.APCA_API_SECRET_KEY ?? "";
 
-const SYMBOLS = ["AAPL", "NVDA", "LMT", "MSFT", "AMD", "TSLA", "AMZN", "META", "GOOGL", "JPM", "XOM", "NFLX", "V", "BA", "PLTR"];
+const DEFAULT_SYMBOLS = ["AAPL", "NVDA", "LMT", "MSFT", "AMD", "TSLA", "AMZN", "META", "GOOGL", "JPM", "XOM", "NFLX", "V", "BA", "PLTR"];
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const symbolsParam = searchParams.get("symbols");
+  const symbolList = symbolsParam
+    ? symbolsParam.split(",").map((s) => s.trim().toUpperCase()).filter(Boolean)
+    : DEFAULT_SYMBOLS;
+
   try {
     const res = await fetch(
-      `${DATA}/v2/stocks/snapshots?symbols=${SYMBOLS.join(",")}`,
+      `${DATA}/v2/stocks/snapshots?symbols=${symbolList.join(",")}`,
       {
         headers: {
           "APCA-API-KEY-ID": KEY,
           "APCA-API-SECRET-KEY": SECRET,
         },
-        next: { revalidate: 30 },
+        // on-demand fetches skip cache; bulk default uses short revalidation
+        cache: symbolsParam ? "no-store" : "default",
+        next: symbolsParam ? undefined : { revalidate: 30 },
       }
     );
 
@@ -23,7 +31,7 @@ export async function GET() {
     const snap = await res.json();
 
     const prices: Record<string, { price: number; changePct: number; direction: "up" | "down" }> = {};
-    for (const symbol of SYMBOLS) {
+    for (const symbol of symbolList) {
       const s = snap[symbol];
       if (!s) continue;
       const price = s.latestTrade?.p ?? s.dailyBar?.c;
@@ -39,6 +47,6 @@ export async function GET() {
 
     return NextResponse.json(prices);
   } catch {
-    return NextResponse.json({}, { status: 200 }); // graceful fallback
+    return NextResponse.json({}, { status: 200 });
   }
 }
