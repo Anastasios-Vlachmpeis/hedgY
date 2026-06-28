@@ -949,19 +949,15 @@ function AssetChartCard({ asset }: { asset: Asset }) {
 
 /* ── Arc probability gauge with embedded label ── */
 function ArcGauge({ pct, bearish }: { pct: number; bearish?: boolean }) {
-  const r = 18, cx = 22, cy = 22;
+  const r = 16, cx = 21, cy = 21;
   const arc = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
+  const color = bearish ? "#ef4444" : "#22c55e";
   return (
-    <svg viewBox="0 0 44 27" className="w-[52px]">
-      <path d={arc} fill="none" stroke="#f0f0f0" strokeWidth="3.5" strokeLinecap="round" pathLength={100} />
-      <path
-        d={arc} fill="none"
-        stroke={bearish ? "#ef4444" : "#22c55e"}
-        strokeWidth="3.5" strokeLinecap="round"
-        pathLength={100} strokeDasharray={`${pct} 100`}
-      />
-      <text x="22" y="16" textAnchor="middle" fontSize="9.5" fontWeight="700" fill="#0a0a0a" fontFamily="inherit">{pct}%</text>
-      <text x="22" y="24" textAnchor="middle" fontSize="6" fill="#a3a3a3" fontFamily="inherit">chance</text>
+    <svg viewBox="0 0 42 30" className="w-[54px]">
+      <path d={arc} fill="none" stroke="#ececec" strokeWidth="4" strokeLinecap="round" pathLength={100} />
+      <path d={arc} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" pathLength={100} strokeDasharray={`${pct} 100`} />
+      <text x={cx} y="14" textAnchor="middle" fontSize="11" fontWeight="700" fill="#0a0a0a" fontFamily="inherit">{pct}%</text>
+      <text x={cx} y="27" textAnchor="middle" fontSize="6.5" fill="#a3a3a3" fontFamily="inherit">chance</text>
     </svg>
   );
 }
@@ -977,7 +973,7 @@ function MarketCard({
 }) {
   const bearish = market.correlation < 0;
   return (
-    <div className="rounded-[10px] bg-[#f8f8f8] p-3">
+    <div className="flex flex-1 flex-col rounded-[10px] bg-[#f8f8f8] p-3">
       <div className="flex items-start gap-2.5">
         <span className="flex size-7 shrink-0 items-center justify-center rounded-[7px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
           <RiskIcon icon={market.icon} bare />
@@ -987,7 +983,7 @@ function MarketCard({
         </p>
         <ArcGauge pct={market.probability} bearish={bearish} />
       </div>
-      <div className="mt-2 flex gap-1.5">
+      <div className="mt-auto pt-2 flex gap-1.5">
         <button
           type="button"
           className="flex-1 rounded-[6px] bg-[#dcfce7] py-1.5 text-[11px] font-semibold text-[#16a34a] transition-colors hover:bg-[#bbf7d0]"
@@ -1032,12 +1028,13 @@ function RiskMarketsCard({
       </p>
       <div className="flex flex-1 flex-col gap-2">
         {markets.map((market, i) => (
-          <MarketCard
-            key={market.id}
-            market={market}
-            recommended={i === 0}
-            onHedge={() => onSelectHedge(market.id)}
-          />
+          <div key={market.id} className="flex flex-1">
+            <MarketCard
+              market={market}
+              recommended={i === 0}
+              onHedge={() => onSelectHedge(market.id)}
+            />
+          </div>
         ))}
       </div>
       <button
@@ -1524,6 +1521,23 @@ export default function DashboardPage() {
     patchedMarkets.find((market) => market.id === selectedAsset.recommendedMarketId) ??
     patchedMarkets[0];
 
+  const METRICS_DB: Record<string, { marketCap: string; pe: string; range52w: string; dividendYield: string; beta: string }> = {
+    PLTR: { marketCap: "$268.4B", pe: "147.2x", range52w: "60.00 – 130.00", dividendYield: "0.00%", beta: "1.85" },
+    TSLA: { marketCap: "$1.02T",  pe: "88.4x",  range52w: "182.00 – 488.54", dividendYield: "0.00%", beta: "2.31" },
+    AMZN: { marketCap: "$2.28T",  pe: "42.1x",  range52w: "168.59 – 242.52", dividendYield: "0.00%", beta: "1.14" },
+    GOOGL: { marketCap: "$2.14T", pe: "21.8x",  range52w: "142.66 – 207.05", dividendYield: "0.52%", beta: "1.06" },
+    META:  { marketCap: "$1.63T", pe: "29.3x",  range52w: "469.79 – 740.91", dividendYield: "0.30%", beta: "1.28" },
+    NFLX:  { marketCap: "$433.2B",pe: "53.7x",  range52w: "542.01 – 1,064.50", dividendYield: "0.00%", beta: "1.34" },
+    ADBE:  { marketCap: "$194.6B",pe: "28.9x",  range52w: "376.27 – 548.16", dividendYield: "0.00%", beta: "1.22" },
+    CRM:   { marketCap: "$293.1B",pe: "44.6x",  range52w: "240.00 – 348.86", dividendYield: "0.68%", beta: "1.17" },
+    INTC:  { marketCap: "$88.2B", pe: "N/A",    range52w: "17.67 – 43.73",  dividendYield: "0.00%", beta: "1.08" },
+    QCOM:  { marketCap: "$169.3B",pe: "16.2x",  range52w: "117.50 – 199.14", dividendYield: "2.31%", beta: "1.41" },
+    JPM:   { marketCap: "$799.1B",pe: "13.8x",  range52w: "180.53 – 285.20", dividendYield: "1.86%", beta: "1.05" },
+    XOM:   { marketCap: "$502.4B",pe: "14.3x",  range52w: "96.28 – 124.42",  dividendYield: "3.52%", beta: "0.71" },
+    BA:    { marketCap: "$137.2B",pe: "N/A",    range52w: "139.31 – 224.16", dividendYield: "0.00%", beta: "1.43" },
+    V:     { marketCap: "$681.4B",pe: "35.2x",  range52w: "252.70 – 374.05", dividendYield: "0.71%", beta: "0.93" },
+  };
+
   // Add a brand-new stock from the search bar with live Alpaca price
   const addAssetBySymbol = React.useCallback(async (symbol: string) => {
     const meta = STOCKS_DB.find((s) => s.symbol === symbol);
@@ -1546,7 +1560,7 @@ export default function DashboardPage() {
       price,
       accent: "#7C5CFF",
       chart: chartData,
-      metrics: { marketCap: "—", pe: "—", range52w: "—", dividendYield: "—", beta: "—" },
+      metrics: METRICS_DB[symbol] ?? { marketCap: "—", pe: "—", range52w: "—", dividendYield: "—", beta: "—" },
       position: {
         shares: 100,
         notional: price * 100,

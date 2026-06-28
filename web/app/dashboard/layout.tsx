@@ -397,11 +397,9 @@ function Topbar() {
         </button>
         <button type="button" className="flex items-center gap-3">
           <span
-            className="flex size-10 items-center justify-center rounded-full text-[13px] font-semibold text-white"
+            className="block size-10 rounded-full"
             style={{ background: "radial-gradient(circle at 30% 25%, #9580ff, transparent 72%), linear-gradient(140deg, #9580ff, #4F8DFF)" }}
-          >
-            GM
-          </span>
+          />
           <ChevronDown className="size-4 text-[var(--purple)]" strokeWidth={2} />
         </button>
       </div>
