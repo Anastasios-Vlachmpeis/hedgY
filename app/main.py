@@ -293,6 +293,17 @@ def deposit(req: DepositRequest) -> dict:
     return summary
 
 
+@app.post("/account/withdraw")
+def withdraw(req: DepositRequest) -> dict:
+    try:
+        account_service.withdraw(req.amount)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    summary = account_service.account(_mark)
+    account_service.record_equity(summary["equity"], force=True)
+    return summary
+
+
 @app.post("/account/reset")
 def reset_account() -> dict:
     account_service.reset()

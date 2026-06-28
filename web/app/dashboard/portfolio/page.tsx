@@ -227,6 +227,12 @@ export default function PortfolioPage() {
   // refresh while the market is open). Skip while a close is mid-flight so the
   // confirmation modal's own refresh isn't clobbered.
   React.useEffect(() => {
+    const onUpdated = () => void refresh();
+    window.addEventListener("verso:account-updated", onUpdated);
+    return () => window.removeEventListener("verso:account-updated", onUpdated);
+  }, [refresh]);
+
+  React.useEffect(() => {
     const id = setInterval(() => {
       if (!closeLoading) void refresh();
     }, 10_000);

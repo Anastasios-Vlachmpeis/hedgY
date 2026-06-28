@@ -130,6 +130,26 @@ class AccountService:
         finally:
             conn.close()
 
+    def withdraw(self, amount: float) -> dict:
+        """Pull cash out to the linked card. Reduces cash AND the deposited base
+        (it's your own money leaving), so unrealized P&L is unaffected."""
+        if amount <= 0:
+            raise ValueError("withdrawal amount must be positive")
+        conn = self._connect()
+        try:
+            row = conn.execute("SELECT cash FROM account WHERE id = 1").fetchone()
+            cash = row["cash"] if row else 0.0
+            if amount > cash + 1e-9:
+                raise ValueError(f"insufficient cash: need ${amount:,.2f}, have ${cash:,.2f}")
+            conn.execute(
+                "UPDATE account SET cash = cash - ?, total_deposited = total_deposited - ? WHERE id = 1",
+                (amount, amount),
+            )
+            conn.commit()
+            return self._summary(conn)
+        finally:
+            conn.close()
+
     def reset(self) -> dict:
         conn = self._connect()
         try:
