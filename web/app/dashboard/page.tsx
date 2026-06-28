@@ -666,37 +666,46 @@ function Badge({ children, className }: { children: React.ReactNode; className?:
   );
 }
 
-const LOGO_DOMAINS: Record<string, string> = {
-  AAPL: "apple.com",     NVDA: "nvidia.com",       MSFT: "microsoft.com",
-  AMD:  "amd.com",       LMT:  "lockheedmartin.com",TSLA: "tesla.com",
-  AMZN: "amazon.com",   META: "meta.com",           GOOGL:"google.com",
-  GOOG: "google.com",   PLTR: "palantir.com",       NFLX: "netflix.com",
-  ADBE: "adobe.com",    CRM:  "salesforce.com",     ORCL: "oracle.com",
-  JPM:  "jpmorganchase.com", XOM: "exxonmobil.com", BA:   "boeing.com",
-  V:    "visa.com",     INTC: "intel.com",          QCOM: "qualcomm.com",
-  AVGO: "broadcom.com", TSM:  "tsmc.com",           ASML: "asml.com",
-  MU:   "micron.com",   AMAT: "appliedmaterials.com",KLAC:"kla.com",
-  GS:   "goldmansachs.com", MS:"morganstanley.com", WMT: "walmart.com",
-  UNH:  "unitedhealthgroup.com", JNJ:"jnj.com",     PFE: "pfizer.com",
+const SI_ICONS: Record<string, string> = {
+  AAPL: "apple",        NVDA: "nvidia",       MSFT: "microsoft",
+  AMD:  "amd",          TSLA: "tesla",        AMZN: "amazon",
+  META: "meta",         GOOGL:"google",       GOOG: "google",
+  PLTR: "palantir",     NFLX: "netflix",      ADBE: "adobe",
+  CRM:  "salesforce",   ORCL: "oracle",       V:    "visa",
+  INTC: "intel",        QCOM: "qualcomm",     AVGO: "broadcom",
+  ASML: "asml",         MU:   "micron",       AMAT: "appliedmaterials",
+  GS:   "goldmansachs", WMT:  "walmart",      UNH:  "unitedhealth",
+  JNJ:  "johnson",      PFE:  "pfizer",       JPM:  "jpmorgan",
+};
+
+const LETTER_BG: Record<string, string> = {
+  LMT: "#1B3A6B", XOM: "#C0131A", BA: "#1E4D8C",
+  MS:  "#003087", TSM: "#C0131A", KLAC: "#0033A0",
 };
 
 function AssetLogo({ symbol }: { symbol: string }) {
-  const domain = LOGO_DOMAINS[symbol];
   const [err, setErr] = React.useState(false);
-  if (domain && !err) {
+  const siName = SI_ICONS[symbol];
+  if (siName && !err) {
     return (
       <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_0_0_1.5px_#ececec]">
         <img
-          src={`https://logo.clearbit.com/${domain}`}
+          src={`https://cdn.simpleicons.org/${siName}`}
           alt={symbol}
-          className="size-[30px] rounded-full object-contain"
+          width={22}
+          height={22}
+          style={{ objectFit: "contain" }}
           onError={() => setErr(true)}
         />
       </span>
     );
   }
+  const bg = LETTER_BG[symbol] ?? "#0a0a0a";
   return (
-    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#0a0a0a] text-[10px] font-bold tracking-tight text-white">
+    <span
+      className="flex size-9 shrink-0 items-center justify-center rounded-full text-[10px] font-bold tracking-tight text-white"
+      style={{ background: bg }}
+    >
       {symbol.slice(0, 2)}
     </span>
   );
@@ -941,19 +950,22 @@ function AssetChartCard({ asset }: { asset: Asset }) {
 /* ── Arc probability gauge with embedded label ── */
 function ArcGauge({ pct, bearish }: { pct: number; bearish?: boolean }) {
   const color = bearish ? "#ef4444" : "#22c55e";
-  // r=22, cx=26, cy=26 → arc from (4,26) to (48,26), top at (26,4)
+  // Arc: center (26,26) r=22 → top at (26,4), chord endpoints at (4,26) and (48,26)
   const arc = "M 4 26 A 22 22 0 0 1 48 26";
   return (
-    <div className="relative w-[52px] shrink-0">
-      <svg viewBox="0 0 52 32" className="w-full">
+    <div className="shrink-0">
+      <svg
+        viewBox="0 0 52 34"
+        width={52}
+        height={34}
+        style={{ display: "block" }}
+      >
         <path d={arc} fill="none" stroke="#ececec" strokeWidth="5" strokeLinecap="round" pathLength={100} />
         <path d={arc} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" pathLength={100} strokeDasharray={`${pct} 100`} />
+        {/* dominantBaseline="central" makes y the vertical center of the glyph */}
+        <text x="26" y="16" textAnchor="middle" dominantBaseline="central" fontSize="11" fontWeight="700" fill="#0a0a0a">{pct}%</text>
+        <text x="26" y="30" textAnchor="middle" dominantBaseline="central" fontSize="7" fill="#a3a3a3">chance</text>
       </svg>
-      {/* HTML text overlay — centered inside the arc bowl (top=4, chord=26) */}
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center" style={{ paddingTop: 9 }}>
-        <span className="text-[11px] font-bold leading-none text-[#0a0a0a]">{pct}%</span>
-        <span className="mt-[3px] text-[7px] leading-none text-[#a3a3a3]">chance</span>
-      </div>
     </div>
   );
 }
