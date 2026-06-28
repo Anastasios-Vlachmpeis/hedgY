@@ -952,7 +952,7 @@ function ArcGauge({ pct, bearish }: { pct: number; bearish?: boolean }) {
   const r = 18, cx = 22, cy = 22;
   const arc = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
   return (
-    <svg viewBox="0 0 44 36" className="w-[52px]">
+    <svg viewBox="0 0 44 27" className="w-[52px]">
       <path d={arc} fill="none" stroke="#f0f0f0" strokeWidth="3.5" strokeLinecap="round" pathLength={100} />
       <path
         d={arc} fill="none"
@@ -960,8 +960,8 @@ function ArcGauge({ pct, bearish }: { pct: number; bearish?: boolean }) {
         strokeWidth="3.5" strokeLinecap="round"
         pathLength={100} strokeDasharray={`${pct} 100`}
       />
-      <text x="22" y="28" textAnchor="middle" fontSize="9" fontWeight="700" fill="#0a0a0a" fontFamily="inherit">{pct}%</text>
-      <text x="22" y="34.5" textAnchor="middle" fontSize="6" fill="#a3a3a3" fontFamily="inherit">chance</text>
+      <text x="22" y="16" textAnchor="middle" fontSize="9.5" fontWeight="700" fill="#0a0a0a" fontFamily="inherit">{pct}%</text>
+      <text x="22" y="24" textAnchor="middle" fontSize="6" fill="#a3a3a3" fontFamily="inherit">chance</text>
     </svg>
   );
 }
@@ -977,9 +977,9 @@ function MarketCard({
 }) {
   const bearish = market.correlation < 0;
   return (
-    <div className="rounded-[12px] border border-[#ececec] bg-white p-3">
+    <div className="rounded-[10px] bg-[#f8f8f8] p-3">
       <div className="flex items-start gap-2.5">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[#f5f5f5]">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-[7px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
           <RiskIcon icon={market.icon} bare />
         </span>
         <p className="flex-1 text-[12px] font-semibold leading-snug text-[#0a0a0a]">
@@ -987,16 +987,16 @@ function MarketCard({
         </p>
         <ArcGauge pct={market.probability} bearish={bearish} />
       </div>
-      <div className="mt-2.5 flex gap-1.5">
+      <div className="mt-2 flex gap-1.5">
         <button
           type="button"
-          className="flex-1 rounded-[7px] bg-[#dcfce7] py-1.5 text-[11px] font-semibold text-[#16a34a] transition-colors hover:bg-[#bbf7d0]"
+          className="flex-1 rounded-[6px] bg-[#dcfce7] py-1.5 text-[11px] font-semibold text-[#16a34a] transition-colors hover:bg-[#bbf7d0]"
         >
           Yes {market.yes}¢
         </button>
         <button
           type="button"
-          className="flex-1 rounded-[7px] bg-[#fee2e2] py-1.5 text-[11px] font-semibold text-[#dc2626] transition-colors hover:bg-[#fecaca]"
+          className="flex-1 rounded-[6px] bg-[#fee2e2] py-1.5 text-[11px] font-semibold text-[#dc2626] transition-colors hover:bg-[#fecaca]"
         >
           No {market.no}¢
         </button>
@@ -1004,7 +1004,7 @@ function MarketCard({
       <button
         type="button"
         onClick={onHedge}
-        className="mt-2 flex h-8 w-full items-center justify-center rounded-[7px] bg-[#f0f0f0] text-[11px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#e5e5e5]"
+        className="mt-2 flex h-8 w-full items-center justify-center rounded-[7px] bg-white border border-[#ececec] text-[11px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#f5f5f5]"
       >
         Hedge →
       </button>
@@ -1026,8 +1026,8 @@ function RiskMarketsCard({
   onBrowse: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col gap-2">
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#7B849A]">
+    <div className="flex h-full flex-col rounded-[18px] border border-[#ececec] bg-white p-4">
+      <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#7B849A]">
         Correlated prediction markets · {assetSymbol}
       </p>
       <div className="flex flex-1 flex-col gap-2">
@@ -1043,7 +1043,7 @@ function RiskMarketsCard({
       <button
         type="button"
         onClick={onBrowse}
-        className="mt-1 flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-[12px] border border-[#ececec] bg-white text-[13px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#fafafa]"
+        className="mt-3 flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-[10px] border border-[#ececec] text-[13px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#fafafa]"
       >
         Browse all risk markets
         <ArrowRight className="size-4" strokeWidth={2} />
