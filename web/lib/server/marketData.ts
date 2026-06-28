@@ -32,13 +32,21 @@ const ALP = {
 // ── Trending stocks (Alpaca) ─────────────────────────────────────────────────
 
 const STOCKS: { symbol: string; name: string }[] = [
-  { symbol: "LMT", name: "Lockheed Martin" },
-  { symbol: "RTX", name: "RTX Corp" },
-  { symbol: "NOC", name: "Northrop Grumman" },
-  { symbol: "GD", name: "General Dynamics" },
-  { symbol: "PFE", name: "Pfizer" },
-  { symbol: "MRK", name: "Merck & Co" },
-  { symbol: "ZIM", name: "ZIM Integrated" },
+  { symbol: "AAPL",  name: "Apple Inc."            },
+  { symbol: "MSFT",  name: "Microsoft Corp."        },
+  { symbol: "NVDA",  name: "NVIDIA Corp."           },
+  { symbol: "TSLA",  name: "Tesla Inc."             },
+  { symbol: "AMZN",  name: "Amazon.com Inc."        },
+  { symbol: "META",  name: "Meta Platforms"         },
+  { symbol: "GOOGL", name: "Alphabet Inc."          },
+  { symbol: "JPM",   name: "JPMorgan Chase"         },
+  { symbol: "LMT",   name: "Lockheed Martin"        },
+  { symbol: "XOM",   name: "Exxon Mobil"            },
+  { symbol: "AMD",   name: "Advanced Micro Devices" },
+  { symbol: "NFLX",  name: "Netflix Inc."           },
+  { symbol: "V",     name: "Visa Inc."              },
+  { symbol: "BA",    name: "Boeing Co."             },
+  { symbol: "PLTR",  name: "Palantir Technologies"  },
 ];
 
 export async function getTrendingStocks(): Promise<Stock[]> {
