@@ -4,24 +4,16 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bell,
   BriefcaseBusiness,
-  CalendarDays,
   ChartNoAxesCombined,
   ChevronDown,
   CreditCard,
   ExternalLink,
-  History,
   Home,
   Landmark,
   LineChart,
-  ReceiptText,
   Search,
   Settings,
-  ShieldCheck,
-  SlidersHorizontal,
-  Star,
-  Sun,
   Wallet,
   X,
 } from "lucide-react";
@@ -37,48 +29,20 @@ const themeVars = {
   "--text-primary": "#0F172A",
   "--text-secondary": "#64748B",
   "--text-muted": "#94A3B8",
-  "--purple": "#7C5CFF",
-  "--purple-light": "#F0ECFF",
   "--blue": "#4F8DFF",
   "--positive": "#16A34A",
   "--negative": "#EF4444",
-  "--hedge": "#EC4899",
   "--button-black": "#050505",
 } as React.CSSProperties;
 
-const navGroups = [
-  {
-    label: "OVERVIEW",
-    items: [
-      { label: "Home", href: "/dashboard", icon: Home },
-      { label: "Watchlist", href: "/dashboard#watchlist", icon: Star },
-    ],
-  },
-  {
-    label: "TRADE",
-    items: [
-      { label: "Build position", href: "/dashboard", icon: ChartNoAxesCombined, selected: true },
-      { label: "Positions", href: "/dashboard#positions", icon: SlidersHorizontal },
-      { label: "Orders", href: "/dashboard#orders", icon: ReceiptText },
-      { label: "History", href: "/dashboard#history", icon: History },
-    ],
-  },
-  {
-    label: "ANALYZE",
-    items: [
-      { label: "Markets", href: "/markets", icon: Landmark },
-      { label: "Events", href: "/markets#events", icon: CalendarDays },
-      { label: "Screeners", href: "/markets#screeners", icon: ShieldCheck },
-    ],
-  },
-  {
-    label: "ACCOUNT",
-    items: [
-      { label: "Portfolio", href: "/dashboard/portfolio", icon: BriefcaseBusiness },
-      { label: "Settings", href: "/dashboard#settings", icon: Settings },
-      { label: "Billing", href: "/dashboard#billing", icon: CreditCard },
-    ],
-  },
+const mainNav = [
+  { label: "Home", href: "/dashboard", icon: Home, exact: true },
+  { label: "Portfolio", href: "/dashboard/portfolio", icon: BriefcaseBusiness },
+];
+
+const bottomNav = [
+  { label: "Settings", href: "/dashboard#settings", icon: Settings },
+  { label: "Billing", href: "/dashboard#billing", icon: CreditCard },
 ];
 
 type SearchItem = {
@@ -159,6 +123,51 @@ function VersoMark() {
   );
 }
 
+function UserAvatar({ size = 10 }: { size?: number }) {
+  return (
+    <span
+      className={`block rounded-full`}
+      style={{
+        width: size * 4,
+        height: size * 4,
+        background: "radial-gradient(circle at 30% 25%, #9580ff, transparent 72%), linear-gradient(140deg, #9580ff, #4F8DFF)",
+        flexShrink: 0,
+      }}
+    />
+  );
+}
+
+function NavItem({
+  href,
+  icon: Icon,
+  label,
+  selected,
+  collapsed,
+}: {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+  selected: boolean;
+  collapsed: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      title={collapsed ? label : undefined}
+      className={cn(
+        "group flex h-10 items-center rounded-[11px] text-[14px] transition-colors duration-150",
+        collapsed ? "justify-center px-2 w-full" : "gap-3 px-3 font-medium",
+        selected
+          ? "bg-[#f0f0f0] text-[#0a0a0a]"
+          : "text-[#5F6B85] hover:bg-[var(--muted-surface)] hover:text-[var(--text-primary)]",
+      )}
+    >
+      <Icon className="size-[17px] shrink-0" strokeWidth={selected ? 2.4 : 1.9} />
+      {!collapsed && <span>{label}</span>}
+    </Link>
+  );
+}
+
 function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const pathname = usePathname();
 
@@ -166,13 +175,14 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
     <aside
       className={cn(
         "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[var(--border-soft)] bg-white/88 py-6 backdrop-blur transition-[width] duration-200",
-        collapsed ? "w-16 items-center px-0" : "w-[220px] px-5",
+        collapsed ? "w-16 items-center px-0" : "w-[200px] px-4",
       )}
     >
+      {/* Logo */}
       <button
         type="button"
         onClick={onToggle}
-        className={cn("mb-9 flex items-center", collapsed ? "justify-center" : "gap-3")}
+        className={cn("mb-8 flex items-center", collapsed ? "justify-center" : "gap-3")}
       >
         <VersoMark />
         {!collapsed && (
@@ -180,83 +190,53 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
         )}
       </button>
 
-      <nav className={cn("flex flex-1 flex-col gap-6", collapsed && "w-full px-2")}>
-        {navGroups.map((group) => (
-          <div key={group.label}>
-            {!collapsed && (
-              <div className="mb-2.5 text-[11px] font-semibold tracking-[0.03em] text-[#74809A]">
-                {group.label}
-              </div>
-            )}
-            <div className="flex flex-col gap-1">
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                const selected =
-                  item.selected || (item.href !== "/dashboard" && pathname === item.href);
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    title={collapsed ? item.label : undefined}
-                    className={cn(
-                      "group relative flex h-10 items-center rounded-[11px] text-[14px] transition-colors duration-150",
-                      collapsed ? "justify-center px-2" : "gap-3 px-3 font-medium",
-                      selected
-                        ? collapsed
-                          ? "bg-[#f0f0f0] text-[#0a0a0a]"
-                          : "bg-[var(--purple-light)] text-[var(--purple)]"
-                        : "text-[#5F6B85] hover:bg-[var(--muted-surface)] hover:text-[var(--text-primary)]",
-                    )}
-                  >
-                    <Icon
-                      className="size-[17px]"
-                      strokeWidth={selected && collapsed ? 2.6 : 1.9}
-                    />
-                    {!collapsed && <span>{item.label}</span>}
-                    {!collapsed && selected && (
-                      <span className="absolute right-3 size-1.5 rounded-full bg-[var(--purple)]" />
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+      {/* Main nav */}
+      <nav className={cn("flex flex-col gap-1", collapsed && "w-full px-2")}>
+        {mainNav.map((item) => {
+          const selected = item.exact
+            ? pathname === item.href
+            : pathname.startsWith(item.href);
+          return (
+            <NavItem
+              key={item.href}
+              href={item.href}
+              icon={item.icon}
+              label={item.label}
+              selected={selected}
+              collapsed={collapsed}
+            />
+          );
+        })}
       </nav>
 
-      {!collapsed && (
-        <div className="mt-6">
-          <button
-            type="button"
-            className="group relative w-full overflow-hidden rounded-[17px] border border-[var(--border-soft)] bg-white p-4 text-left transition-colors hover:border-[#D8DDF0]"
-          >
-            <div className="relative z-10 flex items-start justify-between">
-              <div>
-                <div className="text-[13px] font-semibold text-[var(--text-primary)]">
-                  Invite friends
-                </div>
-                <div className="mt-1 text-[11px] font-medium text-[var(--text-secondary)]">
-                  Earn trading credits
-                </div>
-              </div>
-              <ExternalLink className="mt-0.5 size-3.5 text-[var(--text-secondary)] transition-transform group-hover:translate-x-0.5" />
-            </div>
-            <div className="mt-8 h-12 rounded-[13px] bg-[linear-gradient(115deg,rgba(79,141,255,0.18),rgba(124,92,255,0.18)_45%,rgba(236,72,153,0.18))]">
-              <div className="h-full w-full rounded-[13px] bg-[repeating-linear-gradient(160deg,rgba(124,92,255,0.18)_0_1px,transparent_1px_6px)] opacity-80" />
-            </div>
-          </button>
-          <button
-            type="button"
-            className="mt-4 flex h-11 w-full items-center justify-between rounded-[12px] px-3 text-[13px] font-medium text-[#65708A] transition-colors hover:bg-[var(--muted-surface)]"
-          >
-            <span className="flex items-center gap-3">
-              <Sun className="size-[18px]" strokeWidth={1.7} />
-              Light mode
-            </span>
-            <ChevronDown className="size-4 -rotate-90" strokeWidth={1.8} />
-          </button>
-        </div>
-      )}
+      {/* Bottom: Settings + Billing + User */}
+      <div className={cn("mt-auto flex flex-col gap-1", collapsed && "w-full px-2")}>
+        {bottomNav.map((item) => (
+          <NavItem
+            key={item.href}
+            href={item.href}
+            icon={item.icon}
+            label={item.label}
+            selected={false}
+            collapsed={collapsed}
+          />
+        ))}
+
+        {/* User avatar — very bottom */}
+        <button
+          type="button"
+          className={cn(
+            "mt-2 flex h-10 items-center rounded-[11px] transition-colors hover:bg-[var(--muted-surface)]",
+            collapsed ? "justify-center px-2 w-full" : "gap-3 px-3",
+          )}
+          title={collapsed ? "Account" : undefined}
+        >
+          <UserAvatar size={9} />
+          {!collapsed && (
+            <span className="truncate text-[13px] font-medium text-[#5F6B85]">Account</span>
+          )}
+        </button>
+      </div>
     </aside>
   );
 }
@@ -331,7 +311,7 @@ function SearchCommand() {
           if (event.key === "Escape") setOpen(false);
         }}
         placeholder="Search stocks, ETFs, events..."
-        className="h-10 w-full rounded-[13px] border border-[var(--border-soft)] bg-[var(--muted-surface)]/70 pl-11 pr-20 text-[13px] font-medium text-[var(--text-primary)] outline-none transition-colors placeholder:text-[#7B849A] focus:border-[#D6D8FF] focus:bg-white focus:ring-4 focus:ring-[#7C5CFF]/10"
+        className="h-10 w-full rounded-[13px] border border-[var(--border-soft)] bg-[var(--muted-surface)]/70 pl-11 pr-20 text-[13px] font-medium text-[var(--text-primary)] outline-none transition-colors placeholder:text-[#7B849A] focus:border-[#d0d0d0] focus:bg-white focus:ring-4 focus:ring-black/5"
       />
       <div className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-[7px] border border-[#E2E5EE] bg-white px-1.5 py-0.5 text-[11px] font-semibold text-[#8892A8]">
         <span>⌘</span>
@@ -355,14 +335,7 @@ function SearchCommand() {
                     onClick={() => choose(item)}
                     className="flex w-full items-center gap-3 rounded-[12px] px-3 py-2.5 text-left transition-colors hover:bg-[var(--muted-surface)]"
                   >
-                    <span
-                      className={cn(
-                        "flex size-9 items-center justify-center rounded-[10px]",
-                        item.kind === "asset"
-                          ? "bg-[#EEF4FF] text-[var(--blue)]"
-                          : "bg-[var(--purple-light)] text-[var(--purple)]",
-                      )}
-                    >
+                    <span className="flex size-9 items-center justify-center rounded-[10px] bg-[#EEF4FF] text-[var(--blue)]">
                       <Icon className="size-[17px]" strokeWidth={1.9} />
                     </span>
                     <span className="min-w-0 flex-1">
@@ -397,12 +370,12 @@ function Topbar({ collapsed }: { collapsed: boolean }) {
     <header
       className={cn(
         "fixed right-0 top-0 z-40 flex h-[72px] items-center border-b border-[var(--border-soft)] bg-white/86 px-8 backdrop-blur transition-[left] duration-200",
-        collapsed ? "left-16" : "left-[220px]",
+        collapsed ? "left-16" : "left-[200px]",
       )}
     >
       <SearchCommand />
 
-      <div className="ml-auto flex items-center gap-5">
+      <div className="ml-auto flex items-center">
         <Link
           href="/dashboard/portfolio"
           className="hidden text-left transition-opacity hover:opacity-75 sm:block"
@@ -414,20 +387,6 @@ function Topbar({ collapsed }: { collapsed: boolean }) {
             <ChevronDown className="size-3.5" strokeWidth={1.8} />
           </div>
         </Link>
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="flex size-10 items-center justify-center rounded-full border border-transparent text-[#5F6B85] transition-colors hover:border-[var(--border-soft)] hover:bg-[var(--muted-surface)]"
-        >
-          <Bell className="size-[19px]" strokeWidth={1.8} />
-        </button>
-        <button type="button" className="flex items-center gap-3">
-          <span
-            className="block size-10 rounded-full"
-            style={{ background: "radial-gradient(circle at 30% 25%, #9580ff, transparent 72%), linear-gradient(140deg, #9580ff, #4F8DFF)" }}
-          />
-          <ChevronDown className="size-4 text-[#a3a3a3]" strokeWidth={2} />
-        </button>
       </div>
     </header>
   );
@@ -445,7 +404,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
       <main
         className={cn(
           "min-h-screen pt-[72px] transition-[padding-left] duration-200",
-          collapsed ? "pl-16" : "pl-[220px]",
+          collapsed ? "pl-16" : "pl-[200px]",
         )}
       >
         {children}
