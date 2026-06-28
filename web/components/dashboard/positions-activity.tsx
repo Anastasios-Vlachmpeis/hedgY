@@ -43,7 +43,7 @@ function PositionsActivity({
 
   return (
     <div>
-      {/* Tab bar — plain text, no container card */}
+      {/* Tab bar */}
       <div className="mb-3 flex items-center gap-4">
         {(["positions", "activity"] as const).map((t) => (
           <button
@@ -53,8 +53,8 @@ function PositionsActivity({
             className={cn(
               "pb-2.5 text-[14px] font-semibold capitalize transition-colors",
               t === tab
-                ? "text-[#181925]"
-                : "text-[#a3a3a3] hover:text-[#666666]",
+                ? "text-[#0a0a0a]"
+                : "text-[#a3a3a3] hover:text-[#555555]",
             )}
           >
             {t}
@@ -66,11 +66,11 @@ function PositionsActivity({
         <>
           {/* Control toolbar */}
           <div className="mb-3 flex items-center gap-2">
-            <div className="flex shrink-0 items-center overflow-hidden rounded-[8px] border border-[#e8e8e8] bg-white">
+            <div className="flex shrink-0 items-center overflow-hidden rounded-[8px] border border-[#ececec] bg-white">
               {TYPE_FILTERS.map((f, i) => (
                 <React.Fragment key={f}>
                   {i > 0 && (
-                    <span className="self-stretch w-px shrink-0 bg-[#e8e8e8]" aria-hidden />
+                    <span className="self-stretch w-px shrink-0 bg-[#ececec]" aria-hidden />
                   )}
                   <button
                     type="button"
@@ -78,8 +78,8 @@ function PositionsActivity({
                     className={cn(
                       "px-3 py-[7px] text-[12px] font-medium transition-colors",
                       f === typeFilter
-                        ? "bg-[#C5D3E6] text-[#181925]"
-                        : "text-[#737373] hover:bg-[#C5D3E6]/50 hover:text-[#181925]",
+                        ? "bg-[#f0f0f0] text-[#0a0a0a]"
+                        : "text-[#737373] hover:bg-[#f5f5f5] hover:text-[#0a0a0a]",
                     )}
                   >
                     {f}
@@ -95,7 +95,7 @@ function PositionsActivity({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search positions"
-                className="h-[30px] w-full rounded-[8px] border border-[#e8e8e8] bg-white pl-8 pr-3 text-[12px] text-[#181925] placeholder:text-[#a3a3a3] transition-colors focus:border-[#9580ff] focus:outline-none focus:ring-2 focus:ring-[#9580ff]/20"
+                className="h-[30px] w-full rounded-[8px] border border-[#ececec] bg-white pl-8 pr-3 text-[12px] text-[#0a0a0a] placeholder:text-[#a3a3a3] transition-colors focus:border-[#d0d0d0] focus:outline-none"
               />
             </div>
 
@@ -104,7 +104,7 @@ function PositionsActivity({
               onClick={() =>
                 setSort((s) => (s === "value-desc" ? "value-asc" : "value-desc"))
               }
-              className="flex h-[30px] shrink-0 items-center gap-1.5 rounded-[8px] bg-[#C5D3E6] px-3 text-[12px] font-medium text-[#181925] transition-colors hover:bg-[#B5C6DC]"
+              className="flex h-[30px] shrink-0 items-center gap-1.5 rounded-[8px] border border-[#ececec] bg-[#f0f0f0] px-3 text-[12px] font-medium text-[#0a0a0a] transition-colors hover:bg-[#e8e8e8]"
             >
               Value
               <ChevronDown
@@ -116,7 +116,7 @@ function PositionsActivity({
             </button>
           </div>
 
-          {/* Column header — px-3 + gap-3 matches pill card internal layout */}
+          {/* Column header */}
           <div className="mb-2 flex items-center gap-3 px-3 pb-2">
             <span className="flex-1 text-[11px] font-medium uppercase tracking-[0.05em] text-[#737373]">
               Market

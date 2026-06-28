@@ -52,7 +52,7 @@ function ActivityRows({ activity }: { activity: Activity[] }) {
               <div className="flex min-w-0 flex-1 items-center gap-2.5">
                 <InitialAvatar title={a.title} />
                 <div className="min-w-0">
-                  <p className="truncate text-[13px] font-semibold text-[#181925]">
+                  <p className="truncate text-[13px] font-semibold text-[#0a0a0a]">
                     {a.title}
                   </p>
                   <p className="truncate text-[11px] text-[#a3a3a3]">{a.detail}</p>

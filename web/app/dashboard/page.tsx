@@ -1630,22 +1630,28 @@ function AssetChartCard({ asset }: { asset: Asset }) {
   );
 }
 
-/* ── Arc probability gauge with embedded label ── */
+/* ── Arc probability gauge — explicit arc endpoint, no dasharray tricks ── */
 function ArcGauge({ pct, bearish }: { pct: number; bearish?: boolean }) {
-  const color = bearish ? "#ef4444" : "#22c55e";
-  // Arc: center (26,26) r=22 → top at (26,4), chord endpoints at (4,26) and (48,26)
-  const arc = "M 4 26 A 22 22 0 0 1 48 26";
+  const color = bearish ? "#dc2626" : "#16a34a";
+  // Semicircle: center (26,22) r=19 → left (7,22) top (26,3) right (45,22)
+  const cx = 26, cy = 22, r = 19;
+  const trackD = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
+  // Fill from left endpoint sweeping clockwise by pct/100 of 180°
+  const theta = Math.PI * (1 - pct / 100); // π→0 as pct 0→100
+  const ex = (cx + r * Math.cos(theta)).toFixed(2);
+  const ey = (cy - r * Math.sin(theta)).toFixed(2);
+  const large = pct > 50 ? 1 : 0;
+  const fillD = pct === 0 ? null
+    : pct >= 100 ? trackD
+    : `M ${cx - r} ${cy} A ${r} ${r} 0 ${large} 1 ${ex} ${ey}`;
   return (
-    <div style={{ position: "relative", width: 52, height: 34, flexShrink: 0 }}>
-      <svg viewBox="0 0 52 34" width={52} height={34} style={{ display: "block", position: "absolute", top: 0, left: 0 }}>
-        <path d={arc} fill="none" stroke="#ececec" strokeWidth="5" strokeLinecap="round" pathLength={100} />
-        <path d={arc} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" pathLength={100} strokeDasharray={`${pct} 100`} />
+    <div style={{ flexShrink: 0, width: 52, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <svg width={52} height={24} viewBox="0 0 52 24" style={{ display: "block", overflow: "visible" }}>
+        <path d={trackD} fill="none" stroke="#ececec" strokeWidth={5} strokeLinecap="round" />
+        {fillD && <path d={fillD} fill="none" stroke={color} strokeWidth={5} strokeLinecap="round" />}
       </svg>
-      {/* Overlay: arc bowl = y 4–26 in 34px container; pad 8px to land text in bowl center */}
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 8 }}>
-        <span style={{ fontSize: 9, fontWeight: 700, lineHeight: 1, color: "#0a0a0a" }}>{pct}%</span>
-        <span style={{ fontSize: 6, lineHeight: 1, color: "#a3a3a3", marginTop: 2 }}>chance</span>
-      </div>
+      <span style={{ fontSize: 9, fontWeight: 700, lineHeight: 1, color: "#0a0a0a", marginTop: 3 }}>{pct}%</span>
+      <span style={{ fontSize: 6, lineHeight: 1, color: "#a3a3a3", marginTop: 2 }}>chance</span>
     </div>
   );
 }
@@ -2129,6 +2135,29 @@ function HeaderIntro() {
   );
 }
 
+const METRICS_DB: Record<string, { marketCap: string; pe: string; range52w: string; dividendYield: string; beta: string }> = {
+  AAPL:  { marketCap: "$3.02T",  pe: "29.8x",  range52w: "164.08 – 237.49",    dividendYield: "0.51%", beta: "1.11" },
+  NVDA:  { marketCap: "$3.51T",  pe: "40.2x",  range52w: "86.62 – 195.95",     dividendYield: "0.03%", beta: "1.72" },
+  MSFT:  { marketCap: "$3.66T",  pe: "34.5x",  range52w: "344.79 – 543.84",    dividendYield: "0.66%", beta: "0.93" },
+  AMD:   { marketCap: "$249.1B", pe: "35.1x",  range52w: "93.12 – 227.30",     dividendYield: "0.00%", beta: "1.88" },
+  LMT:   { marketCap: "$118.4B", pe: "17.6x",  range52w: "418.88 – 618.95",    dividendYield: "2.54%", beta: "0.78" },
+  TSLA:  { marketCap: "$1.02T",  pe: "88.4x",  range52w: "182.00 – 488.54",    dividendYield: "0.00%", beta: "2.31" },
+  META:  { marketCap: "$1.63T",  pe: "29.3x",  range52w: "469.79 – 740.91",    dividendYield: "0.30%", beta: "1.28" },
+  AMZN:  { marketCap: "$2.28T",  pe: "42.1x",  range52w: "168.59 – 242.52",    dividendYield: "0.00%", beta: "1.14" },
+  GOOGL: { marketCap: "$2.14T",  pe: "21.8x",  range52w: "142.66 – 207.05",    dividendYield: "0.52%", beta: "1.06" },
+  NFLX:  { marketCap: "$433.2B", pe: "53.7x",  range52w: "542.01 – 1,064.50",  dividendYield: "0.00%", beta: "1.34" },
+  JPM:   { marketCap: "$799.1B", pe: "13.8x",  range52w: "180.53 – 285.20",    dividendYield: "1.86%", beta: "1.05" },
+  GS:    { marketCap: "$201.3B", pe: "15.1x",  range52w: "412.00 – 672.40",    dividendYield: "2.12%", beta: "1.31" },
+  V:     { marketCap: "$681.4B", pe: "35.2x",  range52w: "252.70 – 374.05",    dividendYield: "0.71%", beta: "0.93" },
+  WMT:   { marketCap: "$798.2B", pe: "37.4x",  range52w: "56.32 – 105.30",     dividendYield: "1.01%", beta: "0.53" },
+  XOM:   { marketCap: "$502.4B", pe: "14.3x",  range52w: "96.28 – 124.42",     dividendYield: "3.52%", beta: "0.71" },
+  PLTR:  { marketCap: "$268.4B", pe: "147.2x", range52w: "60.00 – 130.00",     dividendYield: "0.00%", beta: "1.85" },
+  ADBE:  { marketCap: "$194.6B", pe: "28.9x",  range52w: "376.27 – 548.16",    dividendYield: "0.00%", beta: "1.22" },
+  COIN:  { marketCap: "$89.4B",  pe: "38.6x",  range52w: "128.50 – 349.75",    dividendYield: "0.00%", beta: "3.14" },
+  PYPL:  { marketCap: "$72.8B",  pe: "18.4x",  range52w: "56.41 – 93.28",      dividendYield: "0.00%", beta: "1.37" },
+  UBER:  { marketCap: "$172.3B", pe: "24.6x",  range52w: "56.23 – 90.17",      dividendYield: "0.00%", beta: "1.49" },
+};
+
 export default function DashboardPage() {
   const [selectedSymbol, setSelectedSymbol] = React.useState("LMT");
   const [activeMarketId, setActiveMarketId] = React.useState("fed-rate-cut-july");
@@ -2225,29 +2254,6 @@ export default function DashboardPage() {
     patchedMarkets.find((market) => market.id === activeMarketId) ??
     patchedMarkets.find((market) => market.id === selectedAsset.recommendedMarketId) ??
     patchedMarkets[0];
-
-  const METRICS_DB: Record<string, { marketCap: string; pe: string; range52w: string; dividendYield: string; beta: string }> = {
-    AAPL:  { marketCap: "$3.02T",  pe: "29.8x",  range52w: "164.08 – 237.49",    dividendYield: "0.51%", beta: "1.11" },
-    NVDA:  { marketCap: "$3.51T",  pe: "40.2x",  range52w: "86.62 – 195.95",     dividendYield: "0.03%", beta: "1.72" },
-    MSFT:  { marketCap: "$3.66T",  pe: "34.5x",  range52w: "344.79 – 543.84",    dividendYield: "0.66%", beta: "0.93" },
-    AMD:   { marketCap: "$249.1B", pe: "35.1x",  range52w: "93.12 – 227.30",     dividendYield: "0.00%", beta: "1.88" },
-    LMT:   { marketCap: "$118.4B", pe: "17.6x",  range52w: "418.88 – 618.95",    dividendYield: "2.54%", beta: "0.78" },
-    TSLA:  { marketCap: "$1.02T",  pe: "88.4x",  range52w: "182.00 – 488.54",    dividendYield: "0.00%", beta: "2.31" },
-    META:  { marketCap: "$1.63T",  pe: "29.3x",  range52w: "469.79 – 740.91",    dividendYield: "0.30%", beta: "1.28" },
-    AMZN:  { marketCap: "$2.28T",  pe: "42.1x",  range52w: "168.59 – 242.52",    dividendYield: "0.00%", beta: "1.14" },
-    GOOGL: { marketCap: "$2.14T",  pe: "21.8x",  range52w: "142.66 – 207.05",    dividendYield: "0.52%", beta: "1.06" },
-    NFLX:  { marketCap: "$433.2B", pe: "53.7x",  range52w: "542.01 – 1,064.50",  dividendYield: "0.00%", beta: "1.34" },
-    JPM:   { marketCap: "$799.1B", pe: "13.8x",  range52w: "180.53 – 285.20",    dividendYield: "1.86%", beta: "1.05" },
-    GS:    { marketCap: "$201.3B", pe: "15.1x",  range52w: "412.00 – 672.40",    dividendYield: "2.12%", beta: "1.31" },
-    V:     { marketCap: "$681.4B", pe: "35.2x",  range52w: "252.70 – 374.05",    dividendYield: "0.71%", beta: "0.93" },
-    WMT:   { marketCap: "$798.2B", pe: "37.4x",  range52w: "56.32 – 105.30",     dividendYield: "1.01%", beta: "0.53" },
-    XOM:   { marketCap: "$502.4B", pe: "14.3x",  range52w: "96.28 – 124.42",     dividendYield: "3.52%", beta: "0.71" },
-    PLTR:  { marketCap: "$268.4B", pe: "147.2x", range52w: "60.00 – 130.00",     dividendYield: "0.00%", beta: "1.85" },
-    ADBE:  { marketCap: "$194.6B", pe: "28.9x",  range52w: "376.27 – 548.16",    dividendYield: "0.00%", beta: "1.22" },
-    COIN:  { marketCap: "$89.4B",  pe: "38.6x",  range52w: "128.50 – 349.75",    dividendYield: "0.00%", beta: "3.14" },
-    PYPL:  { marketCap: "$72.8B",  pe: "18.4x",  range52w: "56.41 – 93.28",      dividendYield: "0.00%", beta: "1.37" },
-    UBER:  { marketCap: "$172.3B", pe: "24.6x",  range52w: "56.23 – 90.17",      dividendYield: "0.00%", beta: "1.49" },
-  };
 
   // Add a brand-new stock from the search bar with live Alpaca price
   const addAssetBySymbol = React.useCallback(async (symbol: string) => {

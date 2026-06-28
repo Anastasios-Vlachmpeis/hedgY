@@ -9,7 +9,7 @@ function ValuePnl({ p }: { p: Position }) {
   const pnlColor = up ? "text-[#16a34a]" : "text-[#dc2626]";
   return (
     <>
-      <span className="hidden w-24 shrink-0 text-right text-[13px] font-semibold tabular-nums text-[#181925] sm:block">
+      <span className="hidden w-24 shrink-0 text-right text-[13px] font-semibold tabular-nums text-[#0a0a0a] sm:block">
         {usd(p.value, 0)}
       </span>
       <div className="w-24 shrink-0 text-right">
@@ -28,7 +28,7 @@ function HedgeBar({ ratio }: { ratio: number }) {
     <div className="mt-1 flex items-center gap-2">
       <span className="flex h-1.5 w-20 shrink-0 overflow-hidden rounded-full">
         <span className="h-full bg-[#d4d4d4]" style={{ width: `${100 - ratio}%` }} />
-        <span className="h-full bg-[#9580ff]" style={{ width: `${ratio}%` }} />
+        <span className="h-full bg-[#0a0a0a]" style={{ width: `${ratio}%` }} />
       </span>
       <span className="text-[11px] tabular-nums text-[#a3a3a3]">
         {ratio}% hedged
@@ -49,11 +49,11 @@ function CombinedRow({ p }: { p: Position }) {
     <li className="flex flex-col rounded-[10px] border border-[#ececec] bg-white px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       {/* Title + total value / P&L */}
       <div className="flex items-start gap-3">
-        <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#181925]">
+        <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#0a0a0a]">
           {p.title}
         </p>
         <div className="flex shrink-0 gap-3">
-          <span className="hidden w-24 shrink-0 text-right text-[13px] font-semibold tabular-nums text-[#181925] sm:block">
+          <span className="hidden w-24 shrink-0 text-right text-[13px] font-semibold tabular-nums text-[#0a0a0a] sm:block">
             {usd(p.value, 0)}
           </span>
           <div className="w-24 shrink-0 text-right">
@@ -71,7 +71,7 @@ function CombinedRow({ p }: { p: Position }) {
       {p.equityLeg && (
         <div className="mt-1.5 flex items-center gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-2 text-[11px]">
-            <span className="w-10 shrink-0 font-semibold text-[#181925]">Equity</span>
+            <span className="w-10 shrink-0 font-semibold text-[#0a0a0a]">Equity</span>
             <span className="truncate text-[#a3a3a3]">{p.equityLeg.label}</span>
           </div>
           <div className="flex shrink-0 gap-3">
@@ -87,7 +87,7 @@ function CombinedRow({ p }: { p: Position }) {
       {p.hedgeLeg && (
         <div className="mt-0.5 flex items-center gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-2 text-[11px]">
-            <span className="w-10 shrink-0 font-semibold text-[#181925]">Hedge</span>
+            <span className="w-10 shrink-0 font-semibold text-[#0a0a0a]">Hedge</span>
             <span className="truncate text-[#a3a3a3]">{p.hedgeLeg.label}</span>
           </div>
           <div className="flex shrink-0 gap-3">
@@ -106,7 +106,7 @@ function SimpleRow({ p }: { p: Position }) {
   return (
     <li className="flex items-center gap-3 rounded-[10px] border border-[#ececec] bg-white px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-semibold text-[#181925]">{p.title}</p>
+        <p className="truncate text-[13px] font-semibold text-[#0a0a0a]">{p.title}</p>
         <p className="truncate text-[11px] text-[#a3a3a3]">{p.detail}</p>
       </div>
       <ValuePnl p={p} />
