@@ -11,7 +11,7 @@ import { GradientAvatar } from "@/components/ui/gradient-avatar";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/structure", label: "Structure" },
+  { href: "/dashboard/hedge", label: "Hedge" },
 ] as const;
 
 /**

@@ -177,6 +177,10 @@ class CombinedHedgeLeg(BaseModel):
     side: Literal["YES", "NO"]
     notionalUsd: float = Field(gt=0, le=10_000_000)
     venue: str | None = None
+    # Curated combos (the /hedge analyst pairs) carry no live market: the caller
+    # supplies the contract price (0..1) and a human label directly.
+    price: float | None = Field(default=None, ge=0, le=1)
+    label: str | None = None
 
 
 class CombinedOrderRequest(BaseModel):
@@ -307,9 +311,13 @@ def create_combined_order(req: CombinedOrderRequest) -> dict:
         if eq_price is None:
             raise HTTPException(status_code=503, detail=f"no live price for {eq.symbol}")
 
-    hg_price, question = _prediction_price(hg.market_id, hg.side, hg.venue)
-    if hg_price is None:
-        raise HTTPException(status_code=503, detail="no live price for that market/side")
+    if hg.price is not None and hg.price > 0:
+        # Curated combo: trust the caller-supplied contract price + label.
+        hg_price, question = hg.price, (hg.label or hg.market_id)
+    else:
+        hg_price, question = _prediction_price(hg.market_id, hg.side, hg.venue)
+        if hg_price is None:
+            raise HTTPException(status_code=503, detail="no live price for that market/side")
 
     # ── pre-check funds so we never half-fill a combined position ──────────
     needed = (eq.notionalUsd if eq.action == "buy" else 0.0) + hg.notionalUsd

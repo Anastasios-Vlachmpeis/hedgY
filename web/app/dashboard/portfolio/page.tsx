@@ -19,6 +19,7 @@ interface BackendPosition {
   cost: number;
   unrealized_pnl: number;
   unrealized_pnl_pct: number;
+  group_id?: string | null;
 }
 
 interface BackendTrade {
@@ -34,7 +35,7 @@ interface BackendTrade {
   ts: number;
 }
 
-function mapPosition(p: BackendPosition): Position {
+function mapSingle(p: BackendPosition): Position {
   const isStock = p.kind === "stock";
   return {
     id: String(p.id),
@@ -48,6 +49,51 @@ function mapPosition(p: BackendPosition): Position {
     pnl: p.unrealized_pnl,
     pnlPct: p.unrealized_pnl_pct,
   };
+}
+
+// Legs sharing a group_id are a combo (equity + hedge) — render them as one
+// "Combined" product. Everything without a group maps 1:1.
+function mapPositions(rows: BackendPosition[]): Position[] {
+  const groups = new Map<string, BackendPosition[]>();
+  const singles: BackendPosition[] = [];
+  for (const p of rows) {
+    if (p.group_id) {
+      const arr = groups.get(p.group_id);
+      if (arr) arr.push(p);
+      else groups.set(p.group_id, [p]);
+    } else {
+      singles.push(p);
+    }
+  }
+
+  const out: Position[] = [];
+  for (const [gid, legs] of groups) {
+    const stock = legs.find((l) => l.kind === "stock");
+    const pred = legs.find((l) => l.kind === "prediction");
+    if (stock && pred) {
+      const value = legs.reduce((s, l) => s + l.market_value, 0);
+      const cost = legs.reduce((s, l) => s + l.cost, 0);
+      const pnl = legs.reduce((s, l) => s + l.unrealized_pnl, 0);
+      const hedgeLabel = pred.label ?? `${pred.side ?? ""} prediction`;
+      out.push({
+        id: `grp-${gid}`,
+        title: `${stock.symbol} combo`,
+        type: "Combined",
+        detail: `${stock.symbol} + ${hedgeLabel}`,
+        value,
+        cost,
+        pnl,
+        pnlPct: cost > 0 ? (pnl / cost) * 100 : 0,
+        equityLeg: { label: stock.symbol ?? "Equity", value: stock.market_value },
+        hedgeLeg: { label: hedgeLabel, value: pred.market_value },
+      });
+    } else {
+      // Degenerate group (one leg sold off) — render the survivors singly.
+      legs.forEach((l) => out.push(mapSingle(l)));
+    }
+  }
+  singles.forEach((p) => out.push(mapSingle(p)));
+  return out;
 }
 
 function relTime(tsSeconds: number): string {
@@ -105,7 +151,7 @@ export default function PortfolioPage() {
             positionsCount: acc.positions_count,
             currency: acc.currency ?? "USD",
           },
-          positions: Array.isArray(pos) ? pos.map(mapPosition) : [],
+          positions: Array.isArray(pos) ? mapPositions(pos) : [],
           activity: Array.isArray(trd) ? trd.map(mapTrade) : [],
         });
       } catch {

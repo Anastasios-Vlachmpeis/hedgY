@@ -82,7 +82,7 @@ function PromoRail({ stocks }: { stocks: Stock[] }) {
           Express an equity view and offset it with a prediction-market hedge — in one position.
         </p>
         <Link
-          href="/structure"
+          href="/dashboard/hedge"
           className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13px] font-semibold text-[#181925] transition-transform hover:-translate-y-0.5"
         >
           Build a position

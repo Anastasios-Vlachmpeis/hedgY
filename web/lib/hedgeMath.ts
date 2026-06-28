@@ -84,8 +84,10 @@ export function sizeTwoState(
     entryPrice = 1 - yesCost;
   }
 
-  const premiumSignedUsd = nYes * yesCost;
-  const premiumUsd = Math.abs(premiumSignedUsd);
+  // Actual cash outlay to enter the hedge: contracts bought at the side's price.
+  // YES side fills at yesCost; NO side fills at (1 − yesCost).
+  const premiumUsd = Math.abs(nYes) * entryPrice;
+  const premiumSignedUsd = premiumUsd;
 
   const wYes = notional * (1 + retIfYes) + nYes * (1 - yesCost);
   const wNo = notional * (1 + retIfNo) - nYes * yesCost;
@@ -119,7 +121,8 @@ export function scaleSizing(
 ): TwoStateSizing {
   const r = Math.max(0, Math.min(1, ratio));
   const nYes = s.nYes * r;
-  const premiumSignedUsd = nYes * s.yesCost;
+  // Scaling preserves the execution side, so reuse its entry price.
+  const premiumSignedUsd = Math.abs(nYes) * s.entryPrice;
   const wYes = hedgedWealth(notional, s.retIfYes, nYes, s.yesCost, true);
   const wNo = hedgedWealth(notional, s.retIfNo, nYes, s.yesCost, false);
   const wealthGapUsd = Math.abs(wNo - wYes);

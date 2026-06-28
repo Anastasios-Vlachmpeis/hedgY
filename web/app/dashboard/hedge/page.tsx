@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { ArrowRight, ShieldCheck, Sparkles, TrendingDown } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, ShieldCheck, Sparkles, TrendingDown } from "lucide-react";
 import {
   CartesianGrid,
   Line,
@@ -258,12 +257,59 @@ export default function HedgePage() {
     setSelectedId(id);
     const next = hedgeSuggestions.find((s) => s.id === id);
     if (next) setHedgeRatio(next.position.defaultHedgeRatio);
+    resetTicket();
   };
 
   const preview = React.useMemo(
     () => (selected ? computePreview(selected.position, hedgeRatio) : null),
     [selected, hedgeRatio],
   );
+
+  const [status, setStatus] = React.useState<"idle" | "placing" | "placed">("idle");
+  const [error, setError] = React.useState<string | null>(null);
+
+  // Reset the button whenever the chosen combo changes.
+  const resetTicket = React.useCallback(() => {
+    setStatus("idle");
+    setError(null);
+  }, []);
+
+  const buyPair = React.useCallback(async () => {
+    if (!selected || !preview) return;
+    const { position } = selected;
+    setStatus("placing");
+    setError(null);
+    try {
+      const res = await fetch("/api/orders/combined", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          equity: {
+            symbol: position.equityLeg.symbols[0],
+            notionalUsd: Math.round(position.equityLeg.size),
+            action: "buy",
+            order_type: "market",
+          },
+          hedge: {
+            market_id: `curated:${selected.id}`,
+            side: selected.hedgeSide,
+            notionalUsd: Math.max(1, Math.round(preview.hedgeSize)),
+            price: position.hedgeLeg.marketPrice,
+            label: `${selected.hedgeSide} · ${selected.hedgeMarket}`,
+          },
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.detail ?? `order failed (${res.status})`);
+      }
+      setStatus("placed");
+      window.dispatchEvent(new CustomEvent("verso:account-updated"));
+    } catch (err) {
+      setStatus("idle");
+      setError(err instanceof Error ? err.message : "could not place combo");
+    }
+  }, [selected, preview]);
 
   return (
     <div className="mx-auto flex max-w-[1540px] flex-col gap-6 px-8 py-6">
@@ -273,8 +319,8 @@ export default function HedgePage() {
           Hedge
         </h1>
         <p className="mt-2 max-w-[820px] text-[14px] font-medium leading-6 text-[var(--text-secondary)]">
-          Offset stock exposure with prediction markets. Pick an exposure, review the
-          suggested hedge, and see how it flattens your downside.
+          The following combos are prepared by our in-house team of analysts. Not
+          financial advice.
         </p>
       </div>
 
@@ -344,7 +390,10 @@ export default function HedgePage() {
                   max={1}
                   step={0.05}
                   value={hedgeRatio}
-                  onChange={(e) => setHedgeRatio(Number(e.target.value))}
+                  onChange={(e) => {
+                    setHedgeRatio(Number(e.target.value));
+                    resetTicket();
+                  }}
                   className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#f0f0f0] accent-[#0a0a0a]"
                 />
               </div>
@@ -356,13 +405,39 @@ export default function HedgePage() {
                 <Stat label="Max loss" value={formatSigned(preview.maxLoss)} tone="red" />
               </div>
 
-              <Link
-                href={`/structure?from=${selected.id}`}
-                className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-[12px] bg-[#0a0a0a] text-[13px] font-semibold text-white transition-colors hover:bg-[#262626]"
+              <button
+                type="button"
+                onClick={buyPair}
+                disabled={status === "placing" || status === "placed"}
+                className={cn(
+                  "mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-[12px] text-[13px] font-semibold text-white transition-colors disabled:cursor-default",
+                  status === "placed"
+                    ? "bg-[#16a34a]"
+                    : "bg-[#0a0a0a] hover:bg-[#262626]",
+                )}
               >
-                Build this pair
-                <ArrowRight className="size-4" strokeWidth={2} />
-              </Link>
+                {status === "placing" ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" strokeWidth={2} />
+                    Placing…
+                  </>
+                ) : status === "placed" ? (
+                  <>
+                    <CheckCircle2 className="size-4" strokeWidth={2} />
+                    Added to portfolio
+                  </>
+                ) : (
+                  <>
+                    Buy this pair
+                    <ArrowRight className="size-4" strokeWidth={2} />
+                  </>
+                )}
+              </button>
+              {error ? (
+                <p className="-mt-1 text-center text-[12px] font-medium text-[#dc2626]">
+                  {error}
+                </p>
+              ) : null}
             </>
           ) : (
             <div className="flex min-h-[360px] flex-col items-center justify-center text-center">

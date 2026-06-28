@@ -50,7 +50,7 @@ function SuggestionCard({ s }: { s: HedgeSuggestion }) {
       </div>
 
       <ActionButton asChild tone="buy" className="shrink-0">
-        <Link href={`/structure?from=${s.id}`}>
+        <Link href="/dashboard/hedge">
           Build this <ArrowRight className="size-3.5" />
         </Link>
       </ActionButton>

@@ -85,8 +85,10 @@ def size_two_state(
         contracts = abs(n_yes)
         entry_price = 1.0 - yes_cost
 
-    premium = n_yes * yes_cost
-    premium_abs = abs(premium)
+    # Actual cash outlay = contracts bought at the executed side's price
+    # (YES fills at yes_cost; NO fills at 1 - yes_cost).
+    premium_abs = abs(n_yes) * entry_price
+    premium = premium_abs
 
     w_yes = notional * (1 + ret_if_yes) + n_yes * (1 - yes_cost)
     w_no = notional * (1 + ret_if_no) - n_yes * yes_cost

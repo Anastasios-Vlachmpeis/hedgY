@@ -53,3 +53,22 @@ INFO:     127.0.0.1:54116 - "GET /positions HTTP/1.1" 200 OK
 INFO:     127.0.0.1:54119 - "GET /account HTTP/1.1" 200 OK
 INFO:     127.0.0.1:54116 - "GET /positions HTTP/1.1" 200 OK
 INFO:     127.0.0.1:54119 - "GET /account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62714 - "GET /markets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62714 - "GET /positions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62721 - "GET /account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62714 - "GET /positions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62721 - "GET /account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64043 - "GET /trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64043 - "GET /trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64044 - "GET /positions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64040 - "GET /account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64040 - "GET /positions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64043 - "GET /account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56831 - "GET /markets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56831 - "GET /positions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56837 - "GET /account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56831 - "GET /positions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56837 - "GET /account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64069 - "GET /account HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64079 - "POST /orders/combined HTTP/1.1" 503 Service Unavailable
+INFO:     127.0.0.1:64083 - "POST /orders/combined HTTP/1.1" 503 Service Unavailable

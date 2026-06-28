@@ -115,7 +115,7 @@ function RiskCard({ r }: { r: (typeof LMT_RISKS)[0] }) {
       <div className="mt-2.5 flex items-center justify-between">
         <span className="text-[10px] text-[#a3a3a3]">{fmtVol(r.volume)} vol</span>
         <Link
-          href={`/structure?from=${r.hedgeFrom}`}
+          href="/dashboard/hedge"
           className={cn(
             "rounded-[8px] px-3 py-1 text-[11px] font-semibold transition-colors",
             r.recommended
@@ -273,7 +273,7 @@ export default function TradePage() {
             </p>
 
             <Link
-              href="/structure?from=defense-election"
+              href="/dashboard/hedge"
               className="mt-5 flex items-center justify-center gap-2 rounded-[12px] bg-[#171B3B] py-3.5 text-[14px] font-bold text-white transition-opacity hover:opacity-90"
             >
               <Zap className="size-4" strokeWidth={2.5} />
@@ -354,7 +354,7 @@ export default function TradePage() {
             </div>
           </div>
           <Link
-            href="/structure?from=defense-election"
+            href="/dashboard/hedge"
             className="flex items-center gap-2 rounded-[10px] bg-[#171B3B] px-6 py-2.5 text-[13px] font-bold text-white transition-opacity hover:opacity-90"
           >
             Apply hedge
