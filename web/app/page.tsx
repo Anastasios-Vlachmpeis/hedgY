@@ -1,5 +1,4 @@
-import { PillNav } from "@/components/ui/pill-nav";
-import { Hero } from "@/components/landing/hero";
+import { HeroLanding } from "@/components/hero/hero-landing";
 import { Showcase } from "@/components/landing/showcase";
 import { TrustBar } from "@/components/landing/trust-bar";
 import { Features } from "@/components/landing/features";
@@ -13,9 +12,8 @@ import { Footer } from "@/components/landing/footer";
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
-      <PillNav />
+      <HeroLanding />
       <main>
-        <Hero />
         <Showcase />
         <TrustBar />
         <Features />
