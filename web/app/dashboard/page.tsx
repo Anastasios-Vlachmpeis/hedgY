@@ -1309,6 +1309,37 @@ const riskMarkets: RiskMarket[] = [
 
 const timeframes = ["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "All"];
 
+// Keywords per stock for market relevance scoring
+const STOCK_KEYWORDS: Record<string, string[]> = {
+  AAPL:  ["apple", "iphone", "ios", "app store", "antitrust", "eu", "dma", "tech", "china", "taiwan"],
+  NVDA:  ["nvidia", "chip", "semiconductor", "gpu", "ai", "export", "china", "taiwan", "tech"],
+  AMD:   ["amd", "chip", "semiconductor", "cpu", "export", "china", "taiwan", "tech"],
+  MSFT:  ["microsoft", "openai", "ai", "cloud", "antitrust", "tech", "eu", "layoff"],
+  TSLA:  ["tesla", "ev", "electric", "musk", "greenland", "trump", "energy"],
+  META:  ["meta", "facebook", "social", "antitrust", "tech", "eu", "layoff"],
+  AMZN:  ["amazon", "aws", "cloud", "antitrust", "retail", "tech", "layoff"],
+  GOOGL: ["google", "alphabet", "search", "ai", "antitrust", "eu", "tech"],
+  GOOG:  ["google", "alphabet", "search", "ai", "antitrust", "eu", "tech"],
+  LMT:   ["iran", "taiwan", "war", "military", "defense", "nato", "greenland", "house", "republican", "senate"],
+  BA:    ["iran", "taiwan", "war", "military", "defense", "boeing", "house", "republican"],
+  PLTR:  ["iran", "taiwan", "war", "military", "defense", "ai", "government", "house"],
+  JPM:   ["fed", "rate", "interest", "inflation", "economy", "bank", "republican", "democrat", "election"],
+  GS:    ["fed", "rate", "interest", "economy", "bank", "republican", "democrat", "election"],
+  V:     ["fed", "rate", "economy", "election", "republican", "democrat"],
+  XOM:   ["iran", "oil", "energy", "greenland", "opec", "war", "hormuz"],
+  NFLX:  ["streaming", "media", "tech", "antitrust", "layoff"],
+  COIN:  ["crypto", "bitcoin", "regulation", "sec", "republican"],
+  PYPL:  ["fed", "rate", "economy", "payment", "regulation"],
+  UBER:  ["regulation", "antitrust", "tech", "layoff", "economy"],
+};
+
+function scoreMarketForStock(market: RiskMarket, symbol: string): number {
+  const keywords = STOCK_KEYWORDS[symbol] ?? [];
+  if (!keywords.length) return 0;
+  const text = `${market.title} ${market.category}`.toLowerCase();
+  return keywords.reduce((score, kw) => (text.includes(kw) ? score + 1 : score), 0);
+}
+
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("en-US", {
@@ -2283,7 +2314,15 @@ export default function DashboardPage() {
 
   const selectedAsset = patchedAssets.find((asset) => asset.symbol === selectedSymbol) ?? patchedAssets[2];
 
-  const visibleRiskMarkets = patchedMarkets.slice(0, 3);
+  const visibleRiskMarkets = React.useMemo(() => {
+    if (!patchedMarkets.length) return [];
+    const scored = patchedMarkets
+      .map((m) => ({ m, score: scoreMarketForStock(m, selectedSymbol) }))
+      .sort((a, b) => b.score - a.score);
+    // If top results have score > 0, prefer those; otherwise fall back to first 3
+    const top = scored.filter((s) => s.score > 0).slice(0, 3);
+    return (top.length > 0 ? top : scored.slice(0, 3)).map((s) => s.m);
+  }, [patchedMarkets, selectedSymbol]);
 
   const activeMarket =
     patchedMarkets.find((market) => market.id === activeMarketId) ??

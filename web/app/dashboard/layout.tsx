@@ -123,15 +123,21 @@ function VersoMark() {
   );
 }
 
+// Two-tone gradient avatar — same palette as applai
+const AVATAR_GRADIENTS: [string, string][] = [
+  ["#3b82f6", "#ec4899"], ["#f59e0b", "#8b5cf6"], ["#06b6d4", "#d946ef"], ["#14b8a6", "#6366f1"],
+  ["#facc15", "#ef4444"], ["#22c55e", "#3b82f6"], ["#fb923c", "#ec4899"], ["#a855f7", "#84cc16"],
+];
+const [avatarA, avatarB] = AVATAR_GRADIENTS[3]; // #14b8a6 → #6366f1 (teal→indigo)
+
 function UserAvatar({ size = 10 }: { size?: number }) {
   return (
     <span
-      className={`block rounded-full`}
+      className="block shrink-0 rounded-full"
       style={{
         width: size * 4,
         height: size * 4,
-        background: "radial-gradient(circle at 35% 30%, #888888, transparent 60%), linear-gradient(135deg, #1a1a1a 0%, #6b6b6b 100%)",
-        flexShrink: 0,
+        background: `radial-gradient(circle at 30% 25%, ${avatarA}, transparent 72%), linear-gradient(140deg, ${avatarA}, ${avatarB})`,
       }}
     />
   );
