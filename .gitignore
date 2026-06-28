@@ -12,3 +12,7 @@ __pycache__/
 app/account.db
 
 .DS_Store
+
+# runtime artifacts
+account.db
+*.db

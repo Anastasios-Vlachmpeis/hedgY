@@ -46,10 +46,10 @@ function PillNav() {
 
         <div className="flex items-center gap-1.5 pl-1">
           <Button asChild variant="ghost" size="sm">
-            <Link href="/dashboard">Login</Link>
+            <Link href="/login">Login</Link>
           </Button>
           <Button asChild variant="primary" size="sm">
-            <Link href="/dashboard">Get started</Link>
+            <Link href="/signup">Get started</Link>
           </Button>
         </div>
       </div>

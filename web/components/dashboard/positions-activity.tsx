@@ -78,8 +78,8 @@ function PositionsActivity({
                     className={cn(
                       "px-3 py-[7px] text-[12px] font-medium transition-colors",
                       f === typeFilter
-                        ? "bg-[#ebebeb] text-[#181925]"
-                        : "text-[#737373] hover:text-[#444444]",
+                        ? "bg-[#C5D3E6] text-[#181925]"
+                        : "text-[#737373] hover:bg-[#C5D3E6]/50 hover:text-[#181925]",
                     )}
                   >
                     {f}
@@ -104,7 +104,7 @@ function PositionsActivity({
               onClick={() =>
                 setSort((s) => (s === "value-desc" ? "value-asc" : "value-desc"))
               }
-              className="flex h-[30px] shrink-0 items-center gap-1.5 rounded-[8px] border border-[#e8e8e8] bg-white px-3 text-[12px] font-medium text-[#444444] transition-colors hover:border-[#c8c8c8] hover:text-[#181925]"
+              className="flex h-[30px] shrink-0 items-center gap-1.5 rounded-[8px] bg-[#C5D3E6] px-3 text-[12px] font-medium text-[#181925] transition-colors hover:bg-[#B5C6DC]"
             >
               Value
               <ChevronDown
