@@ -1536,6 +1536,36 @@ function ChartTooltip({
   );
 }
 
+function chartYDomain(data: ChartPoint[], refPrice: number): [number, number] {
+  const prices = data.map((d) => d.price);
+  const minP = Math.min(...prices, refPrice);
+  const maxP = Math.max(...prices, refPrice);
+  const pad = Math.max((maxP - minP) * 0.06, 1);
+  return [minP - pad, maxP + pad];
+}
+
+function PriceRefLabel({
+  viewBox,
+  value,
+}: {
+  viewBox?: { x?: number; y?: number; width?: number };
+  value: number;
+}) {
+  if (viewBox?.y == null) return null;
+  const x = (viewBox.x ?? 0) + (viewBox.width ?? 0);
+  const y = viewBox.y - 10;
+  const w = 44;
+  const h = 20;
+  return (
+    <g>
+      <rect x={x - w + 2} y={y} width={w} height={h} rx={6} fill="#fff" stroke="#ececec" strokeWidth={1} />
+      <text x={x - w / 2 + 2} y={y + 13} textAnchor="middle" fontSize={11} fontWeight={700} fill="#0a0a0a">
+        {value.toFixed(2)}
+      </text>
+    </g>
+  );
+}
+
 function AssetChartCard({ asset }: { asset: Asset }) {
   const [activeFrame, setActiveFrame] = React.useState("1Y");
   const [ticket, setTicket] = React.useState<OrderTicketData | null>(null);
@@ -1546,6 +1576,7 @@ function AssetChartCard({ asset }: { asset: Asset }) {
   const periodChangePct = firstClose ? ((lastClose - firstClose) / firstClose) * 100 : 0;
   const periodChangeStr = `${periodChangePct >= 0 ? "+" : ""}${periodChangePct.toFixed(2)}%`;
   const tickFormatter = makeTickFormatter(visibleData.length);
+  const yDomain = chartYDomain(visibleData, asset.price);
 
   return (
     <Card className="overflow-hidden rounded-[20px] border border-[#ececec] bg-white shadow-none">
@@ -1617,7 +1648,7 @@ function AssetChartCard({ asset }: { asset: Asset }) {
                 orientation="right"
                 tickLine={false}
                 axisLine={false}
-                domain={["dataMin - 20", "dataMax + 20"]}
+                domain={yDomain}
                 tickFormatter={(v: number) => `$${Math.round(v)}`}
                 tick={{ fill: "#737373", fontSize: 10, fontWeight: 500 }}
                 width={52}
@@ -1631,6 +1662,7 @@ function AssetChartCard({ asset }: { asset: Asset }) {
                 stroke="#d1d5db"
                 strokeDasharray="3 3"
                 strokeWidth={1}
+                label={(props) => <PriceRefLabel viewBox={props.viewBox} value={asset.price} />}
               />
               <Line
                 type="monotone"
@@ -1642,9 +1674,6 @@ function AssetChartCard({ asset }: { asset: Asset }) {
               />
             </RechartsLineChart>
           </ResponsiveContainer>
-          <div className="absolute right-[46px] top-[48%] rounded-[6px] border border-[#ececec] bg-white px-2 py-0.5 text-[11px] font-bold text-[#0a0a0a]">
-            {asset.price.toFixed(2)}
-          </div>
         </div>
 
         <div className="mt-5 border-t border-[#f0f0f0] pt-4">
@@ -1936,11 +1965,9 @@ function ProjectedOutcomesCard({ market }: { market: RiskMarket }) {
 function SummaryCard({
   market,
   asset,
-  onOpenAnalysis,
 }: {
   market: RiskMarket;
   asset: Asset;
-  onOpenAnalysis: () => void;
 }) {
   const hedgeNotional = asset.position.notional * market.hedgeRatio;
   const netCost = asset.position.notional + hedgeNotional * (market.hedgeSide === "NO" ? market.no : market.yes) / 100;
@@ -1970,16 +1997,6 @@ function SummaryCard({
           <span className="text-[12px] text-[#737373]">Volume</span>
           <span className="text-[13px] font-semibold text-[#0a0a0a]">{market.volume}</span>
         </div>
-      </div>
-      <div className="mt-auto pt-5">
-        <button
-          type="button"
-          onClick={onOpenAnalysis}
-          className="flex h-9 w-full items-center justify-center gap-1.5 rounded-[9px] border border-[#ececec] bg-white text-[12px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#f5f5f5]"
-        >
-          View full analysis
-          <ArrowRight className="size-3.5" strokeWidth={2} />
-        </button>
       </div>
     </div>
   );
@@ -2567,7 +2584,6 @@ export default function DashboardPage() {
               <SummaryCard
                 market={activeMarket}
                 asset={selectedAsset}
-                onOpenAnalysis={() => setBrowseOpen(true)}
               />
             </>
           ) : (
