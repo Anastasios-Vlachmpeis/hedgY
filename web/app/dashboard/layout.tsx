@@ -170,7 +170,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
         className={cn("mb-6 flex items-center", collapsed ? "justify-center" : "gap-3")}
       >
         <span className="text-[22px] font-semibold tracking-[-0.04em] text-[#050505]">
-          {collapsed ? "h" : "hedgY"}
+          {collapsed ? "hY" : "hedgY"}
         </span>
       </button>
 

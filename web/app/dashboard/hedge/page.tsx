@@ -319,8 +319,8 @@ export default function HedgePage() {
           Hedge
         </h1>
         <p className="mt-2 max-w-[820px] text-[14px] font-medium leading-6 text-[var(--text-secondary)]">
-          The following combos are prepared by our in-house team of analysts. Not
-          financial advice.
+          Structured hedge packages from our research desk, review combined payoff and sizing before submitting a combined
+          order. Not financial advice.
         </p>
       </div>
 
