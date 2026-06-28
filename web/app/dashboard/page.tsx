@@ -1004,7 +1004,7 @@ function MarketCard({
       <button
         type="button"
         onClick={onHedge}
-        className="mt-2 flex h-8 w-full items-center justify-center rounded-[7px] bg-[#0a0a0a] text-[11px] font-semibold text-white transition-opacity hover:opacity-80"
+        className="mt-2 flex h-8 w-full items-center justify-center rounded-[7px] bg-[#f0f0f0] text-[11px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#e5e5e5]"
       >
         Hedge →
       </button>
@@ -1112,7 +1112,7 @@ function RecommendedHedgeCard({
         onClick={onApply}
         className={cn(
           "flex h-9 w-full items-center justify-center gap-2 rounded-[9px] text-[12px] font-semibold transition-opacity hover:opacity-80",
-          applied ? "bg-[#f0f0f0] text-[#0a0a0a]" : "bg-[#0a0a0a] text-white",
+          applied ? "bg-[#e5e5e5] text-[#737373]" : "bg-[#f0f0f0] text-[#0a0a0a] hover:bg-[#e5e5e5]",
         )}
       >
         {applied ? <CheckCircle2 className="size-3.5" /> : <Zap className="size-3.5" fill="currentColor" />}
