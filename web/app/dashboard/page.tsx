@@ -801,14 +801,17 @@ function ChartTooltip({
   label,
 }: {
   active?: boolean;
-  payload?: Array<{ value: number | string }>;
+  payload?: Array<{ value: number | string; payload?: { t: string } }>;
   label?: string;
 }) {
   if (!active || !payload?.length) return null;
+  const dateLabel = payload[0]?.payload?.t || label || "";
   return (
-    <div className="rounded-[10px] border border-[var(--border-soft)] bg-white px-3 py-2 shadow-[0_10px_24px_rgba(15,23,42,0.09)]">
-      <div className="text-[11px] font-semibold text-[var(--text-muted)]">{label || "Price"}</div>
-      <div className="mt-1 text-[13px] font-bold text-[var(--text-primary)]">
+    <div className="rounded-[10px] border border-[#ececec] bg-white px-3 py-2.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)]">
+      {dateLabel && (
+        <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#a3a3a3]">{dateLabel}</div>
+      )}
+      <div className="text-[13px] font-bold text-[#0a0a0a]">
         {formatCurrency(Number(payload[0].value))}
       </div>
     </div>
@@ -849,10 +852,8 @@ function AssetChartCard({ asset }: { asset: Asset }) {
             aria-label="Watch asset"
             onClick={() => setWatched((value) => !value)}
             className={cn(
-              "flex size-9 items-center justify-center rounded-[11px] border border-[var(--border-soft)] transition-colors",
-              watched
-                ? "bg-[var(--purple-light)] text-[var(--purple)]"
-                : "bg-white text-[#64748B] hover:bg-[var(--muted-surface)]",
+              "flex size-9 items-center justify-center rounded-[11px] border border-[#ececec] transition-colors",
+              watched ? "bg-[#f0f0f0] text-[#0a0a0a]" : "bg-white text-[#a3a3a3] hover:bg-[#f5f5f5]",
             )}
           >
             <Star className="size-4" fill={watched ? "currentColor" : "none"} strokeWidth={1.9} />
@@ -868,10 +869,10 @@ function AssetChartCard({ asset }: { asset: Asset }) {
               type="button"
               onClick={() => setActiveFrame(frame)}
               className={cn(
-                "h-8 rounded-full px-3 text-[12px] font-semibold transition-colors duration-150",
+                "h-7 rounded-full px-3 text-[12px] font-semibold transition-colors duration-150",
                 activeFrame === frame
-                  ? "bg-[var(--purple-light)] text-[var(--purple)]"
-                  : "text-[#5F6B85] hover:bg-[var(--muted-surface)] hover:text-[var(--text-primary)]",
+                  ? "bg-[#f0f0f0] text-[#0a0a0a]"
+                  : "text-[#a3a3a3] hover:text-[#0a0a0a]",
               )}
             >
               {frame}
@@ -879,51 +880,65 @@ function AssetChartCard({ asset }: { asset: Asset }) {
           ))}
         </div>
 
-        <div className="relative h-[242px]">
+        <div className="relative h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
-            <RechartsLineChart data={asset.chart} margin={{ top: 12, right: 36, left: 4, bottom: 4 }}>
-              <CartesianGrid vertical={false} stroke="#EEF1F6" strokeDasharray="3 3" />
+            <RechartsLineChart data={asset.chart} margin={{ top: 12, right: 44, left: 4, bottom: 4 }}>
+              <CartesianGrid vertical={false} stroke="#f0f0f0" strokeDasharray="0" />
               <XAxis
                 dataKey="t"
                 tickLine={false}
                 axisLine={false}
                 interval={0}
-                tick={{ fill: "#64748B", fontSize: 11, fontWeight: 600 }}
+                tick={{ fill: "#a3a3a3", fontSize: 10, fontWeight: 500 }}
                 padding={{ left: 8, right: 8 }}
               />
               <YAxis
                 orientation="right"
                 tickLine={false}
                 axisLine={false}
-                domain={["dataMin - 35", "dataMax + 35"]}
-                tick={{ fill: "#0F172A", fontSize: 11, fontWeight: 600 }}
-                width={36}
+                domain={["dataMin - 20", "dataMax + 20"]}
+                tick={{ fill: "#737373", fontSize: 10, fontWeight: 500 }}
+                width={42}
               />
-              <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#D9DEEA", strokeDasharray: "3 3" }} />
+              <Tooltip
+                content={<ChartTooltip />}
+                cursor={{ stroke: "#0a0a0a", strokeWidth: 1, strokeDasharray: "4 2" }}
+              />
               <ReferenceLine
                 y={asset.price}
-                stroke="#A9B6FF"
-                strokeDasharray="2 2"
+                stroke="#d1d5db"
+                strokeDasharray="3 3"
                 strokeWidth={1}
               />
               <Line
                 type="monotone"
                 dataKey="price"
-                stroke="url(#assetLine)"
-                strokeWidth={2}
+                stroke="#0a0a0a"
+                strokeWidth={1.5}
                 dot={false}
-                activeDot={{ r: 4, stroke: "#FFFFFF", strokeWidth: 2, fill: "#7C5CFF" }}
+                activeDot={{ r: 4, stroke: "#ffffff", strokeWidth: 2, fill: "#0a0a0a" }}
               />
-              <defs>
-                <linearGradient id="assetLine" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#4F8DFF" />
-                  <stop offset="100%" stopColor="#7C5CFF" />
-                </linearGradient>
-              </defs>
             </RechartsLineChart>
           </ResponsiveContainer>
-          <div className="absolute right-4 top-[48%] rounded-full bg-[var(--purple)] px-2.5 py-1 text-[11px] font-bold text-white shadow-[0_5px_18px_rgba(124,92,255,0.28)]">
+          <div className="absolute right-[46px] top-[48%] rounded-[6px] border border-[#ececec] bg-white px-2 py-0.5 text-[11px] font-bold text-[#0a0a0a]">
             {asset.price.toFixed(2)}
+          </div>
+        </div>
+
+        <div className="mt-5 border-t border-[#f0f0f0] pt-4">
+          <div className="grid grid-cols-5 gap-x-3 gap-y-1">
+            {[
+              ["Market cap", asset.metrics.marketCap],
+              ["P/E ratio", asset.metrics.pe],
+              ["52W range", asset.metrics.range52w],
+              ["Div. yield", asset.metrics.dividendYield],
+              ["Beta (1Y)", asset.metrics.beta],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <div className="text-[10px] text-[#a3a3a3]">{label}</div>
+                <div className="mt-0.5 text-[12px] font-semibold text-[#0a0a0a]">{value}</div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -932,12 +947,12 @@ function AssetChartCard({ asset }: { asset: Asset }) {
   );
 }
 
-/* ── Arc probability gauge (trade-page style) ── */
+/* ── Arc probability gauge with embedded label ── */
 function ArcGauge({ pct, bearish }: { pct: number; bearish?: boolean }) {
   const r = 18, cx = 22, cy = 22;
   const arc = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
   return (
-    <svg viewBox="0 0 44 26" className="w-[44px]">
+    <svg viewBox="0 0 44 36" className="w-[52px]">
       <path d={arc} fill="none" stroke="#f0f0f0" strokeWidth="3.5" strokeLinecap="round" pathLength={100} />
       <path
         d={arc} fill="none"
@@ -945,6 +960,8 @@ function ArcGauge({ pct, bearish }: { pct: number; bearish?: boolean }) {
         strokeWidth="3.5" strokeLinecap="round"
         pathLength={100} strokeDasharray={`${pct} 100`}
       />
+      <text x="22" y="28" textAnchor="middle" fontSize="9" fontWeight="700" fill="#0a0a0a" fontFamily="inherit">{pct}%</text>
+      <text x="22" y="34.5" textAnchor="middle" fontSize="6" fill="#a3a3a3" fontFamily="inherit">chance</text>
     </svg>
   );
 }
@@ -960,43 +977,34 @@ function MarketCard({
 }) {
   const bearish = market.correlation < 0;
   return (
-    <div
-      className="rounded-[14px] border border-[#ececec] bg-white p-4"
-    >
-      <div className="flex items-start gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-[9px] bg-[#f5f5f5]">
+    <div className="rounded-[12px] border border-[#ececec] bg-white p-3">
+      <div className="flex items-start gap-2.5">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[#f5f5f5]">
           <RiskIcon icon={market.icon} bare />
         </span>
-        <p className="flex-1 text-[12.5px] font-semibold leading-snug text-[#0a0a0a]">
+        <p className="flex-1 text-[12px] font-semibold leading-snug text-[#0a0a0a]">
           {market.title}
         </p>
-        <div className="flex shrink-0 flex-col items-center gap-[1px]">
-          <ArcGauge pct={market.probability} bearish={bearish} />
-          <span className="text-[11px] font-bold tabular-nums text-[#0a0a0a]">{market.probability}%</span>
-          <span className="text-[9px] text-[#a3a3a3]">chance</span>
-        </div>
+        <ArcGauge pct={market.probability} bearish={bearish} />
       </div>
-      <div className="mt-3 flex gap-2">
+      <div className="mt-2.5 flex gap-1.5">
         <button
           type="button"
-          className="flex-1 rounded-[9px] bg-[#dcfce7] py-2 text-[12px] font-semibold text-[#16a34a] transition-colors hover:bg-[#bbf7d0]"
+          className="flex-1 rounded-[7px] bg-[#dcfce7] py-1.5 text-[11px] font-semibold text-[#16a34a] transition-colors hover:bg-[#bbf7d0]"
         >
           Yes {market.yes}¢
         </button>
         <button
           type="button"
-          className="flex-1 rounded-[9px] bg-[#fee2e2] py-2 text-[12px] font-semibold text-[#dc2626] transition-colors hover:bg-[#fecaca]"
+          className="flex-1 rounded-[7px] bg-[#fee2e2] py-1.5 text-[11px] font-semibold text-[#dc2626] transition-colors hover:bg-[#fecaca]"
         >
           No {market.no}¢
         </button>
       </div>
-      <div className="mt-1.5 flex items-center justify-between">
-        <span className="text-[10px] text-[#a3a3a3]">{market.volume} vol</span>
-      </div>
       <button
         type="button"
         onClick={onHedge}
-        className="mt-2.5 flex h-9 w-full items-center justify-center rounded-[9px] bg-[#0a0a0a] text-[12px] font-semibold text-white transition-opacity hover:opacity-80"
+        className="mt-2 flex h-8 w-full items-center justify-center rounded-[7px] bg-[#0a0a0a] text-[11px] font-semibold text-white transition-opacity hover:opacity-80"
       >
         Hedge →
       </button>
