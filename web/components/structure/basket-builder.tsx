@@ -12,12 +12,14 @@ function LegCard({
   title,
   sub,
   size,
+  approach,
 }: {
   badge: string;
   badgeClass: string;
   title: string;
   sub: string;
   size: number;
+  approach?: string;
 }) {
   return (
     <div className="rounded-[10px] bg-[#20212e] p-3">
@@ -33,6 +35,9 @@ function LegCard({
       </div>
       <p className="mt-2 text-[14px] font-semibold text-white">{title}</p>
       <p className="text-[12px] text-[#a3a3a3]">{sub}</p>
+      {approach ? (
+        <p className="mt-1.5 text-[11px] leading-relaxed text-[#737373]">{approach}</p>
+      ) : null}
     </div>
   );
 }
@@ -71,6 +76,7 @@ function BasketBuilder({
         title={`${position.equityLeg.label} (${position.equityLeg.symbols.join(" · ")})`}
         sub="Aggregated across Alpaca · IBKR"
         size={position.equityLeg.size}
+        approach={position.equityLeg.approach}
       />
       <LegCard
         badge={`Prediction · Buy ${position.hedgeLeg.side}`}
@@ -78,6 +84,7 @@ function BasketBuilder({
         title={`${position.hedgeLeg.label} @ ${Math.round(position.hedgeLeg.marketPrice * 100)}%`}
         sub="Hedge leg · Kalshi · Polymarket"
         size={hedgeSize}
+        approach={position.hedgeLeg.approach}
       />
 
       {/* Hedge ratio slider */}

@@ -19,8 +19,9 @@ import json
 import os
 import urllib.request
 
-from structuring.relationships import relate, EventLink
+from structuring.hedge_math import market_yes_prob, residual_pct, size_two_state, yes_returns_from_legs
 from structuring.enrichment import enrich
+from structuring.relationships import relate, EventLink
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -28,40 +29,47 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # --------------------------------------------------------------------------- #
 # Risk scoring                                                                 #
 # --------------------------------------------------------------------------- #
-def score_exposure(holding_value: float, link: EventLink, p_adverse: float) -> dict:
+def score_exposure(holding_value: float, link: EventLink, leg_price: float) -> dict:
     """Score one (holding, event) pair into a RiskExposure."""
-    move = abs(link.move_adverse)
-    event_loss = holding_value * move                   # $ lost if bad outcome hits
-    expected_loss = event_loss * p_adverse               # probability-weighted
-    so = link.sigma_other
-    residual = so * so / (move * move + so * so) if move > 0 else 1.0
+    move = link.move_adverse
+    ret_yes, ret_no = yes_returns_from_legs(move, link.hedge_leg, link.move_favorable)
+    p_yes = market_yes_prob(link.hedge_leg, leg_price)
+    spread_ret = abs(ret_no - ret_yes)
+    event_loss = holding_value * spread_ret
+    p_adverse = leg_price if link.hedge_leg.upper() == "YES" else 1.0 - leg_price
+    expected_loss = holding_value * abs(move) * p_adverse
 
-    # hedge sizing (reuses the service.py math)
-    p = min(max(p_adverse, 0.01), 0.99)
-    N = event_loss / (1 - p)
-    premium = N * p
+    residual = residual_pct(link.sigma_other, ret_yes, ret_no)
+
+    sized = size_two_state(
+        holding_value, ret_yes, ret_no, p_yes, link.hedge_leg,
+    )
+    premium = sized["premiumUsd"]
     hedge_ratio = premium / holding_value if holding_value > 0 else 0
-    hedge_efficiency = event_loss / premium if premium > 0 else 0  # $ protected per $ spent
+    hedge_efficiency = event_loss / premium if premium > 0 else 0
 
     return {
         "holding": link.holding_symbol,
         "event": {
             "id": link.event_market_id,
             "question": link.event_question,
-            "hedge_leg": link.hedge_leg,
+            "hedge_leg": sized["execSide"],
             "p_adverse": round(p_adverse, 4),
         },
         "direction": link.direction,
         "move_adverse": link.move_adverse,
+        "move_favorable": link.move_favorable,
         "holding_value": round(holding_value, 2),
         "event_loss_usd": round(event_loss, 2),
         "expected_loss_usd": round(expected_loss, 2),
         "hedge": {
-            "contracts": round(N),
-            "premium_usd": round(premium, 2),
+            "contracts": sized["contracts"],
+            "premium_usd": premium,
             "hedge_ratio": round(hedge_ratio, 4),
             "residual_pct": round(residual, 3),
             "efficiency": round(hedge_efficiency, 2),
+            "hedge_quality": sized["hedgeQuality"],
+            "approach_note": sized["approachNote"],
         },
         "confidence": link.confidence,
         "rationale": link.rationale,

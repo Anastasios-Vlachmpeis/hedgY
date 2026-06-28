@@ -23,7 +23,8 @@ class EventLink:
     hedge_leg: str              # "YES" | "NO" — the side to BUY to hedge
     move_adverse: float         # estimated % move if the adverse outcome hits (signed, e.g. -0.12)
     confidence: float           # 0..1
-    sigma_other: float          # non-event vol for residual calc
+    move_favorable: float = 0.0 # estimated % move if the favorable outcome hits
+    sigma_other: float = 0.10   # non-event vol for residual calc
     source: str = "curated"     # "curated" | "semantic" | "llm" | "eventstudy"
     rationale: str = ""
 
@@ -46,6 +47,7 @@ CURATED_RULES: list[dict] = [
         "hedge_leg": "YES",
         "direction": "adverse",
         "move_adverse": -0.08,
+        "move_favorable": 0.05,
         "confidence": 0.5,
         "sigma_other": 0.10,
         "rationale": "A peace-favoring / incumbent-change outcome may cut defense budgets.",
@@ -59,6 +61,7 @@ CURATED_RULES: list[dict] = [
         "hedge_leg": "NO",
         "direction": "adverse",
         "move_adverse": -0.05,
+        "move_favorable": 0.03,
         "confidence": 0.6,
         "sigma_other": 0.08,
         "rationale": "A hold/hike instead of a cut hurts rate-sensitive equities.",
@@ -72,6 +75,7 @@ CURATED_RULES: list[dict] = [
         "hedge_leg": "NO",
         "direction": "adverse",
         "move_adverse": -0.18,
+        "move_favorable": 0.10,
         "confidence": 0.45,
         "sigma_other": 0.20,
         "rationale": "Key market-structure legislation stalling hurts crypto-proxy equities.",
@@ -85,6 +89,7 @@ CURATED_RULES: list[dict] = [
         "hedge_leg": "YES",
         "direction": "adverse",
         "move_adverse": -0.15,
+        "move_favorable": 0.08,
         "confidence": 0.4,
         "sigma_other": 0.14,
         "rationale": "A Hormuz blockade disrupts routes and hits a broad shipping selloff.",
@@ -98,6 +103,7 @@ CURATED_RULES: list[dict] = [
         "hedge_leg": "YES",
         "direction": "adverse",
         "move_adverse": -0.10,
+        "move_favorable": 0.06,
         "confidence": 0.5,
         "sigma_other": 0.15,
         "rationale": "Geopolitical or OPEC events can swing energy equities.",
@@ -113,6 +119,7 @@ CURATED_RULES: list[dict] = [
         "hedge_leg": "YES",
         "direction": "adverse",
         "move_adverse": -0.08,
+        "move_favorable": 0.05,
         "confidence": 0.35,
         "sigma_other": 0.12,
         "rationale": "Major tech regulation could pressure mega-cap valuations.",
@@ -176,6 +183,7 @@ def relate(holding_symbol: str, markets: list[dict],
             direction=rule["direction"],
             hedge_leg=rule["hedge_leg"],
             move_adverse=rule["move_adverse"],
+            move_favorable=rule.get("move_favorable", 0.0),
             confidence=rule["confidence"],
             sigma_other=rule["sigma_other"],
             source="curated",

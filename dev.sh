@@ -10,9 +10,16 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ---- backend deps (first run only) ----
+PYTHON=""
+for candidate in python3.12 python3.11 python3.10 python3; do
+  if command -v "$candidate" >/dev/null 2>&1; then
+    PYTHON="$(command -v "$candidate")"
+    break
+  fi
+done
 if [ ! -x "$ROOT/.venv/bin/uvicorn" ]; then
   echo "▶ creating Python venv + installing backend deps…"
-  python3 -m venv "$ROOT/.venv"
+  "$PYTHON" -m venv "$ROOT/.venv"
   "$ROOT/.venv/bin/python" -m pip install -q --upgrade pip
   "$ROOT/.venv/bin/pip" install -q -r "$ROOT/requirements.txt"
 fi

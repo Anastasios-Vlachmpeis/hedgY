@@ -22,6 +22,7 @@ import {
   summarize,
   type HedgeSuggestion,
 } from "@/lib/mockData";
+import { scaleSizing, sizeTwoState } from "@/lib/hedgeMath";
 
 /* ---------- helpers ---------- */
 
@@ -38,13 +39,13 @@ function formatCents(price: number): string {
   return `${Math.round(price * 100)}¢`;
 }
 
-// Curated suggestions only carry a qualitative strength; map it to an
-// illustrative offset score / residual basis risk for the UI.
-const OFFSET_BY_STRENGTH: Record<HedgeSuggestion["strength"], number> = {
-  Strong: 0.86,
-  Moderate: 0.64,
-  Light: 0.43,
-};
+// Offset score from two-state hedge quality at the default ratio.
+function offsetScore(suggestion: HedgeSuggestion): number {
+  const p = suggestion.position;
+  const full = sizeTwoState(p.equityLeg.size, p.calibration);
+  const scaled = scaleSizing(p.equityLeg.size, full, p.defaultHedgeRatio);
+  return scaled.hedgeQuality;
+}
 
 /* ---------- payoff chart ---------- */
 
@@ -162,7 +163,7 @@ function ExposureCard({
   selected: boolean;
   onSelect: () => void;
 }) {
-  const offset = OFFSET_BY_STRENGTH[suggestion.strength];
+  const offset = offsetScore(suggestion);
   const basisRisk = Math.round((1 - offset) * 100);
   const notional = suggestion.position.equityLeg.size;
 
@@ -211,6 +212,7 @@ function ExposureCard({
         {suggestion.rationale}{" "}
         <span className="text-[#a3a3a3]">· leaves ~{basisRisk}% basis risk</span>
       </p>
+      <p className="text-[11px] leading-relaxed text-[#a3a3a3]">{suggestion.approachNote}</p>
     </button>
   );
 }

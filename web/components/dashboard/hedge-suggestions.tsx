@@ -46,6 +46,7 @@ function SuggestionCard({ s }: { s: HedgeSuggestion }) {
         </div>
 
         <p className="truncate text-[12px] text-[#666666]">{s.rationale}</p>
+        <p className="text-[11px] leading-relaxed text-[#a3a3a3]">{s.approachNote}</p>
       </div>
 
       <ActionButton asChild tone="buy" className="shrink-0">

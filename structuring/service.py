@@ -107,14 +107,24 @@ def adverse_price(template: dict, market: dict) -> tuple[str, float] | None:
     return side, float(quote["price"])
 
 
+from structuring.hedge_math import (
+    market_yes_prob,
+    pays_as_hedge,
+    residual_pct,
+    size_two_state,
+    yes_returns_from_legs,
+)
+
+
 # --------------------------------------------------------------------------- #
 # The classifier (sizing + offset + residual + classification)                 #
 # --------------------------------------------------------------------------- #
-def assess(template: dict, p: float, notional: float, params: dict) -> dict:
+def assess(template: dict, leg_price: float, notional: float, params: dict) -> dict:
     move = template["moveAdverse"]          # signed, e.g. -0.25
     conf = template["confidence"]
     so = template["sigmaOther"]
-    p = min(max(p, 0.01), 0.99)             # guard degenerate prices
+    hedge_leg = template["hedge"]["leg"]
+    move_fav = template.get("moveFavorable")
     flags: list[str] = []
 
     if abs(move) < params["minEffect"]:
@@ -122,29 +132,53 @@ def assess(template: dict, p: float, notional: float, params: dict) -> dict:
     if conf < params["minConfidence"]:
         flags.append("low-confidence")
 
-    L = notional * abs(move)                # expected loss in the adverse state
-    cap = params["premiumCapPct"]
-    budget = cap * notional if cap else float("inf")
-    N = min(L / (1 - p), budget / p)        # contracts (respect premium cap if set)
-    premium = N * p
-    net_gain_adverse = N * (1 - p)
-    dollar_offset = net_gain_adverse / L
-    hedge_quality = max(0.0, min(1.0, net_gain_adverse / L))
-    residual = so * so / (move * move + so * so)
-    classification = "hedge" if hedge_quality >= params["minHedgeQuality"] else "expression"
+    if not pays_as_hedge(template.get("expectedDirection", "adverse"), move):
+        return {
+            "classification": "expression",
+            "reason": "contract pays in equity's favorable state",
+            "moveAdverse": move,
+            "confidence": conf,
+            "flags": flags,
+        }
+
+    ret_yes, ret_no = yes_returns_from_legs(move, hedge_leg, move_fav)
+    p_yes = market_yes_prob(hedge_leg, leg_price)
+    sized = size_two_state(
+        notional,
+        ret_yes,
+        ret_no,
+        p_yes,
+        hedge_leg,
+        premium_cap_pct=params.get("premiumCapPct"),
+    )
+
+    spread_ret = abs(ret_no - ret_yes)
+    if spread_ret < params["minEffect"]:
+        return {"classification": "unrelated", "reason": "effect too small", "flags": flags}
+
+    residual = residual_pct(so, ret_yes, ret_no)
+    classification = (
+        "hedge" if sized["hedgeQuality"] >= params["minHedgeQuality"] else "expression"
+    )
 
     return {
         "classification": classification,
         "moveAdverse": move,
+        "moveFavorable": move_fav if move_fav is not None else 0.0,
+        "retIfYes": round(ret_yes, 4),
+        "retIfNo": round(ret_no, 4),
         "confidence": conf,
-        "contractPrice": round(p, 4),
-        "expectedLossUsd": round(L, 2),
-        "contracts": round(N),
-        "premiumUsd": round(premium, 2),
-        "hedgeRatio": round(premium / notional, 4),
-        "dollarOffset": round(dollar_offset, 3),
-        "hedgeQuality": round(hedge_quality, 3),
+        "contractPrice": round(leg_price, 4),
+        "pYes": round(p_yes, 4),
+        "expectedLossUsd": sized["expectedLossUsd"],
+        "contracts": sized["contracts"],
+        "execSide": sized["execSide"],
+        "premiumUsd": sized["premiumUsd"],
+        "hedgeRatio": round(sized["premiumUsd"] / notional, 4),
+        "dollarOffset": sized["dollarOffset"],
+        "hedgeQuality": sized["hedgeQuality"],
         "residualPct": round(residual, 3),
+        "approachNote": sized["approachNote"],
         "flags": flags,
         "expiryAlignment": template.get("expiryAlignment"),
     }
@@ -195,6 +229,7 @@ def suggest_hedges(markets: list[dict], notional: float = 10_000.0,
             "price": round(p, 4),       # live implied prob of the adverse outcome
         }
         suggestion.update(assess(t, p, notional, params))
+        suggestion["market"]["side"] = suggestion.get("execSide", side)
         out.append(suggestion)
 
     return out
