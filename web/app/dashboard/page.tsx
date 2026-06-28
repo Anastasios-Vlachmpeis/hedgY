@@ -993,14 +993,6 @@ function MarketCard({
         recommended ? "border-[#171B3B]" : "border-[#ececec]",
       )}
     >
-      {recommended && (
-        <div className="mb-2 flex items-center gap-1">
-          <Zap className="size-2.5 text-[#f59e0b]" strokeWidth={2.5} fill="currentColor" />
-          <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#f59e0b]">
-            Recommended hedge
-          </span>
-        </div>
-      )}
       <div className="flex items-start gap-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-[9px] bg-[#f5f5f5]">
           <RiskIcon icon={market.icon} bare />
@@ -1028,21 +1020,16 @@ function MarketCard({
           No {market.no}¢
         </button>
       </div>
-      <div className="mt-2.5 flex items-center justify-between">
+      <div className="mt-1.5 flex items-center justify-between">
         <span className="text-[10px] text-[#a3a3a3]">{market.volume} vol</span>
-        <button
-          type="button"
-          onClick={onHedge}
-          className={cn(
-            "rounded-[8px] px-3 py-1 text-[11px] font-semibold transition-colors",
-            recommended
-              ? "bg-[#171B3B] text-white hover:opacity-90"
-              : "bg-[#f0f0f0] text-[#0a0a0a] hover:bg-[#e5e5e5]",
-          )}
-        >
-          Hedge →
-        </button>
       </div>
+      <button
+        type="button"
+        onClick={onHedge}
+        className="mt-2.5 flex h-9 w-full items-center justify-center rounded-[9px] bg-[#171B3B] text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
+      >
+        Hedge →
+      </button>
     </div>
   );
 }
@@ -1765,7 +1752,7 @@ export default function DashboardPage() {
         <HeaderIntro />
         <AssetSwitcher selectedSymbol={selectedSymbol} onSelect={selectAsset} assetList={patchedAssets} />
 
-        <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-2">
+        <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
           <AssetChartCard asset={selectedAsset} />
           <RiskMarketsCard
             assetSymbol={selectedAsset.symbol}
