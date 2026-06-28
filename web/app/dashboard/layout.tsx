@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { STOCKS_DB } from "@/lib/stocks";
 
 const themeVars = {
   "--app-bg": "#F8F9FC",
@@ -90,11 +91,13 @@ type SearchItem = {
 };
 
 const searchItems: SearchItem[] = [
-  { kind: "asset", id: "AAPL", title: "AAPL", subtitle: "Apple Inc. · Stock", venue: "NASDAQ" },
-  { kind: "asset", id: "NVDA", title: "NVDA", subtitle: "NVIDIA Corp. · Stock", venue: "NASDAQ" },
-  { kind: "asset", id: "LMT", title: "LMT", subtitle: "Lockheed Martin · Stock", venue: "NYSE" },
-  { kind: "asset", id: "MSFT", title: "MSFT", subtitle: "Microsoft Corp. · Stock", venue: "NASDAQ" },
-  { kind: "asset", id: "AMD", title: "AMD", subtitle: "AMD Inc. · Stock", venue: "NASDAQ" },
+  ...STOCKS_DB.map((s) => ({
+    kind: "asset" as const,
+    id: s.symbol,
+    title: s.symbol,
+    subtitle: `${s.name} · ${s.sector}`,
+    venue: s.exchange,
+  })),
   {
     kind: "market",
     id: "defense-budget-900",
