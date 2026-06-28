@@ -74,7 +74,7 @@ const navGroups = [
   {
     label: "ACCOUNT",
     items: [
-      { label: "Portfolio", href: "/dashboard#portfolio", icon: BriefcaseBusiness },
+      { label: "Portfolio", href: "/dashboard/portfolio", icon: BriefcaseBusiness },
       { label: "Settings", href: "/dashboard#settings", icon: Settings },
       { label: "Billing", href: "/dashboard#billing", icon: CreditCard },
     ],
@@ -403,8 +403,8 @@ function Topbar({ collapsed }: { collapsed: boolean }) {
       <SearchCommand />
 
       <div className="ml-auto flex items-center gap-5">
-        <button
-          type="button"
+        <Link
+          href="/dashboard/portfolio"
           className="hidden text-left transition-opacity hover:opacity-75 sm:block"
         >
           <div className="text-[13px] font-semibold text-[var(--text-primary)]">Portfolio</div>
@@ -413,7 +413,7 @@ function Topbar({ collapsed }: { collapsed: boolean }) {
             $128,430.00
             <ChevronDown className="size-3.5" strokeWidth={1.8} />
           </div>
-        </button>
+        </Link>
         <button
           type="button"
           aria-label="Notifications"
@@ -426,7 +426,7 @@ function Topbar({ collapsed }: { collapsed: boolean }) {
             className="block size-10 rounded-full"
             style={{ background: "radial-gradient(circle at 30% 25%, #9580ff, transparent 72%), linear-gradient(140deg, #9580ff, #4F8DFF)" }}
           />
-          <ChevronDown className="size-4 text-[var(--purple)]" strokeWidth={2} />
+          <ChevronDown className="size-4 text-[#a3a3a3]" strokeWidth={2} />
         </button>
       </div>
     </header>
