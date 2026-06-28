@@ -4,7 +4,7 @@
 
 ### [Live demo: parishack-web.vercel.app](https://parishack-web.vercel.app/)
 
-![hedgY dashboard](screenshot.png)
+![hedgY dashboard](screenshot1.png)
 
 hedgY turns a worldview into a hedged, multi-instrument position. You pick a thesis (long defense, long biotech, long a shipping name), and hedgY automatically assembles the matching hedge against the one event that could blow it up: an election, an FDA decision, a blockade in the Strait of Hormuz. The equity leg and the prediction-market hedge are sized, scored, and placed as a single position, in one click.
 
