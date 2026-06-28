@@ -90,6 +90,11 @@ body{
 .animate-marquee{ animation:marquee 42s linear infinite; }
 .marquee-mask{ -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
 
+/* Hero sphere: very slow breathing motion (2-3px) */
+@keyframes versoBreathe{ 0%,100%{ transform:translate(-50%,-50%) scale(1); } 50%{ transform:translate(-50%,-50%) scale(1.018); } }
+.verso-breathe{ animation:versoBreathe 5.5s ease-in-out infinite; }
+@media (prefers-reduced-motion:reduce){ .verso-breathe{ animation:none; } }
+
 /* Subtle ambient motion for self-animating feature cards */
 @keyframes floaty{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5px); } }
 .anim-floaty{ animation:floaty 4s ease-in-out infinite; }
