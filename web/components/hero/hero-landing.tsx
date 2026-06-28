@@ -2,15 +2,8 @@ import Link from "next/link";
 import {
   ArrowRight,
   Play,
-  ChevronDown,
   TrendingUp,
   Hexagon,
-  Shield,
-  Target,
-  Lock,
-  Globe,
-  Users,
-  ShieldCheck,
   Landmark,
   Pill,
 } from "lucide-react";
@@ -19,55 +12,65 @@ import { FlowIllustration, VersoMark } from "@/components/hero/flow-illustration
 
 /* ──────────────────────────────────────────────────────────────────────── */
 
+const GROTESQUE = "'Inter','Helvetica Neue','Helvetica',Arial,system-ui,sans-serif";
+
 export function HeroLanding() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#FAFAFC] text-[#0F172A]">
-      {/* extremely subtle background radial tints */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: [
-            "radial-gradient(46% 40% at 16% 6%, rgba(94,140,255,0.08) 0%, transparent 60%)",
-            "radial-gradient(46% 40% at 84% 6%, rgba(124,92,255,0.08) 0%, transparent 60%)",
-          ].join(","),
-        }}
-      />
-
+    <div
+      className="relative min-h-screen overflow-hidden bg-white text-[#0A0A0A]"
+      style={{ fontFamily: GROTESQUE }}
+    >
       <div className="relative mx-auto w-full max-w-[1440px] px-8">
         <Nav />
 
-        {/* hero copy */}
-        <section className="flex flex-col items-center pt-6 text-center">
-          <h1 className="mt-7 text-[78px] font-semibold leading-[0.98] tracking-[-0.03em]">
-            <span className="block text-[#0F172A]">Invest in what happens.</span>
-            <span className="block bg-gradient-to-r from-[#5E8CFF] via-[#7C5CFF] to-[#A678FF] bg-clip-text text-transparent">
-              Hedge what matters.
-            </span>
+        {/* hero copy — left headline, right paragraph + CTAs */}
+        <section className="grid grid-cols-1 gap-y-10 pt-10 lg:grid-cols-12 lg:items-stretch lg:gap-x-12 lg:pt-16">
+          <h1 className="lg:col-span-7 text-[clamp(32px,4.4vw,56px)] font-semibold leading-[1.02] tracking-[-0.035em] text-[#0A0A0A]">
+            <span className="block">Invest in what</span>
+            <span className="block">happens.</span>
+            <span className="block">Hedge what really</span>
+            <span className="block">matters.</span>
           </h1>
 
-          <p className="mt-7 max-w-[650px] text-[20px] leading-[1.55] text-[#64748B]">
-            Combine stocks, bonds, and prediction markets
-            <br />
-            to build smarter, hedged positions around real-world events.
-          </p>
+          <div className="flex flex-col items-start gap-7 lg:col-span-5 lg:h-full lg:justify-between lg:pb-1">
+            <p className="max-w-[460px] text-[18px] leading-[1.55] text-[#52525B]">
+              Combine stocks, bonds, and prediction markets to build smarter,
+              hedged positions around real-world events.
+            </p>
 
-          <div className="mt-9 flex items-center gap-5">
-            <button className="group inline-flex h-[52px] items-center gap-2.5 rounded-[14px] bg-[#0A0A0A] px-6 text-[15px] font-semibold text-white transition-transform hover:-translate-y-0.5">
-              Build your first position
-              <ArrowRight className="size-[18px] transition-transform group-hover:translate-x-0.5" />
-            </button>
-            <button className="group inline-flex h-[52px] items-center gap-2.5 rounded-[14px] border border-[#E2E5EE] bg-white px-6 text-[15px] font-semibold text-[#0F172A] transition-transform hover:-translate-y-0.5">
-              See how it works
-              <span className="flex size-6 items-center justify-center rounded-full bg-[#0F172A]">
-                <Play className="size-3 fill-white text-white" />
-              </span>
-            </button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <button className="group inline-flex h-[52px] items-center justify-center gap-2.5 rounded-[12px] bg-[#0A0A0A] px-6 text-[13px] font-semibold uppercase tracking-[0.08em] text-white transition-transform hover:-translate-y-0.5">
+                Build your first position
+                <ArrowRight className="size-[16px] transition-transform group-hover:translate-x-0.5" />
+              </button>
+              <a
+                href="#how-it-works"
+                className="group inline-flex h-[52px] items-center justify-center gap-2.5 rounded-[12px] border border-[#0A0A0A] bg-white px-6 text-[13px] font-semibold uppercase tracking-[0.08em] text-[#0A0A0A] transition-colors hover:bg-[#0A0A0A] hover:text-white"
+              >
+                See how it works
+                <span className="flex size-5 items-center justify-center rounded-full border border-current">
+                  <Play className="size-2.5 fill-current" />
+                </span>
+              </a>
+            </div>
           </div>
         </section>
 
         {/* visualization band */}
-        <section className="relative mx-auto mt-[10px] h-[440px] w-full max-w-[1300px]">
+        <section className="relative mx-auto mt-10 h-[440px] w-full max-w-[1300px]">
+          {/* colorful full-bleed ambient gradient (brand scheme) */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-1/2 w-screen -translate-x-1/2"
+            style={{
+              background:
+                "linear-gradient(180deg, #9FD6F1 0%, #AEC5EC 22%, #C9B0E4 42%, #E3A6CE 60%, #F5A0B0 78%, #F9AE63 100%)",
+              WebkitMaskImage:
+                "linear-gradient(180deg, transparent 0%, #000 8%, #000 92%, transparent 100%)",
+              maskImage:
+                "linear-gradient(180deg, transparent 0%, #000 8%, #000 92%, transparent 100%)",
+            }}
+          />
           <FlowIllustration />
           <div className="absolute left-0 top-1/2 hidden -translate-y-1/2 lg:block">
             <StocksCard />
@@ -77,43 +80,20 @@ export function HeroLanding() {
           </div>
         </section>
 
-        {/* benefit strip */}
-        <section className="mt-2 flex flex-wrap items-center justify-center gap-x-16 gap-y-4">
-          {BENEFITS.map((b) => (
-            <div key={b.label} className="flex items-center gap-2.5">
-              <b.icon className="size-[18px] text-[#7C5CFF]" strokeWidth={1.8} />
-              <span className="text-[15px] font-medium text-[#0F172A]">{b.label}</span>
-            </div>
-          ))}
-        </section>
-
-        {/* metrics card */}
-        <section className="mb-20 mt-10">
-          <div className="grid grid-cols-2 rounded-3xl border border-[#E8EBF2] bg-white shadow-[0_24px_60px_-40px_rgba(15,23,42,0.25)] md:grid-cols-4">
-            {METRICS.map((m, i) => (
-              <div
-                key={m.label}
-                className={`flex items-center gap-4 px-8 py-7 ${
-                  i > 0 ? "md:border-l md:border-[#EEF1F6]" : ""
-                }`}
-              >
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#F4F2FF]">
-                  <m.icon className="size-5 text-[#7C5CFF]" strokeWidth={1.8} />
+        {/* markets marquee — every market we connect, scrolling left → right */}
+        <section className="mb-20 mt-2">
+          <div className="marquee-mask overflow-hidden">
+            <div className="animate-marquee-rev flex w-max items-center gap-12 whitespace-nowrap">
+              {[...MARKETS, ...MARKETS].map((m, i) => (
+                <span
+                  key={`${m}-${i}`}
+                  className="flex items-center gap-12 text-[18px] font-semibold tracking-[-0.01em] text-[#0A0A0A]"
+                >
+                  {m}
+                  <span aria-hidden className="size-1 rounded-full bg-[#0A0A0A]/30" />
                 </span>
-                <div>
-                  <div
-                    className={
-                      m.small
-                        ? "text-[16px] font-semibold leading-tight tracking-[-0.01em] text-[#0F172A]"
-                        : "text-[24px] font-bold leading-none tracking-[-0.02em] text-[#0F172A]"
-                    }
-                  >
-                    {m.value}
-                  </div>
-                  <div className="mt-1.5 text-[13px] text-[#64748B]">{m.label}</div>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
       </div>
@@ -123,32 +103,41 @@ export function HeroLanding() {
 
 /* ── nav ─────────────────────────────────────────────────────────────────── */
 
+const NAV_LINKS = [
+  { label: "Markets", href: "/markets" },
+  { label: "Platform", href: "/signup" },
+];
+
 function Nav() {
   return (
     <header className="relative flex h-[88px] items-center justify-between">
       <Link href="/" className="flex items-center gap-2.5">
         <VersoMark className="h-[18px] w-auto" />
-        <span className="text-[22px] font-semibold tracking-[-0.02em] text-[#0F172A]">verso</span>
+        <span className="text-[22px] font-semibold tracking-[-0.02em] text-[#0A0A0A]">verso</span>
       </Link>
 
       <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-9 md:flex">
-        {["Markets", "Platform", "Pricing"].map((l) => (
-          <a key={l} href="#" className="text-[15px] font-medium text-[#334155] hover:text-[#0F172A]">
-            {l}
-          </a>
+        {NAV_LINKS.map((l) => (
+          <Link
+            key={l.label}
+            href={l.href}
+            className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#52525B] transition-colors hover:text-[#0A0A0A]"
+          >
+            {l.label}
+          </Link>
         ))}
-        <a href="#" className="flex items-center gap-1 text-[15px] font-medium text-[#334155] hover:text-[#0F172A]">
-          Resources <ChevronDown className="size-4 text-[#94A3B8]" />
-        </a>
       </nav>
 
       <div className="flex items-center gap-5">
-        <Link href="/login" className="text-[15px] font-medium text-[#334155] hover:text-[#0F172A]">
+        <Link
+          href="/login"
+          className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#52525B] transition-colors hover:text-[#0A0A0A]"
+        >
           Log in
         </Link>
         <Link
           href="/signup"
-          className="inline-flex h-11 items-center rounded-[12px] bg-[#0A0A0A] px-5 text-[15px] font-semibold text-white transition-transform hover:-translate-y-0.5"
+          className="inline-flex h-11 items-center rounded-[12px] bg-[#0A0A0A] px-5 text-[13px] font-semibold uppercase tracking-[0.08em] text-white transition-transform hover:-translate-y-0.5"
         >
           Get started
         </Link>
@@ -321,16 +310,13 @@ function MicrosoftLogo() {
   );
 }
 
-const BENEFITS = [
-  { icon: Shield, label: "Hedge risk" },
-  { icon: Target, label: "Express views" },
-  { icon: TrendingUp, label: "Diversify smarter" },
-  { icon: Lock, label: "Stay protected" },
-];
-
-const METRICS = [
-  { icon: Globe, value: "1M+", label: "Markets traded", small: false },
-  { icon: Users, value: "250K+", label: "Active traders", small: false },
-  { icon: TrendingUp, value: "$2.4B+", label: "Volume (24h)", small: false },
-  { icon: ShieldCheck, value: "Institutional grade", label: "Security & compliance", small: true },
+const MARKETS = [
+  "Kalshi",
+  "Polymarket",
+  "NYSE",
+  "Nasdaq",
+  "Alpaca",
+  "Interactive Brokers",
+  "CME Group",
+  "Cboe",
 ];

@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
 /* ============================================================
    FONTS
    Open Runde (display) + Inter (fallback) + JetBrains Mono (numerals)
@@ -104,6 +107,80 @@ body{
 .anim-dial{ animation:dial 5s ease-in-out infinite; transform-origin:bottom center; }
 @keyframes growbar{ from{ transform:scaleX(.55); } to{ transform:scaleX(1); } }
 .anim-grow{ animation:growbar 3.5s ease-in-out infinite alternate; transform-origin:left; }
+
+/* feature: legs assembling — spring fill + travelling diagonal glint */
+@keyframes legFill{ 0%{ transform:scaleX(0); } 38%{ transform:scaleX(1); } 100%{ transform:scaleX(1); } }
+.anim-leg{ transform-origin:left; animation:legFill 4.4s cubic-bezier(0.22,1,0.36,1) infinite; }
+@keyframes legGlint{ 0%{ transform:translateX(-160%) skewX(-12deg); } 55%{ transform:translateX(460%) skewX(-12deg); } 100%{ transform:translateX(460%) skewX(-12deg); } }
+.anim-leg-glint{ animation:legGlint 4.4s ease-in-out infinite; }
+@media (prefers-reduced-motion:reduce){
+  .anim-leg{ animation:none; transform:none; }
+  .anim-leg-glint{ display:none; }
+}
+
+/* feature: hedge dial — needle sweep + arc draw-on + tip pulse */
+@keyframes dialSweep{
+  0%{ transform:rotate(-86deg); }
+  28%{ transform:rotate(42deg); }
+  38%{ transform:rotate(25deg); }
+  44%{ transform:rotate(30deg); }
+  84%{ transform:rotate(30deg); }
+  100%{ transform:rotate(-86deg); }
+}
+.anim-dial-sweep{ transform-origin:bottom center; animation:dialSweep 4.6s ease-in-out infinite; }
+@keyframes dialDraw{
+  0%{ stroke-dashoffset:100; }
+  30%{ stroke-dashoffset:33; }
+  84%{ stroke-dashoffset:33; }
+  100%{ stroke-dashoffset:100; }
+}
+.anim-dial-draw{ animation:dialDraw 4.6s ease-in-out infinite; }
+@keyframes dialPulse{
+  0%,100%{ transform:translateX(-50%) scale(1); opacity:.9; }
+  50%{ transform:translateX(-50%) scale(1.65); opacity:.45; }
+}
+.anim-dial-pulse{ animation:dialPulse 1.7s ease-in-out infinite; }
+@media (prefers-reduced-motion:reduce){
+  .anim-dial-sweep{ animation:none; transform:rotate(30deg); }
+  .anim-dial-draw{ animation:none; stroke-dashoffset:33; }
+  .anim-dial-pulse{ animation:none; transform:translateX(-50%); }
+}
+
+/* feature: exposure breakdown — cascading segment fill + sweeping glint */
+@keyframes segGrow{ 0%{ transform:scaleX(0); } 30%{ transform:scaleX(1); } 100%{ transform:scaleX(1); } }
+.anim-seg{ transform-origin:left; animation:segGrow 4.8s cubic-bezier(0.22,1,0.36,1) infinite; }
+@keyframes segGlint{ 0%{ transform:translateX(-140%); } 48%{ transform:translateX(620%); } 100%{ transform:translateX(620%); } }
+.anim-seg-glint{ animation:segGlint 4.8s ease-in-out infinite; }
+@media (prefers-reduced-motion:reduce){
+  .anim-seg{ animation:none; transform:none; }
+  .anim-seg-glint{ display:none; }
+}
+
+/* process row: staggered step entrance + drawing dotted connectors + looping icon glow */
+@keyframes stepIn{ 0%{ opacity:0; transform:translateY(16px) scale(.96); } 100%{ opacity:1; transform:none; } }
+.anim-step{ opacity:0; animation:stepIn .72s cubic-bezier(0.16,1,0.3,1) both; }
+
+@keyframes connDraw{ 0%{ transform:scaleX(0); } 100%{ transform:scaleX(1); } }
+.anim-connector{ transform-origin:left; transform:scaleX(0); animation:connDraw .6s cubic-bezier(0.22,1,0.36,1) both; }
+
+@keyframes stepGlow{
+  0%,100%{ box-shadow:0 0 0 0 rgba(124,92,255,0); }
+  50%{ box-shadow:0 0 0 7px rgba(124,92,255,0.10); }
+}
+.anim-step-glow{ animation:stepGlow 3.4s ease-in-out infinite; }
+
+@keyframes badgePulse{
+  0%,100%{ box-shadow:0 0 0 0 rgba(124,92,255,0); }
+  50%{ box-shadow:0 0 0 4px rgba(124,92,255,0.18); }
+}
+.anim-badge-pulse{ animation:badgePulse 3.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion:reduce){
+  .anim-step{ opacity:1; animation:none; transform:none; }
+  .anim-connector{ animation:none; transform:none; }
+  .anim-step-glow{ animation:none; box-shadow:none; }
+  .anim-badge-pulse{ animation:none; box-shadow:none; }
+}
 
 /* ============================================================
    DARK FEATURE PANEL — used ONLY by the Structuring column
