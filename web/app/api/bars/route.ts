@@ -19,9 +19,8 @@ export async function GET(request: Request) {
     );
     if (!res.ok) throw new Error(`Alpaca ${res.status}`);
     const data = await res.json();
-    const bars: Array<{ c: number }> = data.bars?.[symbol] ?? [];
-    // Return just the close prices — dashboard page applies monthLabels
-    return NextResponse.json(bars.map((b) => Number(b.c.toFixed(2))));
+    const bars: Array<{ t: string; c: number }> = data.bars?.[symbol] ?? [];
+    return NextResponse.json(bars.map((b) => ({ date: b.t.split("T")[0], close: Number(b.c.toFixed(2)) })));
   } catch {
     return NextResponse.json([]);
   }

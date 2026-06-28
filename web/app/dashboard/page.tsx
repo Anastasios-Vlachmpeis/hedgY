@@ -93,48 +93,28 @@ type RiskMarket = {
   sparkDown: Array<{ t: string; v: number }>;
 };
 
-const monthLabels = [
-  "Jul",
-  "",
-  "",
-  "Aug",
-  "",
-  "",
-  "Sep",
-  "",
-  "",
-  "Oct",
-  "",
-  "",
-  "Nov",
-  "",
-  "",
-  "Dec",
-  "",
-  "",
-  "2025",
-  "",
-  "",
-  "Feb",
-  "",
-  "",
-  "Mar",
-  "",
-  "",
-  "Apr",
-  "",
-  "",
-  "May",
-  "",
-  "",
-  "Jun",
-];
+function makeChartDate(index: number, startIso = "2024-07-01"): string {
+  const d = new Date(startIso);
+  // 34 points spread over ~365 days → step ≈ 10.7 days
+  d.setDate(d.getDate() + Math.round(index * 10.75));
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
 
-function chart(values: number[]): ChartPoint[] {
-  return values.map((price, index) => ({
-    t: monthLabels[index] ?? "",
+function chart(values: number[], dates?: string[]): ChartPoint[] {
+  return values.map((price, i) => ({
+    t: dates?.[i] ?? makeChartDate(i),
     price,
   }));
+}
+
+function xAxisTickFormatter(val: string, i: number): string {
+  // Show a label roughly every 3 points to mimic monthly markers
+  if (i % 3 !== 0) return "";
+  const parts = val.split(" ");
+  const month = parts[0];
+  const year = parts[2];
+  // Show "Jan '25" style for the January tick, otherwise just month
+  return month === "Jan" ? `Jan '${year?.slice(2)}` : month;
 }
 
 function spark(values: number[]) {
@@ -889,6 +869,7 @@ function AssetChartCard({ asset }: { asset: Asset }) {
                 tickLine={false}
                 axisLine={false}
                 interval={0}
+                tickFormatter={xAxisTickFormatter}
                 tick={{ fill: "#a3a3a3", fontSize: 10, fontWeight: 500 }}
                 padding={{ left: 8, right: 8 }}
               />
@@ -1557,8 +1538,13 @@ export default function DashboardPage() {
     ]);
 
     const price: number = priceData[symbol]?.price ?? 100;
-    const closes: number[] = Array.isArray(barsData) && barsData.length >= 2 ? barsData : Array(34).fill(price);
-    const chartData = chart(closes);
+    const barRows: Array<{ date: string; close: number }> =
+      Array.isArray(barsData) && barsData.length >= 2 && typeof barsData[0] === "object" ? barsData : [];
+    const closes = barRows.length >= 2 ? barRows.map((b) => b.close) : Array(34).fill(price);
+    const dates  = barRows.length >= 2
+      ? barRows.map((b) => new Date(b.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }))
+      : undefined;
+    const chartData = chart(closes, dates);
 
     const newAsset: Asset = {
       symbol,
