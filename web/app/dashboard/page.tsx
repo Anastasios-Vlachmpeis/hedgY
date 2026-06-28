@@ -760,9 +760,11 @@ function RiskIcon({ icon }: { icon: RiskMarket["icon"] }) {
 function AssetSwitcher({
   selectedSymbol,
   onSelect,
+  assetList,
 }: {
   selectedSymbol: string;
   onSelect: (symbol: string) => void;
+  assetList: Asset[];
 }) {
   return (
     <div className="mt-6 flex items-center gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -773,7 +775,7 @@ function AssetSwitcher({
       >
         <ArrowRight className="size-4 rotate-180" strokeWidth={1.9} />
       </button>
-      {assets.map((asset) => {
+      {assetList.map((asset) => {
         const selected = asset.symbol === selectedSymbol;
         return (
           <button
@@ -1681,8 +1683,46 @@ export default function DashboardPage() {
   const [browseOpen, setBrowseOpen] = React.useState(false);
   const [appliedMarketId, setAppliedMarketId] = React.useState<string | null>(null);
 
-  const selectedAsset = assets.find((asset) => asset.symbol === selectedSymbol) ?? assets[2];
-  const visibleRiskMarkets = riskMarkets
+  // ── Live data patches ──────────────────────────────────────────────────────
+  const [livePrices, setLivePrices] = React.useState<Record<string, { price: number; changePct: number; direction: "up" | "down" }>>({});
+  const [liveMarketProbs, setLiveMarketProbs] = React.useState<Record<string, { yes: number; no: number; probability: number; venue: string }>>({});
+
+  React.useEffect(() => {
+    fetch("/api/prices")
+      .then((r) => r.json())
+      .then(setLivePrices)
+      .catch(() => {});
+
+    fetch("/api/risk-markets")
+      .then((r) => r.json())
+      .then((markets: Array<{ id: string; yes: number; no: number; probability: number; venue: string; title: string }>) => {
+        const map: Record<string, { yes: number; no: number; probability: number; venue: string }> = {};
+        for (const m of markets) map[m.id] = { yes: m.yes, no: m.no, probability: m.probability, venue: m.venue };
+        setLiveMarketProbs(map);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Merge live prices into assets
+  const patchedAssets = React.useMemo(() =>
+    assets.map((a) => {
+      const live = livePrices[a.symbol];
+      if (!live) return a;
+      return { ...a, price: live.price, position: { ...a.position, avgPrice: live.price, notional: live.price * a.position.shares, pnl: (live.price - a.position.avgPrice) * a.position.shares } };
+    }),
+  [livePrices]);
+
+  // Merge live probabilities into riskMarkets
+  const patchedMarkets = React.useMemo(() =>
+    riskMarkets.map((m) => {
+      const live = liveMarketProbs[m.id];
+      if (!live) return m;
+      return { ...m, probability: live.probability, yes: live.yes, no: live.no, venue: live.venue };
+    }),
+  [liveMarketProbs]);
+
+  const selectedAsset = patchedAssets.find((asset) => asset.symbol === selectedSymbol) ?? patchedAssets[2];
+  const visibleRiskMarkets = patchedMarkets
     .filter(
       (market) =>
         market.assetSymbols.includes(selectedAsset.symbol) &&
@@ -1690,18 +1730,18 @@ export default function DashboardPage() {
     )
     .slice(0, 3);
   const activeMarket =
-    riskMarkets.find((market) => market.id === activeMarketId) ??
-    riskMarkets.find((market) => market.id === selectedAsset.recommendedMarketId) ??
-    riskMarkets[0];
+    patchedMarkets.find((market) => market.id === activeMarketId) ??
+    patchedMarkets.find((market) => market.id === selectedAsset.recommendedMarketId) ??
+    patchedMarkets[0];
 
   const selectAsset = React.useCallback((symbol: string) => {
-    const nextAsset = assets.find((asset) => asset.symbol === symbol);
+    const nextAsset = patchedAssets.find((asset) => asset.symbol === symbol);
     if (!nextAsset) return;
     setSelectedSymbol(nextAsset.symbol);
     setActiveMarketId(nextAsset.recommendedMarketId);
     setCompareIds(defaultCompareIds(nextAsset.symbol, nextAsset.recommendedMarketId));
     setAppliedMarketId(null);
-  }, []);
+  }, [patchedAssets]);
 
   React.useEffect(() => {
     const onAsset = (event: Event) => {
@@ -1710,7 +1750,7 @@ export default function DashboardPage() {
     };
     const onMarket = (event: Event) => {
       const marketId = (event as CustomEvent<{ marketId?: string }>).detail?.marketId;
-      const market = riskMarkets.find((item) => item.id === marketId);
+      const market = patchedMarkets.find((item) => item.id === marketId);
       if (!market) return;
       setActiveMarketId(market.id);
       if (!market.assetSymbols.includes(selectedSymbol)) {
@@ -1745,7 +1785,7 @@ export default function DashboardPage() {
     <>
       <div className="mx-auto flex max-w-[1540px] flex-col gap-5 px-8 py-6">
         <HeaderIntro />
-        <AssetSwitcher selectedSymbol={selectedSymbol} onSelect={selectAsset} />
+        <AssetSwitcher selectedSymbol={selectedSymbol} onSelect={selectAsset} assetList={patchedAssets} />
 
         <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_520px]">
           <AssetChartCard asset={selectedAsset} />
@@ -1780,7 +1820,7 @@ export default function DashboardPage() {
 
       <MarketBrowserModal
         open={browseOpen}
-        markets={riskMarkets}
+        markets={patchedMarkets}
         activeMarketId={activeMarketId}
         compareIds={compareIds}
         onClose={() => setBrowseOpen(false)}
