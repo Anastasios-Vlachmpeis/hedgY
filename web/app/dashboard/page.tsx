@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import {
   Anchor,
-  Apple,
   ArrowRight,
   Building2,
   CheckCircle2,
@@ -667,46 +666,38 @@ function Badge({ children, className }: { children: React.ReactNode; className?:
   );
 }
 
-function AssetLogo({ symbol, selected = false }: { symbol: string; selected?: boolean }) {
-  if (symbol === "AAPL") {
+const LOGO_DOMAINS: Record<string, string> = {
+  AAPL: "apple.com",     NVDA: "nvidia.com",       MSFT: "microsoft.com",
+  AMD:  "amd.com",       LMT:  "lockheedmartin.com",TSLA: "tesla.com",
+  AMZN: "amazon.com",   META: "meta.com",           GOOGL:"google.com",
+  GOOG: "google.com",   PLTR: "palantir.com",       NFLX: "netflix.com",
+  ADBE: "adobe.com",    CRM:  "salesforce.com",     ORCL: "oracle.com",
+  JPM:  "jpmorganchase.com", XOM: "exxonmobil.com", BA:   "boeing.com",
+  V:    "visa.com",     INTC: "intel.com",          QCOM: "qualcomm.com",
+  AVGO: "broadcom.com", TSM:  "tsmc.com",           ASML: "asml.com",
+  MU:   "micron.com",   AMAT: "appliedmaterials.com",KLAC:"kla.com",
+  GS:   "goldmansachs.com", MS:"morganstanley.com", WMT: "walmart.com",
+  UNH:  "unitedhealthgroup.com", JNJ:"jnj.com",     PFE: "pfizer.com",
+};
+
+function AssetLogo({ symbol }: { symbol: string }) {
+  const domain = LOGO_DOMAINS[symbol];
+  const [err, setErr] = React.useState(false);
+  if (domain && !err) {
     return (
-      <span className="flex size-9 items-center justify-center rounded-full bg-[#050505] text-white">
-        <Apple className="size-[19px]" fill="currentColor" strokeWidth={1.5} />
-      </span>
-    );
-  }
-  if (symbol === "NVDA") {
-    return (
-      <span className="flex size-9 items-center justify-center rounded-full bg-[#050505]">
-        <Cpu className="size-[18px] text-[#76B900]" strokeWidth={2.1} />
-      </span>
-    );
-  }
-  if (symbol === "LMT") {
-    return (
-      <span
-        className={cn(
-          "flex size-9 items-center justify-center rounded-full",
-          selected ? "bg-[#E9EEFF]" : "bg-[#EEF2FF]",
-        )}
-      >
-        <ShieldCheck className="size-[18px] text-[#2F5FAC]" strokeWidth={2} />
-      </span>
-    );
-  }
-  if (symbol === "MSFT") {
-    return (
-      <span className="grid size-9 grid-cols-2 gap-[3px] rounded-[8px] bg-white p-1.5 shadow-[inset_0_0_0_1px_#E7EAF0]">
-        <span className="bg-[#F25022]" />
-        <span className="bg-[#7FBA00]" />
-        <span className="bg-[#00A4EF]" />
-        <span className="bg-[#FFB900]" />
+      <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-[0_0_0_1.5px_#ececec]">
+        <img
+          src={`https://logo.clearbit.com/${domain}`}
+          alt={symbol}
+          className="size-[30px] rounded-full object-contain"
+          onError={() => setErr(true)}
+        />
       </span>
     );
   }
   return (
-    <span className="flex size-9 items-center justify-center rounded-full bg-[#050505] text-[10px] font-bold text-white">
-      AMD
+    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#0a0a0a] text-[10px] font-bold tracking-tight text-white">
+      {symbol.slice(0, 2)}
     </span>
   );
 }
@@ -766,7 +757,7 @@ function AssetSwitcher({
                 : "border-[var(--border-soft)] hover:-translate-y-0.5 hover:border-[#D6D8FF]",
             )}
           >
-            <AssetLogo symbol={asset.symbol} selected={selected} />
+            <AssetLogo symbol={asset.symbol} />
             <span>
               <span className="block text-[14px] font-bold text-[var(--text-primary)]">
                 {asset.symbol}
