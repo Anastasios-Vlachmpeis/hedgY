@@ -1,10 +1,37 @@
 {
-  "name": "paris-hack-alpaca-sandbox",
-  "version": "0.0.1",
+  "name": "paris-hack",
   "private": true,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "alpaca:test": "node --env-file=.env scripts/alpaca-test.ts",
-    "poly:test": "node scripts/polymarket-test.ts"
+    "dev": "bash dev.sh",
+    "dev:vite": "vite",
+    "backend": ".venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload",
+    "stream": "node server/sse.mjs",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.101.2",
+    "lightweight-charts": "^5.0.9",
+    "lucide-react": "^1.21.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.0",
+    "recharts": "^3.9.0",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.1",
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "oxlint": "^1.69.0",
+    "playwright-core": "^1.61.1",
+    "tailwindcss": "^4.3.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.0"
   }
 }

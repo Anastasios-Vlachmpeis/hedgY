@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+:root {
+  /* Base palette tuned to the teal-dark background render */
+  --bg: #0e171c;
+  --text: #f4f7f8;
+  --text-dim: #a2b1b6;
+
+  /* Semantic (financial) — green = gains / YES, red = losses / NO */
+  --up: #2bd96b;
+  --down: #ff5a3c;
+  --express: #ffc24b;
+
+  /* Brand accent */
+  --accent: #000080;
+  --hedge: #000080;
+
+  /* Liquid-glass surfaces (translucent, paired with backdrop-blur) */
+  --surface: rgba(255, 255, 255, 0.06);
+  --surface-2: rgba(255, 255, 255, 0.12);
+  --border: rgba(255, 255, 255, 0.14);
+
+  /* Glass tuning */
+  --glass-bg: rgba(255, 255, 255, 0.07);
+  --glass-bg-strong: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-highlight: rgba(255, 255, 255, 0.18);
+  --glass-shadow: rgba(0, 0, 0, 0.35);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-text-dim: var(--text-dim);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-accent: var(--accent);
+  --color-hedge: var(--hedge);
+  --color-express: var(--express);
+  --color-border: var(--border);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 1024px;
+  font-family: var(--font-sans);
+  background-color: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Barely-visible, heavily tinted background render */
+#root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url(/bg.png);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.28;
+  z-index: -2;
+  pointer-events: none;
+}
+
+#root::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(
+      1100px 600px at 72% 8%,
+      rgba(255, 194, 75, 0.08),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 18% 88%,
+      rgba(0, 0, 128, 0.14),
+      transparent 60%
+    ),
+    linear-gradient(180deg, rgba(14, 23, 28, 0.74), rgba(14, 23, 28, 0.86));
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ---- Liquid glass utilities ---- */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 10px 34px var(--glass-shadow),
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.04);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 16px 50px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.05);
+}
+
+.glass-hover {
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.glass-hover:hover {
+  background: var(--glass-bg-strong);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+/* Subtle inner control surface (chips, inputs, segmented controls) */
+.glass-inset {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+:focus-visible {
+  outline: 2px solid var(--up);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
