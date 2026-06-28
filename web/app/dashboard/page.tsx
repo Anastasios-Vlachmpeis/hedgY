@@ -2034,6 +2034,7 @@ function MarketBrowserModal({
 }) {
   const [query, setQuery] = React.useState("");
   const [venue, setVenue] = React.useState("All");
+  const [betTicket, setBetTicket] = React.useState<OrderTicketData | null>(null);
 
   React.useEffect(() => {
     if (!open) return;
@@ -2203,14 +2204,36 @@ function MarketBrowserModal({
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => { onSelect(active.id); onClose(); }}
-                className="mt-auto flex h-10 w-full items-center justify-center gap-2 rounded-[12px] bg-[#0a0a0a] text-[13px] font-semibold text-white transition-opacity hover:opacity-80"
-              >
-                Use this hedge
-                <ArrowRight className="size-4" strokeWidth={2} />
-              </button>
+              <div className="mt-auto flex flex-col gap-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setBetTicket({
+                      kind: "prediction",
+                      marketId: active.id,
+                      question: active.title,
+                      yes: active.yes,
+                      venues: (active.quoteRows ?? []).map((q) => ({
+                        venue: q.venue.toLowerCase(),
+                        yes: q.yes,
+                        no: q.no,
+                      })),
+                      defaultSide: "YES",
+                    })
+                  }
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-[12px] bg-[#0a0a0a] text-[13px] font-semibold text-white transition-opacity hover:opacity-80"
+                >
+                  Place bet
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { onSelect(active.id); onClose(); }}
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-[12px] border border-[#ececec] bg-white text-[13px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#f5f5f5]"
+                >
+                  Use as hedge
+                  <ArrowRight className="size-4" strokeWidth={2} />
+                </button>
+              </div>
             </>
           ) : (
             <div className="flex flex-1 items-center justify-center text-[13px] text-[#a3a3a3]">
@@ -2218,6 +2241,7 @@ function MarketBrowserModal({
             </div>
           )}
         </aside>
+        <OrderTicket ticket={betTicket} onClose={() => setBetTicket(null)} />
       </div>
     </div>
   );
