@@ -130,7 +130,7 @@ function UserAvatar({ size = 10 }: { size?: number }) {
       style={{
         width: size * 4,
         height: size * 4,
-        background: "radial-gradient(circle at 30% 25%, #555555, transparent 72%), linear-gradient(140deg, #2a2a2a, #555555)",
+        background: "radial-gradient(circle at 35% 30%, #888888, transparent 60%), linear-gradient(135deg, #1a1a1a 0%, #6b6b6b 100%)",
         flexShrink: 0,
       }}
     />
@@ -379,7 +379,7 @@ function Topbar({ collapsed }: { collapsed: boolean }) {
         </div>
         <Link
           href="/dashboard/portfolio"
-          className="flex shrink-0 items-center gap-3 rounded-[12px] border border-[#ececec] px-4 py-2 text-left transition-colors hover:bg-[#f8f8f8]"
+          className="flex shrink-0 items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-[#f8f8f8] rounded-[12px]"
         >
           <Wallet className="size-4 text-[#a3a3a3]" strokeWidth={1.8} />
           <div>
