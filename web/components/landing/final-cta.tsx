@@ -21,9 +21,6 @@ function FinalCta() {
               Start trading <ArrowRight className="size-4" />
             </Link>
           </Button>
-          <Button asChild variant="secondary" size="cta">
-            <Link href="#how">See how it works</Link>
-          </Button>
         </div>
       </Reveal>
     </section>

@@ -17,7 +17,6 @@ function Footer() {
             <span className="text-[18px] font-semibold tracking-[-0.02em] text-[#181925]">
               {WORDMARK}
             </span>
-            <span className="size-2 rounded-full bg-[#9580ff]" aria-hidden />
           </Link>
           <p className="mt-3 max-w-[230px] text-[13px] leading-[1.6] text-[#737373]">
             Trade the world&apos;s markets — and its outcomes — in one position.

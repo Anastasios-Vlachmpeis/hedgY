@@ -58,9 +58,8 @@ export function TradeShell({ children }: { children: React.ReactNode }) {
         {/* Logo */}
         <div className="flex h-[52px] shrink-0 items-center border-b border-[#f0f0f0] px-4">
           <Link href="/trade" className="flex items-center gap-1.5">
-            <span className="size-[6px] rounded-full bg-[#9580ff]" />
             <span className="text-[13px] font-semibold tracking-[-0.01em] text-[#0a0a0a]">
-              hedgeflow
+              hedgY
             </span>
           </Link>
         </div>

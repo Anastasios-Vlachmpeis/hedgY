@@ -28,21 +28,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-[1400px] flex-col px-6 py-7 sm:px-12">
         <Link href="/" className="flex items-center gap-2">
-          <span className="size-2.5 rounded-full bg-[#8B7CFF]" aria-hidden />
           <span className="text-[18px] font-semibold tracking-[-0.02em] text-[#181925]">
-            Verso
+            hedgY
           </span>
         </Link>
 
-        <div className="grid flex-1 items-center lg:grid-cols-2">
-          <div className="flex justify-center py-10">
-            <div className="w-full max-w-[380px]">{children}</div>
-          </div>
-          {/* right half intentionally empty — the pastel bloom shows through */}
-          <div aria-hidden className="hidden lg:block" />
+        <div className="flex flex-1 items-center justify-center py-10">
+          <div className="w-full max-w-[380px]">{children}</div>
         </div>
 
-        <p className="text-center text-[12px] text-[#a3a3a3] lg:text-left">
+        <p className="text-center text-[12px] text-[#a3a3a3]">
           By continuing, you agree to our{" "}
           <span className="font-medium text-[#8B7CFF]">Terms</span> &amp;{" "}
           <span className="font-medium text-[#8B7CFF]">Privacy Policy</span>.

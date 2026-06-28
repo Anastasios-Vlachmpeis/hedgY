@@ -159,7 +159,7 @@ export function FlowIllustration() {
 
       {/* central sphere */}
       <div className="verso-breathe absolute left-1/2 top-1/2 z-10 flex size-[184px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-[#ECEAFF] bg-[radial-gradient(circle_at_50%_36%,#ffffff_0%,#f4f1ff_72%,#efeaff_100%)] text-center shadow-[0_24px_70px_-24px_rgba(124,92,255,0.42),0_0_0_10px_rgba(255,255,255,0.55)]">
-        <VersoMark className="h-[18px] w-auto" />
+        <span className="text-[16px] font-semibold tracking-[-0.02em] text-[#0F172A]">hedgY</span>
         <div className="mt-2 text-[15px] font-semibold tracking-[-0.01em] text-[#0F172A]">
           Smart hedge
         </div>
@@ -170,22 +170,5 @@ export function FlowIllustration() {
         </div>
       </div>
     </div>
-  );
-}
-
-export function VersoMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 16" className={className} fill="#0F172A" aria-hidden>
-      <rect x="0" y="0.8" width="7.5" height="2.6" rx="1.3" />
-      <circle cx="11.6" cy="2.1" r="1.4" />
-      <circle cx="16.4" cy="2.1" r="1.4" />
-      <circle cx="21" cy="2.1" r="1.4" />
-      <circle cx="2" cy="8" r="1.4" />
-      <rect x="6" y="6.7" width="10" height="2.6" rx="1.3" />
-      <circle cx="20.2" cy="8" r="1.4" />
-      <rect x="0" y="12.6" width="7.5" height="2.6" rx="1.3" />
-      <circle cx="11.6" cy="13.9" r="1.4" />
-      <circle cx="16.4" cy="13.9" r="1.4" />
-    </svg>
   );
 }

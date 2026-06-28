@@ -156,9 +156,8 @@ export default function TradePage() {
         <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-6 px-8">
           {/* Logo */}
           <Link href="/trade" className="flex items-center gap-1.5 shrink-0">
-            <span className="size-[6px] rounded-full bg-[#9580ff]" />
             <span className="text-[14px] font-bold tracking-[-0.02em] text-[#0a0a0a]">
-              hedgeflow
+              hedgY
             </span>
           </Link>
 

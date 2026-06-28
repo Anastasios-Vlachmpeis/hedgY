@@ -48,6 +48,17 @@ type SearchItem = {
   cls?: "equity" | "crypto";
 };
 
+// Shown first when the search box is empty, so the default suggestions aren't
+// all prediction markets. Live results replace these as soon as the user types.
+const defaultStocks: SearchItem[] = [
+  { kind: "asset", id: "AAPL", title: "AAPL", subtitle: "Apple Inc.", venue: "NASDAQ", cls: "equity" },
+  { kind: "asset", id: "NVDA", title: "NVDA", subtitle: "NVIDIA Corp.", venue: "NASDAQ", cls: "equity" },
+  { kind: "asset", id: "MSFT", title: "MSFT", subtitle: "Microsoft Corp.", venue: "NASDAQ", cls: "equity" },
+  { kind: "asset", id: "AMZN", title: "AMZN", subtitle: "Amazon.com Inc.", venue: "NASDAQ", cls: "equity" },
+  { kind: "asset", id: "GOOGL", title: "GOOGL", subtitle: "Alphabet Inc.", venue: "NASDAQ", cls: "equity" },
+  { kind: "asset", id: "TSLA", title: "TSLA", subtitle: "Tesla Inc.", venue: "NASDAQ", cls: "equity" },
+];
+
 const searchItems: SearchItem[] = [
   {
     kind: "market",
@@ -90,25 +101,6 @@ const searchItems: SearchItem[] = [
     probability: "31%",
   },
 ];
-
-function VersoMark() {
-  return (
-    <div className="relative size-7" aria-hidden>
-      {Array.from({ length: 8 }).map((_, i) => {
-        const angle = (i / 8) * Math.PI * 2;
-        const x = 11 + Math.cos(angle) * 9;
-        const y = 11 + Math.sin(angle) * 9;
-        return (
-          <span
-            key={i}
-            className="absolute size-[5px] rounded-full bg-[#050505]"
-            style={{ left: x, top: y, opacity: i % 3 === 0 ? 0.45 : 1 }}
-          />
-        );
-      })}
-    </div>
-  );
-}
 
 // Two-tone gradient avatar — same palette as applai
 const AVATAR_GRADIENTS: [string, string][] = [
@@ -177,10 +169,9 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
         onClick={onToggle}
         className={cn("mb-6 flex items-center", collapsed ? "justify-center" : "gap-3")}
       >
-        <VersoMark />
-        {!collapsed && (
-          <span className="text-[22px] font-semibold tracking-[-0.04em] text-[#050505]">verso</span>
-        )}
+        <span className="text-[22px] font-semibold tracking-[-0.04em] text-[#050505]">
+          {collapsed ? "h" : "hedgY"}
+        </span>
       </button>
 
       {/* Main nav */}
@@ -283,9 +274,11 @@ function SearchCommand() {
 
   const results = React.useMemo(() => {
     const q = query.trim().toLowerCase();
-    const markets = q
-      ? searchItems.filter((i) => `${i.title} ${i.subtitle} ${i.venue}`.toLowerCase().includes(q))
-      : searchItems.slice(0, 4);
+    // Empty box: lead with a few large-cap stocks, then a couple of markets.
+    if (!q) return [...defaultStocks, ...searchItems.slice(0, 3)].slice(0, 10);
+    const markets = searchItems.filter((i) =>
+      `${i.title} ${i.subtitle} ${i.venue}`.toLowerCase().includes(q),
+    );
     return [...assets, ...markets].slice(0, 10);
   }, [query, assets]);
 

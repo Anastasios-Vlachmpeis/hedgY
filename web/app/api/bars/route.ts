@@ -15,14 +15,16 @@ export async function GET(request: Request) {
   const symbol = searchParams.get("symbol")?.toUpperCase();
   if (!symbol) return NextResponse.json([], { status: 400 });
 
+  const isCrypto = symbol.includes("/");
+  const url = isCrypto
+    ? `${DATA}/v1beta3/crypto/us/bars?symbols=${encodeURIComponent(symbol)}&timeframe=1Day&start=${oneYearAgo()}&limit=400`
+    : `${DATA}/v2/stocks/bars?symbols=${symbol}&timeframe=1D&start=${oneYearAgo()}&limit=260&adjustment=raw`;
+
   try {
-    const res = await fetch(
-      `${DATA}/v2/stocks/bars?symbols=${symbol}&timeframe=1D&start=${oneYearAgo()}&limit=260&adjustment=raw`,
-      {
-        headers: { "APCA-API-KEY-ID": KEY, "APCA-API-SECRET-KEY": SECRET },
-        cache: "no-store",
-      }
-    );
+    const res = await fetch(url, {
+      headers: { "APCA-API-KEY-ID": KEY, "APCA-API-SECRET-KEY": SECRET },
+      cache: "no-store",
+    });
     if (!res.ok) throw new Error(`Alpaca ${res.status}`);
     const data = await res.json();
     const bars: Array<{ t: string; c: number }> = data.bars?.[symbol] ?? [];

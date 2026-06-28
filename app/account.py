@@ -409,18 +409,30 @@ def stock_price(symbol: str) -> float | None:
     if cached is not None and now - cached[0] < _PRICE_TTL_SECONDS:
         return cached[1]
 
+    headers = {
+        "APCA-API-KEY-ID": settings.alpaca_key_id,
+        "APCA-API-SECRET-KEY": settings.alpaca_secret_key,
+    }
     price: float | None = None
     try:
-        r = httpx.get(
-            f"{settings.alpaca_data_url}/v2/stocks/{symbol}/snapshot",
-            headers={
-                "APCA-API-KEY-ID": settings.alpaca_key_id,
-                "APCA-API-SECRET-KEY": settings.alpaca_secret_key,
-            },
-            timeout=settings.http_timeout_seconds,
-        )
-        r.raise_for_status()
-        snap = r.json()
+        if "/" in symbol:
+            # Crypto pair (e.g. BTC/USD) — different feed, snapshots keyed by symbol.
+            r = httpx.get(
+                f"{settings.alpaca_data_url}/v1beta3/crypto/us/snapshots",
+                params={"symbols": symbol},
+                headers=headers,
+                timeout=settings.http_timeout_seconds,
+            )
+            r.raise_for_status()
+            snap = (r.json().get("snapshots") or {}).get(symbol) or {}
+        else:
+            r = httpx.get(
+                f"{settings.alpaca_data_url}/v2/stocks/{symbol}/snapshot",
+                headers=headers,
+                timeout=settings.http_timeout_seconds,
+            )
+            r.raise_for_status()
+            snap = r.json()
         trade = (snap.get("latestTrade") or {}).get("p")
         if trade:
             price = float(trade)
@@ -446,14 +458,16 @@ def place_alpaca_order(
     """Fire a real Alpaca paper order (market or limit); return its id (best-effort)."""
     if not settings.alpaca_key_id:
         return None
+    # Crypto trades 24/7 and only accepts GTC/IOC; equities use DAY.
+    tif = "gtc" if "/" in symbol else "day"
     if order_type == "limit" and limit_price:
         # Alpaca limit orders are qty-based (notional is market-only).
         payload = {
             "symbol": symbol, "qty": round(notional / limit_price, 4), "side": side,
-            "type": "limit", "limit_price": round(limit_price, 2), "time_in_force": "day",
+            "type": "limit", "limit_price": round(limit_price, 2), "time_in_force": tif,
         }
     else:
-        payload = {"symbol": symbol, "notional": round(notional, 2), "side": side, "type": "market", "time_in_force": "day"}
+        payload = {"symbol": symbol, "notional": round(notional, 2), "side": side, "type": "market", "time_in_force": tif}
     try:
         r = httpx.post(
             f"{settings.alpaca_trading_url}/v2/orders",

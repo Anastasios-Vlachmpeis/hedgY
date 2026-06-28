@@ -25,12 +25,9 @@ function AppShell({ children, className }: { children: React.ReactNode; classNam
       <header className="sticky top-0 z-40 border-b border-[#ececec] bg-white/85 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center gap-6 px-4 sm:px-6">
           <Link href="/dashboard" className="flex items-center gap-2">
-            {WORDMARK && (
-              <span className="text-[16px] font-semibold tracking-[-0.02em] text-[#181925]">
-                {WORDMARK}
-              </span>
-            )}
-            <span className="size-2 rounded-full bg-[#9580ff]" aria-hidden />
+            <span className="text-[16px] font-semibold tracking-[-0.02em] text-[#181925]">
+              {WORDMARK}
+            </span>
           </Link>
 
           <nav className="flex items-center gap-1">

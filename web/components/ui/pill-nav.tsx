@@ -35,7 +35,6 @@ function PillNav() {
           <span className="text-[16px] font-semibold tracking-[-0.02em] text-[#181925]">
             {WORDMARK}
           </span>
-          <span className="size-2 rounded-full bg-[#9580ff]" aria-hidden />
         </Link>
 
         <div className="hidden items-center gap-1 sm:flex">

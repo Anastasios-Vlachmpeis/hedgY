@@ -9,10 +9,6 @@ import { Input } from "@/components/ui/input";
 
 type Mode = "signin" | "signup";
 
-// MVP demo credentials: sign in with these to reach the dashboard.
-const DEMO_EMAIL = "1234@gmail.com";
-const DEMO_PASSWORD = "1234";
-
 // Accent palette (purple, matches the pastel showcase panel).
 const TEAL = "#8B7CFF";
 const TEAL_HOVER = "#7A6BF0";
@@ -51,17 +47,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
     e.preventDefault();
     setError(null);
 
-    const data = new FormData(e.currentTarget);
-    const email = String(data.get("email") ?? "").trim().toLowerCase();
-    const password = String(data.get("password") ?? "");
-
-    // Sign-in is gated on the demo credentials; sign-up is open so neither CTA
-    // is a dead end. Either way, a successful submit lands on the dashboard.
-    if (mode === "signin" && (email !== DEMO_EMAIL || password !== DEMO_PASSWORD)) {
-      setError("Invalid email or password.");
-      return;
-    }
-
+    // Demo app: any credentials are accepted on both sign-in and sign-up, so no
+    // CTA is ever a dead end. A successful submit always lands on the dashboard.
     setLoading(true);
     setTimeout(() => {
       setDone(true);
@@ -172,6 +159,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
           )}
         </button>
       </form>
+
+      <p className="mt-4 rounded-lg bg-[#f6f4ff] px-3 py-2 text-center text-[12px] text-[#666666]">
+        Demo only — you can sign in with any email and password.
+      </p>
     </div>
   );
 }

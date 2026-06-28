@@ -8,7 +8,7 @@ import {
   Pill,
 } from "lucide-react";
 
-import { FlowIllustration, VersoMark } from "@/components/hero/flow-illustration";
+import { FlowIllustration } from "@/components/hero/flow-illustration";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 
@@ -39,10 +39,6 @@ export function HeroLanding() {
             </p>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <button className="group inline-flex h-[52px] items-center justify-center gap-2.5 rounded-[12px] bg-[#0A0A0A] px-6 text-[13px] font-semibold uppercase tracking-[0.08em] text-white transition-transform hover:-translate-y-0.5">
-                Build your first position
-                <ArrowRight className="size-[16px] transition-transform group-hover:translate-x-0.5" />
-              </button>
               <a
                 href="#how-it-works"
                 className="group inline-flex h-[52px] items-center justify-center gap-2.5 rounded-[12px] border border-[#0A0A0A] bg-white px-6 text-[13px] font-semibold uppercase tracking-[0.08em] text-[#0A0A0A] transition-colors hover:bg-[#0A0A0A] hover:text-white"
@@ -103,30 +99,12 @@ export function HeroLanding() {
 
 /* ── nav ─────────────────────────────────────────────────────────────────── */
 
-const NAV_LINKS = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Platform", href: "/signup" },
-];
-
 function Nav() {
   return (
     <header className="relative flex h-[88px] items-center justify-between">
       <Link href="/" className="flex items-center gap-2.5">
-        <VersoMark className="h-[18px] w-auto" />
-        <span className="text-[22px] font-semibold tracking-[-0.02em] text-[#0A0A0A]">verso</span>
+        <span className="text-[22px] font-semibold tracking-[-0.02em] text-[#0A0A0A]">hedgY</span>
       </Link>
-
-      <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-9 md:flex">
-        {NAV_LINKS.map((l) => (
-          <Link
-            key={l.label}
-            href={l.href}
-            className="text-[12px] font-medium uppercase tracking-[0.1em] text-[#52525B] transition-colors hover:text-[#0A0A0A]"
-          >
-            {l.label}
-          </Link>
-        ))}
-      </nav>
 
       <div className="flex items-center gap-5">
         <Link
