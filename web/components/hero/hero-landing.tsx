@@ -61,14 +61,14 @@ export function HeroLanding() {
           {/* colorful full-bleed ambient gradient (brand scheme) */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-1/2 w-screen -translate-x-1/2"
+            className="pointer-events-none absolute inset-y-0 left-1/2 w-screen -translate-x-1/2 opacity-60"
             style={{
               background:
                 "linear-gradient(180deg, #9FD6F1 0%, #AEC5EC 22%, #C9B0E4 42%, #E3A6CE 60%, #F5A0B0 78%, #F9AE63 100%)",
               WebkitMaskImage:
-                "linear-gradient(180deg, transparent 0%, #000 8%, #000 92%, transparent 100%)",
+                "linear-gradient(180deg, transparent 0%, #000 16%, #000 84%, transparent 100%)",
               maskImage:
-                "linear-gradient(180deg, transparent 0%, #000 8%, #000 92%, transparent 100%)",
+                "linear-gradient(180deg, transparent 0%, #000 16%, #000 84%, transparent 100%)",
             }}
           />
           <FlowIllustration />
@@ -201,10 +201,10 @@ function PredictionCard() {
   return (
     <Card>
       <CardHeader
-        icon={<Hexagon className="size-[18px] text-[#7C5CFF]" strokeWidth={2} />}
+        icon={<Hexagon className="size-[18px] text-[#0A0A0A]" strokeWidth={2} />}
         iconBg="bg-[#F1EEFF]"
         title="Prediction Markets"
-        titleColor="text-[#7C5CFF]"
+        titleColor="text-[#0A0A0A]"
         subtitle="Trade the outcome."
       />
       <div className="mt-3 flex flex-col">
@@ -224,7 +224,7 @@ function PredictionCard() {
           </div>
         ))}
       </div>
-      <ExploreLink color="text-[#7C5CFF]" />
+      <ExploreLink color="text-[#0A0A0A]" />
     </Card>
   );
 }
@@ -233,7 +233,7 @@ function PredictionCard() {
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-[300px] rounded-[26px] border border-[#EBEEF4] bg-white/95 p-[18px] shadow-[0_24px_60px_-34px_rgba(15,23,42,0.28)] backdrop-blur-sm transition-transform duration-300 hover:-translate-y-[3px]">
+    <div className="w-[300px] rounded-[26px] border border-white/60 bg-white/55 p-[18px] shadow-[0_24px_60px_-30px_rgba(15,23,42,0.3),inset_0_1px_0_rgba(255,255,255,0.55)] backdrop-blur-xl backdrop-saturate-150 transition-transform duration-300 hover:-translate-y-[3px]">
       {children}
     </div>
   );

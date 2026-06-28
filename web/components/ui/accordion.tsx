@@ -31,7 +31,7 @@ function Accordion({ items }: { items: AccordionItem[] }) {
               </span>
               <ChevronDown
                 className={cn(
-                  "size-5 shrink-0 text-[#9580ff] transition-transform duration-300",
+                  "size-5 shrink-0 text-[#0F172A] transition-transform duration-300",
                   isOpen && "rotate-180",
                 )}
                 strokeWidth={2}

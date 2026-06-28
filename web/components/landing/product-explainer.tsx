@@ -27,7 +27,7 @@ export function ProductExplainer() {
         {/* ── header ─────────────────────────────────────────────────────── */}
         <Reveal className="flex flex-col items-center text-center">
           <h2 className="text-[40px] font-bold leading-[1.05] tracking-[-0.03em] sm:text-[52px] lg:text-[64px]">
-            Two markets. <span className="text-[#7C5CFF]">One position.</span>
+            Two markets. <span className="text-[#0F172A]">One position.</span>
           </h2>
 
           <p className="mx-auto mt-5 max-w-[640px] text-[18px] leading-[1.55] text-[#64748B]">
@@ -51,11 +51,11 @@ export function ProductExplainer() {
                   className="anim-step-glow flex size-14 items-center justify-center rounded-full bg-[#F4F2FF]"
                   style={{ animationDelay: `${1.4 + i * 0.5}s` }}
                 >
-                  <s.icon className="size-6 text-[#7C5CFF]" strokeWidth={1.7} />
+                  <s.icon className="size-6 text-[#0F172A]" strokeWidth={1.7} />
                 </span>
                 <div className="mt-4 flex items-center gap-2">
                   <span
-                    className="anim-badge-pulse flex size-[18px] items-center justify-center rounded-full bg-[#7C5CFF] text-[10px] font-bold text-white"
+                    className="anim-badge-pulse flex size-[18px] items-center justify-center rounded-full bg-[#0F172A] text-[10px] font-bold text-white"
                     style={{ animationDelay: `${1.4 + i * 0.5}s` }}
                   >
                     {i + 1}
@@ -100,7 +100,7 @@ export function ProductExplainer() {
           {FEATURES.map((f) => (
             <div key={f.title} className="flex flex-col gap-3.5">
               <span className="flex size-10 items-center justify-center rounded-[12px] bg-[#F4F2FF]">
-                <f.icon className="size-5 text-[#7C5CFF]" strokeWidth={1.8} />
+                <f.icon className="size-5 text-[#0F172A]" strokeWidth={1.8} />
               </span>
               <div>
                 <h3 className="text-[15px] font-semibold text-[#0F172A]">{f.title}</h3>
@@ -119,7 +119,7 @@ export function ProductExplainer() {
 function ChartPanel() {
   return (
     <div className="flex flex-col">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7C5CFF]">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0F172A]">
         Example in action
       </span>
       <h3 className="mt-3 text-[22px] font-bold leading-[1.2] tracking-[-0.01em] text-[#0F172A]">
@@ -367,7 +367,7 @@ function PositionPanel() {
             <LongCard />
           </div>
           <div>
-            <div className="mb-2 text-[12px] font-semibold text-[#7C5CFF]">You hedge</div>
+            <div className="mb-2 text-[12px] font-semibold text-[#0F172A]">You hedge</div>
             <HedgeCard />
           </div>
         </div>
@@ -464,11 +464,11 @@ function CombinedCard() {
 
       <div className="text-[12px] leading-[1.5] text-[#64748B]">
         Downside protected{" "}
-        <span className="font-semibold text-[#7C5CFF]">with NO outcome</span>
+        <span className="font-semibold text-[#0F172A]">with NO outcome</span>
       </div>
 
       <div className="mt-auto">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F1EEFF] px-3 py-1.5 text-[12px] font-semibold text-[#7C5CFF]">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F1EEFF] px-3 py-1.5 text-[12px] font-semibold text-[#0F172A]">
           <ShieldCheck className="size-3.5" strokeWidth={2.2} />
           Balanced. Hedged. Smarter.
         </span>
