@@ -17,14 +17,21 @@ function PositionsActivity({
   activity,
   onClose,
   closingId,
+  typeFilter: typeFilterProp,
+  onTypeFilterChange,
 }: {
   positions: Position[];
   activity: Activity[];
   onClose?: (p: Position) => void;
   closingId?: string | null;
+  /** controlled position-type filter (falls back to internal state if omitted) */
+  typeFilter?: TypeFilter;
+  onTypeFilterChange?: (f: TypeFilter) => void;
 }) {
   const [tab, setTab] = React.useState<"positions" | "activity">("positions");
-  const [typeFilter, setTypeFilter] = React.useState<TypeFilter>("All");
+  const [internalFilter, setInternalFilter] = React.useState<TypeFilter>("All");
+  const typeFilter = typeFilterProp ?? internalFilter;
+  const setTypeFilter = onTypeFilterChange ?? setInternalFilter;
   const [search, setSearch] = React.useState("");
   const [sort, setSort] = React.useState<SortMode>("value-desc");
 

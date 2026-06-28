@@ -985,6 +985,10 @@ export interface PlatformBreakdown {
   pnl: number;
   pnlPct: number;
   color: string;
+  /** number of underlying positions in this group (cash omits) */
+  count?: number;
+  /** position-type filter key this group maps to ("Cash" is not filterable) */
+  key?: "Combined" | "Equity" | "Prediction" | "Cash";
 }
 
 export const platformBreakdown: PlatformBreakdown[] = [

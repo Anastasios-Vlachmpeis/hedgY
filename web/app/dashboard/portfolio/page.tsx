@@ -13,7 +13,7 @@ function buildBreakdown(positions: Position[], cash: number): PlatformBreakdown[
     { key: "Equity", platform: "Equities", kind: "Stocks · Alpaca", color: "#4F8DFF" },
     { key: "Prediction", platform: "Prediction markets", kind: "Kalshi · Polymarket", color: "#16a34a" },
   ];
-  const rows = groups
+  const rows: PlatformBreakdown[] = groups
     .map((g) => {
       const items = positions.filter((p) => p.type === g.key);
       const value = items.reduce((s, p) => s + p.value, 0);
@@ -26,6 +26,8 @@ function buildBreakdown(positions: Position[], cash: number): PlatformBreakdown[
         pnl,
         pnlPct: cost > 0 ? (pnl / cost) * 100 : 0,
         color: g.color,
+        count: items.length,
+        key: g.key,
       };
     })
     .filter((g) => g.value !== 0 || g.pnl !== 0);
@@ -38,6 +40,7 @@ function buildBreakdown(positions: Position[], cash: number): PlatformBreakdown[
       pnl: 0,
       pnlPct: 0,
       color: "#a3a3a3",
+      key: "Cash",
     });
   }
 
@@ -81,7 +84,7 @@ function mapSingle(p: BackendPosition): Position {
     title: isStock ? (p.symbol ?? "—") : (p.label ?? p.market_id ?? "Prediction"),
     type: isStock ? "Equity" : "Prediction",
     detail: isStock
-      ? `${p.qty} sh · avg $${Number(p.avg_entry).toFixed(2)}`
+      ? `${Number(p.qty).toLocaleString("en-US", { maximumFractionDigits: 4 })} sh · avg $${Number(p.avg_entry).toFixed(2)}`
       : `${p.side ?? ""} · entry ${Math.round(Number(p.avg_entry) * 100)}%`,
     value: p.market_value,
     cost: p.cost,
@@ -192,8 +195,17 @@ async function loadPortfolio(): Promise<Extract<State, { status: "ready" }>> {
   };
 }
 
+type TypeFilter = "All" | "Combined" | "Equity" | "Prediction";
+
 export default function PortfolioPage() {
   const [state, setState] = React.useState<State>({ status: "loading" });
+  // Shared position-type filter (driven by the breakdown cards + the toolbar).
+  const [typeFilter, setTypeFilter] = React.useState<TypeFilter>("All");
+  const positionsRef = React.useRef<HTMLDivElement>(null);
+  const selectType = React.useCallback((key: "Combined" | "Equity" | "Prediction") => {
+    setTypeFilter(key);
+    positionsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
   // Confirmation-modal flow for closing a position.
   const [pendingClose, setPendingClose] = React.useState<Position | null>(null);
   const [closeLoading, setCloseLoading] = React.useState(false);
@@ -296,13 +308,18 @@ export default function PortfolioPage() {
         portfolio={state.portfolio}
         series={state.series}
         breakdown={buildBreakdown(state.positions, state.portfolio.cash)}
+        onSelectType={selectType}
       />
-      <PositionsActivity
-        positions={state.positions}
-        activity={state.activity}
-        onClose={requestClose}
-        closingId={closeLoading && pendingClose ? pendingClose.id : null}
-      />
+      <div ref={positionsRef} className="scroll-mt-[76px]">
+        <PositionsActivity
+          positions={state.positions}
+          activity={state.activity}
+          onClose={requestClose}
+          closingId={closeLoading && pendingClose ? pendingClose.id : null}
+          typeFilter={typeFilter}
+          onTypeFilterChange={setTypeFilter}
+        />
+      </div>
       <ClosePositionModal
         position={pendingClose}
         loading={closeLoading}
