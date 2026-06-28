@@ -988,10 +988,7 @@ function MarketCard({
   const bearish = market.correlation < 0;
   return (
     <div
-      className={cn(
-        "rounded-[14px] border bg-white p-4",
-        recommended ? "border-[#171B3B]" : "border-[#ececec]",
-      )}
+      className="rounded-[14px] border border-[#ececec] bg-white p-4"
     >
       <div className="flex items-start gap-3">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-[9px] bg-[#f5f5f5]">
@@ -1026,7 +1023,7 @@ function MarketCard({
       <button
         type="button"
         onClick={onHedge}
-        className="mt-2.5 flex h-9 w-full items-center justify-center rounded-[9px] bg-[#171B3B] text-[12px] font-semibold text-white transition-opacity hover:opacity-90"
+        className="mt-2.5 flex h-9 w-full items-center justify-center rounded-[9px] bg-[#0a0a0a] text-[12px] font-semibold text-white transition-opacity hover:opacity-80"
       >
         Hedge →
       </button>
@@ -1658,12 +1655,16 @@ export default function DashboardPage() {
   // Add a brand-new stock from the search bar with live Alpaca price
   const addAssetBySymbol = React.useCallback(async (symbol: string) => {
     const meta = STOCKS_DB.find((s) => s.symbol === symbol);
-    let price = 100;
-    try {
-      const res = await fetch(`/api/prices?symbols=${symbol}`);
-      const prices = await res.json();
-      price = prices[symbol]?.price ?? 100;
-    } catch {}
+
+    // Fetch price + historical bars in parallel
+    const [priceData, barsData] = await Promise.all([
+      fetch(`/api/prices?symbols=${symbol}`).then((r) => r.json()).catch(() => ({})),
+      fetch(`/api/bars?symbol=${symbol}`).then((r) => r.json()).catch(() => []),
+    ]);
+
+    const price: number = priceData[symbol]?.price ?? 100;
+    const closes: number[] = Array.isArray(barsData) && barsData.length >= 2 ? barsData : Array(34).fill(price);
+    const chartData = chart(closes);
 
     const newAsset: Asset = {
       symbol,
@@ -1672,7 +1673,7 @@ export default function DashboardPage() {
       sector: meta?.sector ?? "Equities",
       price,
       accent: "#7C5CFF",
-      chart: Array.from({ length: 34 }, (_, i) => ({ t: monthLabels[i] ?? "", price })),
+      chart: chartData,
       metrics: { marketCap: "—", pe: "—", range52w: "—", dividendYield: "—", beta: "—" },
       position: {
         shares: 100,

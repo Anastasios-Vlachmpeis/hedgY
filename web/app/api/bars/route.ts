@@ -1,0 +1,28 @@
+import { NextResponse } from "next/server";
+
+const DATA = process.env.ALPACA_DATA_URL ?? "https://data.alpaca.markets";
+const KEY = process.env.APCA_API_KEY_ID ?? "";
+const SECRET = process.env.APCA_API_SECRET_KEY ?? "";
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const symbol = searchParams.get("symbol")?.toUpperCase();
+  if (!symbol) return NextResponse.json([], { status: 400 });
+
+  try {
+    const res = await fetch(
+      `${DATA}/v2/stocks/bars?symbols=${symbol}&timeframe=1D&start=2024-07-01&limit=34&adjustment=raw`,
+      {
+        headers: { "APCA-API-KEY-ID": KEY, "APCA-API-SECRET-KEY": SECRET },
+        cache: "no-store",
+      }
+    );
+    if (!res.ok) throw new Error(`Alpaca ${res.status}`);
+    const data = await res.json();
+    const bars: Array<{ c: number }> = data.bars?.[symbol] ?? [];
+    // Return just the close prices — dashboard page applies monthLabels
+    return NextResponse.json(bars.map((b) => Number(b.c.toFixed(2))));
+  } catch {
+    return NextResponse.json([]);
+  }
+}
