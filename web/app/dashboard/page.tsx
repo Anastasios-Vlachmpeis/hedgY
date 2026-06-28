@@ -104,14 +104,29 @@ function chart(values: number[], dates?: string[]): ChartPoint[] {
   }));
 }
 
-function xAxisTickFormatter(val: string, i: number): string {
-  // Show a label roughly every 3 points to mimic monthly markers
-  if (i % 3 !== 0) return "";
-  const parts = val.split(" ");
-  const month = parts[0];
-  const year = parts[2];
-  // Show "Jan '25" style for the January tick, otherwise just month
-  return month === "Jan" ? `Jan '${year?.slice(2)}` : month;
+function makeTickFormatter(dataLen: number) {
+  const step = Math.max(1, Math.round(dataLen / 7));
+  return (val: string, i: number): string => {
+    if (i % step !== 0) return "";
+    const parts = val.split(" ");
+    const month = parts[0] ?? "";
+    const year = parts[2];
+    return month === "Jan" && year ? `Jan '${year.slice(2)}` : month;
+  };
+}
+
+const FRAME_DAYS: Record<string, number> = {
+  "1D": 1, "5D": 5, "1M": 21, "3M": 63, "6M": 126, "1Y": 260, "5Y": 1300, All: 9999,
+};
+
+function sliceByFrame(data: ChartPoint[], frame: string): ChartPoint[] {
+  if (!data.length) return data;
+  if (frame === "YTD") {
+    const jan1 = new Date(new Date().getFullYear(), 0, 1).getTime();
+    return data.filter((p) => new Date(p.t).getTime() >= jan1);
+  }
+  const days = FRAME_DAYS[frame] ?? 9999;
+  return data.slice(-Math.min(days, data.length));
 }
 
 function spark(values: number[]) {
@@ -1501,6 +1516,13 @@ function ChartTooltip({
 function AssetChartCard({ asset }: { asset: Asset }) {
   const [activeFrame, setActiveFrame] = React.useState("1Y");
 
+  const visibleData = sliceByFrame(asset.chart, activeFrame);
+  const firstClose = visibleData[0]?.price;
+  const lastClose = visibleData[visibleData.length - 1]?.price ?? asset.price;
+  const periodChangePct = firstClose ? ((lastClose - firstClose) / firstClose) * 100 : 0;
+  const periodChangeStr = `${periodChangePct >= 0 ? "+" : ""}${periodChangePct.toFixed(2)}%`;
+  const tickFormatter = makeTickFormatter(visibleData.length);
+
   return (
     <Card className="overflow-hidden rounded-[20px] border border-[#ececec] bg-white shadow-none">
       <CardHeader className="border-b border-[#ececec] px-5 py-5">
@@ -1517,10 +1539,10 @@ function AssetChartCard({ asset }: { asset: Asset }) {
             <span className="text-[28px] font-bold tracking-[-0.02em] text-[#0a0a0a]">
               {formatCurrency(asset.price)}
             </span>
-            <span className={cn("text-[13px] font-semibold", asset.position.pnl >= 0 ? "text-[#16a34a]" : "text-[#dc2626]")}>
-              {asset.position.pnlPct}
+            <span className={cn("text-[13px] font-semibold", periodChangePct >= 0 ? "text-[#16a34a]" : "text-[#dc2626]")}>
+              {periodChangeStr}
             </span>
-            <span className="text-[12px] text-[#a3a3a3]">{asset.sector}</span>
+            <span className="text-[12px] text-[#a3a3a3]">{activeFrame}</span>
           </div>
         </div>
         <div className="ml-auto flex items-center">
@@ -1557,14 +1579,14 @@ function AssetChartCard({ asset }: { asset: Asset }) {
 
         <div className="relative h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
-            <RechartsLineChart data={asset.chart} margin={{ top: 12, right: 44, left: 4, bottom: 4 }}>
+            <RechartsLineChart data={visibleData} margin={{ top: 12, right: 44, left: 4, bottom: 4 }}>
               <CartesianGrid vertical={false} stroke="#f0f0f0" strokeDasharray="0" />
               <XAxis
                 dataKey="t"
                 tickLine={false}
                 axisLine={false}
                 interval={0}
-                tickFormatter={xAxisTickFormatter}
+                tickFormatter={tickFormatter}
                 tick={{ fill: "#a3a3a3", fontSize: 10, fontWeight: 500 }}
                 padding={{ left: 8, right: 8 }}
               />
