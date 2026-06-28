@@ -122,6 +122,7 @@ function Hero() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!ticker.trim()) return;
     router.push("/trade");
   }
 
@@ -258,7 +259,7 @@ function LiveRisks() {
               {/* CTA */}
               <Link
                 href={r.href}
-                className="ml-2 flex shrink-0 items-center gap-1.5 rounded-[10px] bg-[#171B3B] px-4 py-2 text-[12px] font-bold text-white opacity-0 transition-all group-hover:opacity-100"
+                className="ml-2 flex shrink-0 items-center gap-1.5 rounded-[10px] bg-[#171B3B] px-4 py-2 text-[12px] font-bold text-white pointer-events-none opacity-0 transition-all group-hover:pointer-events-auto group-hover:opacity-100"
               >
                 <Zap className="size-3" strokeWidth={2.5} />
                 Hedge now
