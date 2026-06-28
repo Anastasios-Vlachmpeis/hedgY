@@ -6,6 +6,13 @@ import os
 
 from pydantic import BaseModel, Field
 
+try:  # load repo-root .env so the backend sees Alpaca keys (optional dep)
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except Exception:  # noqa: BLE001 — dotenv is a convenience, not required
+    pass
+
 
 def _clamp(value: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, value))
@@ -45,6 +52,15 @@ class Settings(BaseModel):
     # Matching
     match_threshold: float = Field(default=0.85, ge=0.0, le=1.0)  # difflib ratio cutoff
 
+    # Paper-trading account (the $1000 wallet). Stocks execute on Alpaca paper;
+    # predictions fill in-app at live aggregator odds.
+    alpaca_key_id: str = ""
+    alpaca_secret_key: str = ""
+    alpaca_trading_url: str = "https://paper-api.alpaca.markets"
+    alpaca_data_url: str = "https://data.alpaca.markets"
+    account_db_path: str = "app/account.db"
+    default_deposit: float = Field(default=1000.0, gt=0.0, le=10_000_000.0)
+
     @classmethod
     def load(cls) -> "Settings":
         # Env values are clamped to safe ranges BEFORE validation so a config typo
@@ -59,6 +75,12 @@ class Settings(BaseModel):
             kalshi_base_url=_env_str("KALSHI_BASE_URL", "https://external-api.kalshi.com/trade-api/v2"),
             polymarket_base_url=_env_str("POLYMARKET_BASE_URL", "https://gamma-api.polymarket.com"),
             match_threshold=_env_float("MATCH_THRESHOLD", 0.85, 0.0, 1.0),
+            alpaca_key_id=_env_str("APCA_API_KEY_ID", ""),
+            alpaca_secret_key=_env_str("APCA_API_SECRET_KEY", ""),
+            alpaca_trading_url=_env_str("ALPACA_TRADING_URL", "https://paper-api.alpaca.markets"),
+            alpaca_data_url=_env_str("ALPACA_DATA_URL", "https://data.alpaca.markets"),
+            account_db_path=_env_str("ACCOUNT_DB_PATH", "app/account.db"),
+            default_deposit=_env_float("DEFAULT_DEPOSIT", 1000.0, 0.01, 10_000_000.0),
         )
 
 
