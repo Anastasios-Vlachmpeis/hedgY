@@ -1,0 +1,30 @@
+# Frontend (deployed separately on Vercel) and local cruft — keep the backend
+# image small and avoid copying secrets / a stale local SQLite ledger.
+web/
+.venv/
+venv/
+node_modules/
+.next/
+.git/
+.github/
+
+# Python caches
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Local SQLite ledgers are excluded, EXCEPT the account ledger which we ship as
+# a seed snapshot so the live backend boots with the current positions.
+*.db
+!app/account.db
+
+# Secrets / local env
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Docs / scratch that the runtime doesn't need
+*.md
+docs/
+terminals/

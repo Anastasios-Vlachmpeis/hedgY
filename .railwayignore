@@ -1,0 +1,13 @@
+web/
+.venv/
+venv/
+node_modules/
+.next/
+.git/
+.github/
+**/__pycache__/
+*.pyc
+*.db
+!app/account.db
+terminals/
+docs/

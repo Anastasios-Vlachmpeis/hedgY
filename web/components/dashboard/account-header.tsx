@@ -64,6 +64,126 @@ function Kpi({ icon: Icon, label, value }: { icon: React.ElementType; label: str
   );
 }
 
+/* ── Linked-card row (demo) ── */
+function CardRow({ label }: { label: string }) {
+  return (
+    <div className="mt-5 flex items-center gap-2.5 rounded-[12px] border border-[#ececec] bg-[#fafafa] px-3 py-2.5">
+      <span className="flex h-7 w-11 items-center justify-center rounded-[5px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] text-[13px] font-bold italic tracking-tight text-[#1A1F71]">
+        VISA
+      </span>
+      <span className="text-[13px] font-medium tabular-nums tracking-[0.06em] text-[#0a0a0a]">** 4242</span>
+      <span className="ml-auto text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">{label}</span>
+    </div>
+  );
+}
+
+/* ── Deposit / Withdraw modal with amount slider ── */
+function TransferModal({
+  mode,
+  cash,
+  onClose,
+}: {
+  mode: "deposit" | "withdraw";
+  cash: number;
+  onClose: () => void;
+}) {
+  const isDeposit = mode === "deposit";
+  const max = isDeposit ? 50_000 : Math.max(0, Math.floor(cash));
+  const step = max > 5000 ? 100 : 50;
+  const [amount, setAmount] = React.useState(() =>
+    isDeposit ? 1000 : Math.min(1000, max),
+  );
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function submit() {
+    if (amount <= 0) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/account/${mode}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(typeof data?.detail === "string" ? data.detail : "Transfer failed");
+        return;
+      }
+      window.dispatchEvent(new Event("verso:account-updated"));
+      onClose();
+    } catch {
+      setError("Network error — is the backend running on :8000?");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Modal open onClose={onClose}>
+      <div className="mb-1 flex items-start justify-between">
+        <div>
+          <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-[#0a0a0a]">
+            {isDeposit ? "Deposit funds" : "Withdraw funds"}
+          </h2>
+          <p className="mt-0.5 text-[12px] text-[#a3a3a3]">
+            {isDeposit
+              ? "Add cash from your linked card."
+              : "Move cash from your account to your card."}
+          </p>
+        </div>
+        <button type="button" onClick={onClose} className="flex size-8 items-center justify-center rounded-full bg-[#f5f5f5] text-[#737373] transition-colors hover:bg-[#ececec] hover:text-[#0a0a0a]">
+          <X className="size-3.5" />
+        </button>
+      </div>
+
+      {!isDeposit && max <= 0 ? (
+        <p className="py-8 text-center text-[13px] text-[#a3a3a3]">No cash available to withdraw.</p>
+      ) : (
+        <>
+          <p className="mt-6 text-center text-[40px] font-bold leading-none tracking-[-0.03em] tabular-nums text-[#0a0a0a]">
+            {usd(amount, 0)}
+          </p>
+          <input
+            type="range"
+            min={0}
+            max={max}
+            step={step}
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            className="mt-6 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-[#f0f0f0] accent-[#0a0a0a]"
+          />
+          <div className="mt-2 flex justify-between text-[11px] font-medium tabular-nums text-[#a3a3a3]">
+            <span>$0</span>
+            <span>{isDeposit ? "Available cash " : "Max "}{usd(max, 0)}</span>
+          </div>
+
+          <CardRow label={isDeposit ? "From card" : "To card"} />
+
+          {error && (
+            <p className="mt-3 rounded-[8px] bg-[#fee2e2] px-3 py-2 text-[12px] font-medium text-[#dc2626]">{error}</p>
+          )}
+
+          <div className="mt-5 flex gap-2">
+            <button type="button" onClick={onClose} className="flex-1 rounded-[10px] bg-[#f5f5f5] py-2.5 text-[14px] font-medium text-[#0a0a0a] hover:bg-[#ececec]">
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={submit}
+              disabled={loading || amount <= 0}
+              className="flex-1 rounded-[10px] bg-[#050505] py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[#222] disabled:opacity-60"
+            >
+              {loading ? "Processing…" : isDeposit ? `Deposit ${usd(amount, 0)}` : `Withdraw ${usd(amount, 0)}`}
+            </button>
+          </div>
+        </>
+      )}
+    </Modal>
+  );
+}
+
 /* ── Account header ── */
 function AccountHeader({
   portfolio,
@@ -76,7 +196,9 @@ function AccountHeader({
   breakdown?: PlatformBreakdown[];
   onSelectType?: (key: FilterKey) => void;
 }) {
-  const [breakdownOpen, setBreakdownOpen] = React.useState(false);
+  const [valueOpen, setValueOpen] = React.useState(false);
+  const [pnlOpen, setPnlOpen] = React.useState(false);
+  const [transfer, setTransfer] = React.useState<null | "deposit" | "withdraw">(null);
 
   const up = portfolio.dayChange >= 0;
   const invested = Math.max(0, portfolio.totalValue - portfolio.cash);
@@ -112,10 +234,10 @@ function AccountHeader({
           )}
 
           <div className="mt-auto flex gap-2 pt-5">
-            <button type="button" className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-[#ececec] bg-white py-2.5 text-[13px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#f5f5f5]">
+            <button type="button" onClick={() => setTransfer("deposit")} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-[#ececec] bg-white py-2.5 text-[13px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#f5f5f5]">
               <ArrowDownToLine className="size-4" /> Deposit
             </button>
-            <button type="button" className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-[#ececec] bg-white py-2.5 text-[13px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#f5f5f5]">
+            <button type="button" onClick={() => setTransfer("withdraw")} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-[#ececec] bg-white py-2.5 text-[13px] font-semibold text-[#0a0a0a] transition-colors hover:bg-[#f5f5f5]">
               <ArrowUpFromLine className="size-4" /> Withdraw
             </button>
           </div>
