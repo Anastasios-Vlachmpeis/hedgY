@@ -7,13 +7,11 @@ import {
   BriefcaseBusiness,
   ChartNoAxesCombined,
   ChevronDown,
-  CreditCard,
   ExternalLink,
   Home,
   Landmark,
   LineChart,
   Search,
-  Settings,
   ShieldCheck,
   Wallet,
   X,
@@ -39,11 +37,6 @@ const mainNav = [
   { label: "Home", href: "/dashboard", icon: Home, exact: true },
   { label: "Hedge", href: "/dashboard/hedge", icon: ShieldCheck },
   { label: "Portfolio", href: "/dashboard/portfolio", icon: BriefcaseBusiness },
-];
-
-const bottomNav = [
-  { label: "Settings", href: "/dashboard#settings", icon: Settings },
-  { label: "Billing", href: "/dashboard#billing", icon: CreditCard },
 ];
 
 type SearchItem = {
@@ -210,19 +203,8 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => 
         })}
       </nav>
 
-      {/* Bottom: Settings + Billing + User */}
+      {/* Bottom: User */}
       <div className={cn("mt-auto flex flex-col gap-0.5", collapsed && "w-full px-2")}>
-        {bottomNav.map((item) => (
-          <NavItem
-            key={item.href}
-            href={item.href}
-            icon={item.icon}
-            label={item.label}
-            selected={false}
-            collapsed={collapsed}
-          />
-        ))}
-
         {/* User avatar */}
         <button
           type="button"
