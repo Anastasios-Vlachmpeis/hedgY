@@ -4,6 +4,13 @@
  * future API converge on.
  */
 
+import {
+  hedgedWealth,
+  scaleSizing,
+  sizeTwoState,
+  type HedgeCalibration,
+} from "@/lib/hedgeMath";
+
 export type Direction = "up" | "down" | "flat";
 
 /* ---------- Portfolio / overview ---------- */
@@ -98,6 +105,8 @@ export interface EquityLeg {
   label: string;
   symbols: string[];
   size: number; // notional USD
+  /** Small gray caption under the instrument. */
+  approach?: string;
 }
 
 export interface HedgeLeg {
@@ -106,6 +115,7 @@ export interface HedgeLeg {
   marketPrice: number; // 0–1 implied price of the side being bought
   /** baseline size at the default hedge ratio (display reference) */
   size: number;
+  approach?: string;
 }
 
 export interface CombinedPosition {
@@ -116,16 +126,47 @@ export interface CombinedPosition {
   /** plain-language nouns used to build the summary sentence */
   equityNoun: string; // e.g. "defense equities"
   hedgeAgainst: string; // e.g. "Republicans winning the midterms"
+  /** Two-state calibration (hedgingresearch model). */
+  calibration: HedgeCalibration;
 }
+
+const defenseCalibration: HedgeCalibration = {
+  moveAdverse: -0.08,
+  moveFavorable: 0.05,
+  yesProbability: 0.43,
+  hedgeLeg: "NO",
+};
 
 export const combinedPosition: CombinedPosition = {
   thesis: "Long defense, hedge midterms.",
-  equityLeg: { label: "LMT · RTX · NOC", symbols: ["LMT", "RTX", "NOC"], size: 5000 },
-  hedgeLeg: { label: "NO — Republicans win House", side: "NO", marketPrice: 0.57, size: 1500 },
+  equityLeg: {
+    label: "LMT · RTX · NOC",
+    symbols: ["LMT", "RTX", "NOC"],
+    size: 5000,
+    approach: "Modeled −8% if adverse outcome, +5% if favorable (template prior).",
+  },
+  hedgeLeg: {
+    label: "NO — Republicans win House",
+    side: "NO",
+    marketPrice: 0.57,
+    size: 1500,
+    approach: "",
+  },
   defaultHedgeRatio: 0.3,
   equityNoun: "defense equities",
   hedgeAgainst: "Republicans winning the midterms",
+  calibration: defenseCalibration,
 };
+
+// Fill hedge approach from sizing at default ratio.
+(() => {
+  const full = sizeTwoState(combinedPosition.equityLeg.size, defenseCalibration);
+  combinedPosition.hedgeLeg.approach = full.approachNote;
+  combinedPosition.hedgeLeg.size = Math.round(
+    scaleSizing(combinedPosition.equityLeg.size, full, combinedPosition.defaultHedgeRatio)
+      .premiumUsd,
+  );
+})();
 
 /** Result of recomputing the preview for a given hedge ratio. */
 export interface PreviewResult {
@@ -134,23 +175,36 @@ export interface PreviewResult {
   netCost: number;
   maxGain: number; // >= 0
   maxLoss: number; // <= 0
+  hedgeQuality: number;
+  unhedgedWorst: number;
 }
 
 /**
- * Illustrative (NOT financially exact) preview math. Designed to move
- * sensibly as the hedge ratio changes:
- *   - more hedge  → higher net cost, smaller downside, slightly capped upside.
+ * Two-state hedge preview: scales N = notional × (r_no − r_yes) by hedge ratio.
  */
 export function computePreview(
   p: CombinedPosition,
   hedgeRatio: number,
 ): PreviewResult {
   const equity = p.equityLeg.size;
-  const hedgeSize = Math.round(equity * hedgeRatio);
-  const netCost = equity + hedgeSize;
-  const maxGain = Math.max(0, Math.round(equity * 0.25 - hedgeSize * 0.35));
-  const maxLoss = Math.min(0, Math.round(-(equity * 0.2) + hedgeSize * 0.55));
-  return { hedgeRatio, hedgeSize, netCost, maxGain, maxLoss };
+  const full = sizeTwoState(equity, p.calibration);
+  const scaled = scaleSizing(equity, full, hedgeRatio);
+  const { nYes, yesCost, retIfYes, retIfNo } = scaled;
+
+  const pnlYes = hedgedWealth(equity, retIfYes, nYes, yesCost, true) - equity;
+  const pnlNo = hedgedWealth(equity, retIfNo, nYes, yesCost, false) - equity;
+  const unhedgedYes = equity * retIfYes;
+  const unhedgedNo = equity * retIfNo;
+
+  return {
+    hedgeRatio,
+    hedgeSize: scaled.premiumUsd,
+    netCost: equity + scaled.premiumUsd,
+    maxGain: Math.max(0, Math.round(Math.max(pnlYes, pnlNo))),
+    maxLoss: Math.min(0, Math.round(Math.min(pnlYes, pnlNo))),
+    hedgeQuality: scaled.hedgeQuality,
+    unhedgedWorst: Math.round(Math.min(unhedgedYes, unhedgedNo)),
+  };
 }
 
 /** Plain-English description of the structured position. */
@@ -171,26 +225,35 @@ export interface PayoffPoint {
 }
 
 /**
- * Combined P&L across the election outcomes. The left end ("Republicans win")
- * is the downside for defense stocks; raising the hedge ratio lifts the hedged
- * curve there, visibly cushioning the loss while the unhedged curve stays put.
+ * Combined P&L at the two resolution states (interpolated for the chart).
  */
 export function computePayoff(
   p: CombinedPosition,
   hedgeRatio: number,
   steps = 7,
 ): PayoffPoint[] {
-  const cur = computePreview(p, hedgeRatio);
-  const base = computePreview(p, 0); // unhedged reference
+  const equity = p.equityLeg.size;
+  const full = sizeTwoState(equity, p.calibration);
+  const scaled = scaleSizing(equity, full, hedgeRatio);
+  const { nYes, yesCost, retIfYes, retIfNo } = scaled;
+
+  const hedgedYes = hedgedWealth(equity, retIfYes, nYes, yesCost, true) - equity;
+  const hedgedNo = hedgedWealth(equity, retIfNo, nYes, yesCost, false) - equity;
+  const unhedgedYes = equity * retIfYes;
+  const unhedgedNo = equity * retIfNo;
+
   const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  const adverseLabel =
+    p.calibration.moveAdverse < 0 ? "Adverse outcome" : "Downside";
+  const favorableLabel = "Favorable outcome";
+
   return Array.from({ length: steps }, (_, i) => {
     const x = i / (steps - 1);
     return {
       x,
-      scenario:
-        i === 0 ? "Republicans win" : i === steps - 1 ? "Republicans lose" : "",
-      hedged: Math.round(lerp(cur.maxLoss, cur.maxGain, x)),
-      unhedged: Math.round(lerp(base.maxLoss, base.maxGain, x)),
+      scenario: i === 0 ? adverseLabel : i === steps - 1 ? favorableLabel : "",
+      hedged: Math.round(lerp(hedgedYes, hedgedNo, x)),
+      unhedged: Math.round(lerp(unhedgedYes, unhedgedNo, x)),
     };
   });
 }
@@ -237,59 +300,129 @@ export interface HedgeSuggestion {
   hedgePrice: number; // 0–1
   rationale: string;
   strength: "Strong" | "Moderate" | "Light";
+  approachNote: string;
   /** pre-fills the /structure builder when "Build this" is clicked */
   position: CombinedPosition;
 }
 
+function buildSuggestion(
+  id: string,
+  equityLabel: string,
+  equitySymbols: string[],
+  hedgeMarket: string,
+  hedgeSide: "YES" | "NO",
+  hedgePrice: number,
+  rationale: string,
+  strength: HedgeSuggestion["strength"],
+  position: CombinedPosition,
+): HedgeSuggestion {
+  const full = sizeTwoState(position.equityLeg.size, position.calibration);
+  return {
+    id,
+    equityLabel,
+    equitySymbols,
+    hedgeMarket,
+    hedgeSide,
+    hedgePrice,
+    rationale,
+    strength,
+    approachNote: full.approachNote,
+    position,
+  };
+}
+
 export const hedgeSuggestions: HedgeSuggestion[] = [
-  {
-    id: "defense-election",
-    equityLabel: "Long Defense",
-    equitySymbols: ["LMT", "RTX", "NOC"],
-    hedgeMarket: "Republicans win 2026 midterms",
-    hedgeSide: "NO",
-    hedgePrice: 0.57,
-    rationale: "Defense budgets track the administration.",
-    strength: "Strong",
-    position: combinedPosition,
-  },
-  {
-    id: "pharma-fda",
-    equityLabel: "Long Pharma",
-    equitySymbols: ["PFE", "MRK"],
-    hedgeMarket: "Pfizer GLP-1 FDA approval 2026",
-    hedgeSide: "NO",
-    hedgePrice: 0.61,
-    rationale: "Binary FDA readout risk on the lead asset.",
-    strength: "Moderate",
-    position: {
+  buildSuggestion(
+    "defense-election",
+    "Long Defense",
+    ["LMT", "RTX", "NOC"],
+    "Republicans win 2026 midterms",
+    "NO",
+    0.57,
+    "Defense budgets track the administration.",
+    "Strong",
+    combinedPosition,
+  ),
+  buildSuggestion(
+    "pharma-fda",
+    "Long Pharma",
+    ["PFE", "MRK"],
+    "Pfizer GLP-1 FDA approval 2026",
+    "NO",
+    0.61,
+    "Binary FDA readout risk on the lead asset.",
+    "Moderate",
+    {
       thesis: "Long Pfizer, hedge FDA outcome.",
-      equityLeg: { label: "PFE · MRK", symbols: ["PFE", "MRK"], size: 5000 },
-      hedgeLeg: { label: "NO — Pfizer GLP-1 FDA approval", side: "NO", marketPrice: 0.61, size: 1500 },
+      equityLeg: {
+        label: "PFE · MRK",
+        symbols: ["PFE", "MRK"],
+        size: 5000,
+        approach: "Modeled −25% on rejection, +12% on approval (template prior).",
+      },
+      hedgeLeg: {
+        label: "NO — Pfizer GLP-1 FDA approval",
+        side: "NO",
+        marketPrice: 0.61,
+        size: 0,
+        approach: "",
+      },
       defaultHedgeRatio: 0.3,
       equityNoun: "pharma names",
       hedgeAgainst: "the GLP-1 approval",
+      calibration: {
+        moveAdverse: -0.25,
+        moveFavorable: 0.12,
+        yesProbability: 0.39,
+        hedgeLeg: "NO",
+      },
     },
-  },
-  {
-    id: "shipping-hormuz",
-    equityLabel: "Long Shipping",
-    equitySymbols: ["ZIM"],
-    hedgeMarket: "Strait of Hormuz blockade 2026",
-    hedgeSide: "YES",
-    hedgePrice: 0.17,
-    rationale: "Route disruption offset by the hedge payout.",
-    strength: "Light",
-    position: {
+  ),
+  buildSuggestion(
+    "shipping-hormuz",
+    "Long Shipping",
+    ["ZIM"],
+    "Strait of Hormuz blockade 2026",
+    "YES",
+    0.17,
+    "Route disruption offset by the hedge payout.",
+    "Light",
+    {
       thesis: "Long ZIM, hedge Hormuz.",
-      equityLeg: { label: "ZIM Integrated", symbols: ["ZIM"], size: 5000 },
-      hedgeLeg: { label: "YES — Strait of Hormuz blockade", side: "YES", marketPrice: 0.17, size: 1500 },
+      equityLeg: {
+        label: "ZIM Integrated",
+        symbols: ["ZIM"],
+        size: 5000,
+        approach: "Modeled −15% if blockade, +8% if strait stays open.",
+      },
+      hedgeLeg: {
+        label: "YES — Strait of Hormuz blockade",
+        side: "YES",
+        marketPrice: 0.17,
+        size: 0,
+        approach: "",
+      },
       defaultHedgeRatio: 0.3,
       equityNoun: "ZIM shipping",
       hedgeAgainst: "a Hormuz blockade",
+      calibration: {
+        moveAdverse: -0.15,
+        moveFavorable: 0.08,
+        yesProbability: 0.17,
+        hedgeLeg: "YES",
+      },
     },
-  },
+  ),
 ];
+
+// Back-fill hedge leg sizes and approach notes.
+for (const s of hedgeSuggestions) {
+  const full = sizeTwoState(s.position.equityLeg.size, s.position.calibration);
+  s.position.hedgeLeg.approach = full.approachNote;
+  s.position.hedgeLeg.size = Math.round(
+    scaleSizing(s.position.equityLeg.size, full, s.position.defaultHedgeRatio).premiumUsd,
+  );
+}
 
 /** Look up a suggestion's pre-fill position by id (for /structure?from=). */
 export function positionFromSuggestion(id?: string): CombinedPosition {
@@ -583,6 +716,7 @@ export const featuredMarket: FeaturedMarket = {
 export interface PositionLeg {
   label: string;
   value: number;
+  approach?: string;
 }
 
 export interface Position {
@@ -594,6 +728,8 @@ export interface Position {
   cost: number; // cost basis
   pnl: number; // value − cost
   pnlPct: number;
+  /** Small gray methodology / disclosure line. */
+  approach?: string;
   // Combined positions expose their two legs so the hedge structure is visible.
   equityLeg?: PositionLeg;
   hedgeLeg?: PositionLeg;
@@ -609,14 +745,23 @@ export const positions: Position[] = [
     cost: 10_000,
     pnl: 840,
     pnlPct: 8.4,
-    equityLeg: { label: "LMT · RTX · NOC", value: 8_300 },
-    hedgeLeg: { label: "NO — Republicans win House @57%", value: 2_540 },
+    equityLeg: {
+      label: "LMT · RTX · NOC",
+      value: 8_300,
+      approach: combinedPosition.equityLeg.approach,
+    },
+    hedgeLeg: {
+      label: "NO — Republicans win House @57%",
+      value: 2_540,
+      approach: combinedPosition.hedgeLeg.approach,
+    },
   },
   {
     id: "p-lmt",
     title: "Lockheed Martin",
     type: "Equity",
     detail: "12 shares @ $452.10 avg",
+    approach: "Spot equity leg; no paired event hedge on this line.",
     value: 5_667.6,
     cost: 5_425.2,
     pnl: 242.4,
@@ -631,14 +776,23 @@ export const positions: Position[] = [
     cost: 6_500,
     pnl: -180,
     pnlPct: -2.8,
-    equityLeg: { label: "PFE · MRK", value: 4_900 },
-    hedgeLeg: { label: "NO — Pfizer GLP-1 FDA approval @61%", value: 1_420 },
+    equityLeg: {
+      label: "PFE · MRK",
+      value: 4_900,
+      approach: hedgeSuggestions[1]!.position.equityLeg.approach,
+    },
+    hedgeLeg: {
+      label: "NO — Pfizer GLP-1 FDA approval @61%",
+      value: 1_420,
+      approach: hedgeSuggestions[1]!.position.hedgeLeg.approach,
+    },
   },
   {
     id: "p-fed",
     title: "Fed cuts rates in July 2026",
     type: "Prediction",
     detail: "YES · 38¢ · 200 contracts",
+    approach: "Binary contract; pays $1 per YES share if the event resolves YES.",
     value: 84,
     cost: 76,
     pnl: 8,
@@ -693,8 +847,16 @@ export const positions: Position[] = [
     cost: 5_000,
     pnl: 180,
     pnlPct: 3.6,
-    equityLeg: { label: "ZIM Integrated", value: 3_980 },
-    hedgeLeg: { label: "YES — Strait of Hormuz blockade @17%", value: 1_200 },
+    equityLeg: {
+      label: "ZIM Integrated",
+      value: 3_980,
+      approach: hedgeSuggestions[2]!.position.equityLeg.approach,
+    },
+    hedgeLeg: {
+      label: "YES — Strait of Hormuz blockade @17%",
+      value: 1_200,
+      approach: hedgeSuggestions[2]!.position.hedgeLeg.approach,
+    },
   },
   {
     id: "p-btc",

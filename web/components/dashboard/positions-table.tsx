@@ -69,33 +69,46 @@ function CombinedRow({ p }: { p: Position }) {
 
       {/* Equity leg — same gap-3 + w-24 columns, value lands under VALUE total */}
       {p.equityLeg && (
-        <div className="mt-1.5 flex items-center gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-2 text-[11px]">
-            <span className="w-10 shrink-0 font-semibold text-[#0a0a0a]">Equity</span>
-            <span className="truncate text-[#a3a3a3]">{p.equityLeg.label}</span>
+        <div className="mt-1.5 flex flex-col gap-0.5">
+          <div className="flex items-center gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2 text-[11px]">
+              <span className="w-10 shrink-0 font-semibold text-[#0a0a0a]">Equity</span>
+              <span className="truncate text-[#a3a3a3]">{p.equityLeg.label}</span>
+            </div>
+            <div className="flex shrink-0 gap-3">
+              <span className="hidden w-24 shrink-0 text-right text-[11px] tabular-nums text-[#a3a3a3] sm:block">
+                {usd(p.equityLeg.value, 0)}
+              </span>
+              <span className="w-24 shrink-0" />
+            </div>
           </div>
-          <div className="flex shrink-0 gap-3">
-            <span className="hidden w-24 shrink-0 text-right text-[11px] tabular-nums text-[#a3a3a3] sm:block">
-              {usd(p.equityLeg.value, 0)}
-            </span>
-            <span className="w-24 shrink-0" />
-          </div>
+          {p.equityLeg.approach ? (
+            <p className="pl-[52px] text-[11px] leading-relaxed text-[#a3a3a3]">
+              {p.equityLeg.approach}
+            </p>
+          ) : null}
         </div>
       )}
 
-      {/* Hedge leg */}
       {p.hedgeLeg && (
-        <div className="mt-0.5 flex items-center gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-2 text-[11px]">
-            <span className="w-10 shrink-0 font-semibold text-[#0a0a0a]">Hedge</span>
-            <span className="truncate text-[#a3a3a3]">{p.hedgeLeg.label}</span>
+        <div className="mt-0.5 flex flex-col gap-0.5">
+          <div className="flex items-center gap-3">
+            <div className="flex min-w-0 flex-1 items-center gap-2 text-[11px]">
+              <span className="w-10 shrink-0 font-semibold text-[#0a0a0a]">Hedge</span>
+              <span className="truncate text-[#a3a3a3]">{p.hedgeLeg.label}</span>
+            </div>
+            <div className="flex shrink-0 gap-3">
+              <span className="hidden w-24 shrink-0 text-right text-[11px] tabular-nums text-[#a3a3a3] sm:block">
+                {usd(p.hedgeLeg.value, 0)}
+              </span>
+              <span className="w-24 shrink-0" />
+            </div>
           </div>
-          <div className="flex shrink-0 gap-3">
-            <span className="hidden w-24 shrink-0 text-right text-[11px] tabular-nums text-[#a3a3a3] sm:block">
-              {usd(p.hedgeLeg.value, 0)}
-            </span>
-            <span className="w-24 shrink-0" />
-          </div>
+          {p.hedgeLeg.approach ? (
+            <p className="pl-[52px] text-[11px] leading-relaxed text-[#a3a3a3]">
+              {p.hedgeLeg.approach}
+            </p>
+          ) : null}
         </div>
       )}
     </li>
@@ -108,6 +121,9 @@ function SimpleRow({ p }: { p: Position }) {
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-semibold text-[#0a0a0a]">{p.title}</p>
         <p className="truncate text-[11px] text-[#a3a3a3]">{p.detail}</p>
+        {p.approach ? (
+          <p className="mt-0.5 text-[11px] leading-relaxed text-[#a3a3a3]">{p.approach}</p>
+        ) : null}
       </div>
       <ValuePnl p={p} />
     </li>
