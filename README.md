@@ -4,6 +4,8 @@
 
 ### [Live demo: parishack-web.vercel.app](https://parishack-web.vercel.app/)
 
+![hedgY dashboard](screenshot.png)
+
 hedgY turns a worldview into a hedged, multi-instrument position. You pick a thesis (long defense, long biotech, long a shipping name), and hedgY automatically assembles the matching hedge against the one event that could blow it up: an election, an FDA decision, a blockade in the Strait of Hormuz. The equity leg and the prediction-market hedge are sized, scored, and placed as a single position, in one click.
 
 Stocks and crypto live on one venue. Real-world outcomes live on another. Nobody assembles the hedged position across both. That gap is the product.
@@ -159,18 +161,30 @@ A note on the SQLite ledger: by default the container's database is ephemeral an
 ## Repository layout
 
 ```
-app/                  FastAPI backend (routes, ledger, pricing, connectors)
+app/                  FastAPI backend
   main.py             API routes and the market poller
   account.py          SQLite paper-trading ledger and Alpaca pricing
-  connectors/         Kalshi and Polymarket connectors
+  connectors/         Kalshi and Polymarket market-data connectors
   config.py           Environment-driven settings
+  tests/              Ledger unit tests (no network)
 structuring/          Hedge templates and the suggestion engine
+connections/          Account-linking layer (SnapTrade, Mesh, Kalshi), not yet wired
 web/                  Next.js frontend
   app/                App Router pages and the /api proxy layer
   components/         Dashboard, trade, markets, and UI components
   lib/                Hedge math, server fetchers, brand constants
-Dockerfile            Backend container
+hedgingresearch/      Jupyter notebooks and charts backing the hedge templates
+scripts/              Alpaca and Polymarket smoke-test scripts (TypeScript)
+packages/             Placeholder for a future shared integrations package
+docs/                 Specs, including the paper-trading account design
+dev.sh                Starts backend and frontend together
+Dockerfile            Backend container image
+Procfile              Buildpack start command
 railway.json          Railway deploy config
+RUNNING.md            Detailed local run guide
+SESSION-HANDOFF.md    Current product state and what is live vs mock
+handoff.md            Backend deep-dive
+screenshot.png        Dashboard screenshot used in this README
 ```
 
 ---
