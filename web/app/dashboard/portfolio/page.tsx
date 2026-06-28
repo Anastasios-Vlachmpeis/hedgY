@@ -3,6 +3,7 @@
 import * as React from "react";
 import { AccountHeader, type EquityPoint } from "@/components/dashboard/account-header";
 import { PositionsActivity } from "@/components/dashboard/positions-activity";
+import { ClosePositionModal } from "@/components/dashboard/close-position-modal";
 import { type Activity, type PlatformBreakdown, type Portfolio, type Position } from "@/lib/mockData";
 
 // Real value/P&L breakdown grouped by position type (no fabricated platforms).
@@ -149,39 +150,56 @@ type State =
   | { status: "error" }
   | { status: "ready"; portfolio: Portfolio; positions: Position[]; activity: Activity[]; series: EquityPoint[] };
 
+async function loadPortfolio(): Promise<Extract<State, { status: "ready" }>> {
+  const [accRes, posRes, trdRes, histRes] = await Promise.all([
+    fetch("/api/account"),
+    fetch("/api/positions"),
+    fetch("/api/trades"),
+    fetch("/api/account/history"),
+  ]);
+  if (!accRes.ok || !posRes.ok) throw new Error("backend unreachable");
+  const acc = await accRes.json();
+  const pos: BackendPosition[] = await posRes.json();
+  const trd: BackendTrade[] = trdRes.ok ? await trdRes.json() : [];
+  const hist: { t: number; value: number }[] = histRes.ok ? await histRes.json() : [];
+  return {
+    status: "ready",
+    portfolio: {
+      totalValue: acc.equity,
+      dayChange: acc.pnl,
+      dayChangePct: acc.pnl_pct,
+      buyingPower: acc.buying_power,
+      positionsCount: acc.positions_count,
+      currency: acc.currency ?? "USD",
+    },
+    positions: Array.isArray(pos) ? mapPositions(pos) : [],
+    activity: Array.isArray(trd) ? trd.map(mapTrade) : [],
+    series: Array.isArray(hist) ? hist.map((h) => ({ value: h.value })) : [],
+  };
+}
+
 export default function PortfolioPage() {
   const [state, setState] = React.useState<State>({ status: "loading" });
+  // Confirmation-modal flow for closing a position.
+  const [pendingClose, setPendingClose] = React.useState<Position | null>(null);
+  const [closeLoading, setCloseLoading] = React.useState(false);
+  const [closeDone, setCloseDone] = React.useState(false);
+  const [closeError, setCloseError] = React.useState<string | null>(null);
+
+  const refresh = React.useCallback(async () => {
+    try {
+      setState(await loadPortfolio());
+    } catch {
+      setState({ status: "error" });
+    }
+  }, []);
 
   React.useEffect(() => {
     let alive = true;
     (async () => {
       try {
-        const [accRes, posRes, trdRes, histRes] = await Promise.all([
-          fetch("/api/account"),
-          fetch("/api/positions"),
-          fetch("/api/trades"),
-          fetch("/api/account/history"),
-        ]);
-        if (!accRes.ok || !posRes.ok) throw new Error("backend unreachable");
-        const acc = await accRes.json();
-        const pos: BackendPosition[] = await posRes.json();
-        const trd: BackendTrade[] = trdRes.ok ? await trdRes.json() : [];
-        const hist: { t: number; value: number }[] = histRes.ok ? await histRes.json() : [];
-        if (!alive) return;
-        setState({
-          status: "ready",
-          portfolio: {
-            totalValue: acc.equity,
-            dayChange: acc.pnl,
-            dayChangePct: acc.pnl_pct,
-            buyingPower: acc.buying_power,
-            positionsCount: acc.positions_count,
-            currency: acc.currency ?? "USD",
-          },
-          positions: Array.isArray(pos) ? mapPositions(pos) : [],
-          activity: Array.isArray(trd) ? trd.map(mapTrade) : [],
-          series: Array.isArray(hist) ? hist.map((h) => ({ value: h.value })) : [],
-        });
+        const next = await loadPortfolio();
+        if (alive) setState(next);
       } catch {
         if (alive) setState({ status: "error" });
       }
@@ -190,6 +208,54 @@ export default function PortfolioPage() {
       alive = false;
     };
   }, []);
+
+  const requestClose = React.useCallback((p: Position) => {
+    setCloseError(null);
+    setCloseDone(false);
+    setPendingClose(p);
+  }, []);
+
+  const cancelClose = React.useCallback(() => {
+    setPendingClose(null);
+    setCloseError(null);
+    setCloseDone(false);
+  }, []);
+
+  // A combined card has id `grp-<gid>`; singles carry the numeric ledger id.
+  const confirmClose = React.useCallback(async () => {
+    const p = pendingClose;
+    if (!p) return;
+    const body = p.id.startsWith("grp-")
+      ? { group_id: p.id.slice(4) }
+      : { id: Number(p.id) };
+    setCloseLoading(true);
+    setCloseError(null);
+    try {
+      const res = await fetch("/api/positions/close", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setCloseError(
+          typeof data?.detail === "string" ? data.detail : "Couldn't close this position.",
+        );
+        return;
+      }
+      setCloseDone(true);
+      window.dispatchEvent(new Event("verso:account-updated"));
+      await refresh();
+      setTimeout(() => {
+        setPendingClose(null);
+        setCloseDone(false);
+      }, 750);
+    } catch {
+      setCloseError("Network error — is the trading backend running on :8000?");
+    } finally {
+      setCloseLoading(false);
+    }
+  }, [pendingClose, refresh]);
 
   if (state.status === "loading") return <PortfolioSkeleton />;
   if (state.status === "error") return <PortfolioError />;
@@ -201,7 +267,20 @@ export default function PortfolioPage() {
         series={state.series}
         breakdown={buildBreakdown(state.positions)}
       />
-      <PositionsActivity positions={state.positions} activity={state.activity} />
+      <PositionsActivity
+        positions={state.positions}
+        activity={state.activity}
+        onClose={requestClose}
+        closingId={closeLoading && pendingClose ? pendingClose.id : null}
+      />
+      <ClosePositionModal
+        position={pendingClose}
+        loading={closeLoading}
+        done={closeDone}
+        error={closeError}
+        onConfirm={confirmClose}
+        onCancel={cancelClose}
+      />
     </div>
   );
 }

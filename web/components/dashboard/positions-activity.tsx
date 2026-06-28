@@ -15,9 +15,13 @@ type SortMode = "value-desc" | "value-asc";
 function PositionsActivity({
   positions,
   activity,
+  onClose,
+  closingId,
 }: {
   positions: Position[];
   activity: Activity[];
+  onClose?: (p: Position) => void;
+  closingId?: string | null;
 }) {
   const [tab, setTab] = React.useState<"positions" | "activity">("positions");
   const [typeFilter, setTypeFilter] = React.useState<TypeFilter>("All");
@@ -138,6 +142,8 @@ function PositionsActivity({
             <PositionsRows
               positions={filtered}
               hideGroupHeaders={typeFilter !== "All"}
+              onClose={onClose}
+              closingId={closingId}
             />
           )}
         </>

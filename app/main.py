@@ -191,6 +191,14 @@ class CombinedOrderRequest(BaseModel):
     hedge: CombinedHedgeLeg
 
 
+class ClosePositionRequest(BaseModel):
+    """Close an open position in full. Identify it by ledger `id` (a single
+    position) or by `group_id` (a combined hedge — closes every leg)."""
+
+    id: int | None = None
+    group_id: str | None = None
+
+
 def _prediction_price(market_id: str, side: str, venue: str | None = None) -> tuple[float | None, str | None]:
     """(live side price, question) for a unified market id, from the live store.
 
@@ -231,6 +239,45 @@ def account_history() -> list[dict]:
 @app.get("/positions")
 def get_positions() -> list[dict]:
     return account_service.positions_marked(_mark)
+
+
+@app.post("/positions/close")
+def close_position(req: ClosePositionRequest) -> dict:
+    """Liquidate a held position (or a whole combined hedge) at the live mark."""
+    rows = account_service.positions()
+    if req.group_id:
+        targets = [p for p in rows if p.get("group_id") == req.group_id]
+    elif req.id is not None:
+        targets = [p for p in rows if p["id"] == req.id]
+    else:
+        raise HTTPException(status_code=422, detail="close requires 'id' or 'group_id'")
+    if not targets:
+        raise HTTPException(status_code=404, detail="position not found")
+
+    result: dict | None = None
+    for p in targets:
+        # Mark to live price; fall back to entry when a live price is
+        # unavailable (e.g. curated combos carry no live market) so a position
+        # can always be closed — mirrors how the account marks to avg_entry.
+        price = _mark(p)
+        if price is None or price <= 0:
+            price = p["avg_entry"]
+        # Notional slightly above the held value so the sell always clears the
+        # full quantity (the ledger caps qty_to_sell at what's held).
+        notional = p["qty"] * price * 1.0001
+        if p["kind"] == "stock" and p.get("symbol"):
+            place_alpaca_order(p["symbol"], p["qty"] * price, "sell", "market", None)
+        try:
+            result = account_service.place_order(
+                kind=p["kind"], action="sell", notional=notional, price=price,
+                symbol=(p["symbol"].upper() if p.get("symbol") else None),
+                market_id=p.get("market_id"), side=p.get("side"), label=p.get("label"),
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    account_service.record_equity(account_service.account(_mark)["equity"], force=True)
+    return result or {"account": account_service.account(_mark)}
 
 
 @app.get("/trades")
@@ -353,7 +400,7 @@ async def root() -> dict:
         "mode": "read-only (suggestions only)",
         "endpoints": [
             "/markets", "/markets/{id}", "/suggestions", "/health",
-            "/account", "/account/history", "/positions", "/trades",
+            "/account", "/account/history", "/positions", "/positions/close", "/trades",
             "/account/deposit", "/account/reset", "/orders",
         ],
         "has_data": store.has_data,

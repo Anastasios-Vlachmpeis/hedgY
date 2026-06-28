@@ -1,8 +1,40 @@
 import * as React from "react";
+import { Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { usd, signedUsd, pct } from "@/lib/format";
 import type { Position } from "@/lib/mockData";
+
+/** Small "Close" action shown on each open position when a handler is wired. */
+function CloseButton({
+  p,
+  onClose,
+  closing,
+}: {
+  p: Position;
+  onClose?: (p: Position) => void;
+  closing?: boolean;
+}) {
+  if (!onClose) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (!closing) onClose(p);
+      }}
+      disabled={closing}
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
+        closing
+          ? "cursor-not-allowed border-[#ececec] text-[#a3a3a3]"
+          : "border-[#ececec] text-[#dc2626] hover:border-[#dc2626] hover:bg-[#fef2f2]",
+      )}
+    >
+      {closing ? <Loader2 className="size-3 animate-spin" /> : null}
+      {closing ? "Closing…" : "Close"}
+    </button>
+  );
+}
 
 function ValuePnl({ p }: { p: Position }) {
   const up = p.pnl >= 0;
@@ -38,7 +70,7 @@ function HedgeBar({ ratio }: { ratio: number }) {
 }
 
 /** Combined position — flex-col card so leg rows share the same column grid as the title row. */
-function CombinedRow({ p }: { p: Position }) {
+function CombinedRow({ p, onClose, closing }: { p: Position; onClose?: (p: Position) => void; closing?: boolean }) {
   const ratio =
     p.equityLeg && p.hedgeLeg
       ? Math.round((p.hedgeLeg.value / p.equityLeg.value) * 100)
@@ -52,7 +84,7 @@ function CombinedRow({ p }: { p: Position }) {
         <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#0a0a0a]">
           {p.title}
         </p>
-        <div className="flex shrink-0 gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           <span className="hidden w-24 shrink-0 text-right text-[13px] font-semibold tabular-nums text-[#0a0a0a] sm:block">
             {usd(p.value, 0)}
           </span>
@@ -62,6 +94,7 @@ function CombinedRow({ p }: { p: Position }) {
             </p>
             <p className={cn("text-[11px] tabular-nums", pnlColor)}>({pct(p.pnlPct)})</p>
           </div>
+          <CloseButton p={p} onClose={onClose} closing={closing} />
         </div>
       </div>
 
@@ -115,7 +148,7 @@ function CombinedRow({ p }: { p: Position }) {
   );
 }
 
-function SimpleRow({ p }: { p: Position }) {
+function SimpleRow({ p, onClose, closing }: { p: Position; onClose?: (p: Position) => void; closing?: boolean }) {
   return (
     <li className="flex items-center gap-3 rounded-[10px] border border-[#ececec] bg-white px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <div className="min-w-0 flex-1">
@@ -126,6 +159,7 @@ function SimpleRow({ p }: { p: Position }) {
         ) : null}
       </div>
       <ValuePnl p={p} />
+      <CloseButton p={p} onClose={onClose} closing={closing} />
     </li>
   );
 }
@@ -140,22 +174,23 @@ const GROUPS: Array<{ type: Position["type"]; label: string }> = [
 function PositionsRows({
   positions,
   hideGroupHeaders = false,
+  onClose,
+  closingId,
 }: {
   positions: Position[];
   hideGroupHeaders?: boolean;
+  onClose?: (p: Position) => void;
+  closingId?: string | null;
 }) {
-  if (hideGroupHeaders) {
-    return (
-      <ul className="flex flex-col gap-2">
-        {positions.map((p) =>
-          p.type === "Combined" ? (
-            <CombinedRow key={p.id} p={p} />
-          ) : (
-            <SimpleRow key={p.id} p={p} />
-          ),
-        )}
-      </ul>
+  const renderRow = (p: Position) =>
+    p.type === "Combined" ? (
+      <CombinedRow key={p.id} p={p} onClose={onClose} closing={closingId === p.id} />
+    ) : (
+      <SimpleRow key={p.id} p={p} onClose={onClose} closing={closingId === p.id} />
     );
+
+  if (hideGroupHeaders) {
+    return <ul className="flex flex-col gap-2">{positions.map(renderRow)}</ul>;
   }
 
   return (
@@ -168,15 +203,7 @@ function PositionsRows({
             <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-[#a3a3a3]">
               {label}
             </p>
-            <ul className="flex flex-col gap-2">
-              {items.map((p) =>
-                type === "Combined" ? (
-                  <CombinedRow key={p.id} p={p} />
-                ) : (
-                  <SimpleRow key={p.id} p={p} />
-                ),
-              )}
-            </ul>
+            <ul className="flex flex-col gap-2">{items.map(renderRow)}</ul>
           </div>
         );
       })}

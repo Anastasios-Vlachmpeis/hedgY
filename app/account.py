@@ -14,6 +14,7 @@ the $1000 world; predictions fill in-app at live odds. No real money / custody.
 
 from __future__ import annotations
 
+import logging
 import sqlite3
 import time
 from typing import Callable
@@ -21,6 +22,8 @@ from typing import Callable
 import httpx
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 EPS = 1e-9
 
@@ -402,6 +405,43 @@ _PRICE_TTL_SECONDS = 15.0
 _price_cache: dict[str, tuple[float, float | None]] = {}
 
 
+def _crypto_price(symbol: str, headers: dict[str, str]) -> float | None:
+    """Latest crypto price for a pair like ``BTC/USD`` via the v1beta3 crypto feed.
+
+    Uses the dedicated latest-trades endpoint (then latest-quotes mid as a
+    fallback) — these are keyed by the pair symbol and are the same endpoints
+    proven out in scripts/alpaca-test.ts. The crypto snapshots endpoint returns
+    a different shape than the stock one, which is why the old code silently
+    produced no price for BTC/USD.
+    """
+    base = f"{settings.alpaca_data_url}/v1beta3/crypto/us"
+    params = {"symbols": symbol}
+
+    r = httpx.get(
+        f"{base}/latest/trades",
+        params=params,
+        headers=headers,
+        timeout=settings.http_timeout_seconds,
+    )
+    r.raise_for_status()
+    trade = (r.json().get("trades") or {}).get(symbol) or {}
+    if trade.get("p"):
+        return float(trade["p"])
+
+    r = httpx.get(
+        f"{base}/latest/quotes",
+        params=params,
+        headers=headers,
+        timeout=settings.http_timeout_seconds,
+    )
+    r.raise_for_status()
+    quote = (r.json().get("quotes") or {}).get(symbol) or {}
+    bid, ask = quote.get("bp"), quote.get("ap")
+    if bid and ask:
+        return (float(bid) + float(ask)) / 2.0
+    return None
+
+
 def stock_price(symbol: str) -> float | None:
     """Latest Alpaca price for a symbol (trade price, else quote mid), cached briefly."""
     now = time.monotonic()
@@ -416,15 +456,7 @@ def stock_price(symbol: str) -> float | None:
     price: float | None = None
     try:
         if "/" in symbol:
-            # Crypto pair (e.g. BTC/USD) — different feed, snapshots keyed by symbol.
-            r = httpx.get(
-                f"{settings.alpaca_data_url}/v1beta3/crypto/us/snapshots",
-                params={"symbols": symbol},
-                headers=headers,
-                timeout=settings.http_timeout_seconds,
-            )
-            r.raise_for_status()
-            snap = (r.json().get("snapshots") or {}).get(symbol) or {}
+            price = _crypto_price(symbol, headers)
         else:
             r = httpx.get(
                 f"{settings.alpaca_data_url}/v2/stocks/{symbol}/snapshot",
@@ -433,18 +465,19 @@ def stock_price(symbol: str) -> float | None:
             )
             r.raise_for_status()
             snap = r.json()
-        trade = (snap.get("latestTrade") or {}).get("p")
-        if trade:
-            price = float(trade)
-        else:
-            quote = snap.get("latestQuote") or {}
-            bid, ask = quote.get("bp"), quote.get("ap")
-            if bid and ask:
-                price = (float(bid) + float(ask)) / 2.0
+            trade = (snap.get("latestTrade") or {}).get("p")
+            if trade:
+                price = float(trade)
             else:
-                bar = snap.get("dailyBar") or {}
-                price = float(bar["c"]) if bar.get("c") else None
+                quote = snap.get("latestQuote") or {}
+                bid, ask = quote.get("bp"), quote.get("ap")
+                if bid and ask:
+                    price = (float(bid) + float(ask)) / 2.0
+                else:
+                    bar = snap.get("dailyBar") or {}
+                    price = float(bar["c"]) if bar.get("c") else None
     except Exception:  # noqa: BLE001 — pricing is best-effort
+        logger.exception("stock_price failed for %s", symbol)
         price = None
 
     # Cache hits and misses alike so a flaky/slow symbol can't be hammered.
