@@ -87,7 +87,7 @@ type RiskMarket = {
   outcomeUpPct: string;
   outcomeDown: number;
   outcomeDownPct: string;
-  quoteRows: Array<{ venue: "Kalshi" | "Polymarket"; yes: number; no: number; volume: string }>;
+  quoteRows: Array<{ venue: string; yes: number; no: number; volume: string }>;
   sparkUp: Array<{ t: string; v: number }>;
   sparkDown: Array<{ t: string; v: number }>;
 };
@@ -1457,6 +1457,7 @@ export default function DashboardPage() {
   // ── Live data patches ──────────────────────────────────────────────────────
   const [livePrices, setLivePrices] = React.useState<Record<string, { price: number; changePct: number; direction: "up" | "down" }>>({});
   const [liveMarketProbs, setLiveMarketProbs] = React.useState<Record<string, { yes: number; no: number; probability: number; venue: string }>>({});
+  const [liveBrowseMarkets, setLiveBrowseMarkets] = React.useState<RiskMarket[]>([]);
 
   React.useEffect(() => {
     fetch("/api/prices")
@@ -1466,10 +1467,41 @@ export default function DashboardPage() {
 
     fetch("/api/risk-markets")
       .then((r) => r.json())
-      .then((markets: Array<{ id: string; yes: number; no: number; probability: number; venue: string; title: string }>) => {
-        const map: Record<string, { yes: number; no: number; probability: number; venue: string }> = {};
-        for (const m of markets) map[m.id] = { yes: m.yes, no: m.no, probability: m.probability, venue: m.venue };
-        setLiveMarketProbs(map);
+      .then((markets: Array<{ id: string; yes: number; no: number; probability: number; venue: string; venues: string[]; title: string; category: string }>) => {
+        const iconMap: Record<string, RiskMarket["icon"]> = {
+          Economics: "building", Politics: "landmark", Technology: "cpu",
+          Defense: "shield", Energy: "anchor", Macro: "macro",
+        };
+        setLiveBrowseMarkets(markets.map((m) => ({
+          id: m.id,
+          title: m.title,
+          category: m.category ?? "Markets",
+          assetSymbols: [],
+          icon: (iconMap[m.category] ?? "file") as RiskMarket["icon"],
+          probability: m.probability,
+          yes: m.yes,
+          no: m.no,
+          volume: "—",
+          venue: m.venues?.join(" / ") ?? m.venue,
+          bestYesVenue: m.venues?.[0] ?? m.venue,
+          bestNoVenue: m.venues?.[0] ?? m.venue,
+          hedgeRatio: 0.5,
+          hedgeSide: m.probability > 50 ? "YES" : "NO",
+          protectionPct: Math.round(30 + (Math.abs(m.probability - 50) / 50) * 30),
+          outcomeUp: 0,
+          outcomeDown: 0,
+          outcomeUpPct: "+0%",
+          outcomeDownPct: "-0%",
+          correlation: -0.3,
+          quoteRows: (m.venues ?? [m.venue]).map((v) => ({
+            venue: v.charAt(0).toUpperCase() + v.slice(1),
+            yes: m.yes,
+            no: m.no,
+            volume: "—",
+          })),
+          sparkUp: [],
+          sparkDown: [],
+        })));
       })
       .catch(() => {});
   }, []);
@@ -1659,7 +1691,7 @@ export default function DashboardPage() {
 
       <MarketBrowserModal
         open={browseOpen}
-        markets={patchedMarkets}
+        markets={liveBrowseMarkets.length > 0 ? liveBrowseMarkets : patchedMarkets}
         activeMarketId={activeMarketId}
         compareIds={compareIds}
         onClose={() => setBrowseOpen(false)}
